@@ -68,11 +68,13 @@ app.use(async (req, _res, next) => {
   next();
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
-
-// Only the public/ folder is served, so server.js, auth.js etc. are never downloadable.
-app.use(express.static(path.join(__dirname, 'public')));
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
