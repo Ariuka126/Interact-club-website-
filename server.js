@@ -2,7 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
-const { createSupabase } = require('./supabase');
+const { createSupabase, checkSupabase } = require('./supabase');
 const authRoutes = require('./auth');
 
 // Render sets RENDER=true; NODE_ENV may not be set there.
@@ -52,29 +52,29 @@ app.use(
 
 const supabase = createSupabase();
 app.locals.supabase = supabase;
+checkSupabase(supabase).catch(e => console.error('[supabase] self-test crashed:', e)); // logs only; does not block startup
 
 // Load the logged-in user on every request so /me works after a page refresh
 // and role changes (promotions) apply immediately.
 app.use(async (req, _res, next) => {
   req.user = null;
   if (req.session.userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .select('id, name, email, role, sector')
       .eq('id', req.session.userId)
       .maybeSingle();
+    if (error) console.error('[auth] user lookup failed:', error.message);
     req.user = data || null;
   }
   next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
+
+// Only the public/ folder is served, so server.js, auth.js etc. are never downloadable.
+app.use(express.static(path.join(__dirname, 'public')));
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
