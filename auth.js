@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
-const { db } = require('../db');
+const { db } = require('./db');
 
 const router = express.Router();
 const BCRYPT_ROUNDS = 12;
