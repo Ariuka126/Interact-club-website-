@@ -1,7 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
-const { db } = require('./db');
 
 const router = express.Router();
 const BCRYPT_ROUNDS = 12;
@@ -18,11 +17,6 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many attempts. Try again in a few minutes.' },
 });
-
-const findByEmail = db.prepare('SELECT * FROM users WHERE email = ?');
-const insertUser = db.prepare(
-  "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'volunteer')"
-);
 
 const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: u.role, sector: u.sector });
 
@@ -51,20 +45,23 @@ router.post('/register', authLimiter, async (req, res, next) => {
     // bcrypt only uses the first 72 bytes, so reject longer input instead of silently truncating
     if (Buffer.byteLength(password, 'utf8') > 72) return res.status(400).json({ error: 'Password must be 72 bytes or fewer.' });
 
-    if (findByEmail.get(email)) return res.status(409).json({ error: 'An account with that email already exists.' });
-
     const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    let id;
-    try {
-      id = insertUser.run(name, email, hash).lastInsertRowid;
-    } catch (err) {
-      // two sign-ups with the same email racing each other
-      if (String(err.code).startsWith('SQLITE_CONSTRAINT')) return res.status(409).json({ error: 'An account with that email already exists.' });
-      throw err;
+    const supabase = req.app.locals.supabase;
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert({ name, email, password_hash: hash, role: 'volunteer' })
+      .select('*')
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ error: 'An account with that email already exists.' });
+      }
+      throw error;
     }
 
-    await startSession(req, Number(id));
-    res.status(201).json({ user: publicUser(findByEmail.get(email)) });
+    await startSession(req, user.id);
+    res.status(201).json({ user: publicUser(user) });
   } catch (err) {
     next(err);
   }
@@ -75,7 +72,15 @@ router.post('/login', authLimiter, async (req, res, next) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
 
-    const user = findByEmail.get(email);
+    const supabase = req.app.locals.supabase;
+    const { data: foundUser, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    const user = error ? null : foundUser;
     const ok = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
     if (!user || !ok) return res.status(401).json({ error: 'Invalid email or password.' });
 
