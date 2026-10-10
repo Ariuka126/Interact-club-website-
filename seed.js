@@ -1,25 +1,34 @@
-// Creates the first Co-President and loads the prototype's sample events.
-// Usage: set SEED_PRESIDENT_* in .env, then `npm run db:seed`.
+// Creates the first Co-President and loads the sample events into Supabase.
+// Usage: set SEED_PRESIDENT_* plus the Supabase vars in .env, then `node seed.js`.
 require('dotenv').config();
-const bcrypt = require('bcrypt');
-const { db, initSchema } = require('./db');
+const bcrypt = require('bcryptjs');
+const { createSupabase } = require('./supabase');
 
-initSchema();
+(async () => {
+  const { SEED_PRESIDENT_NAME: name, SEED_PRESIDENT_EMAIL: rawEmail, SEED_PRESIDENT_PASSWORD: pw } = process.env;
+  if (!name || !rawEmail || !pw || pw.length < 8) {
+    console.error('Set SEED_PRESIDENT_NAME, SEED_PRESIDENT_EMAIL and SEED_PRESIDENT_PASSWORD (8+ chars) first.');
+    process.exit(1);
+  }
+  const supabase = createSupabase();
+  const email = rawEmail.trim().toLowerCase();
 
-const { SEED_PRESIDENT_NAME: name, SEED_PRESIDENT_EMAIL: email, SEED_PRESIDENT_PASSWORD: pw } = process.env;
-if (!name || !email || !pw || pw.length < 8) {
-  console.error('Set SEED_PRESIDENT_NAME, SEED_PRESIDENT_EMAIL and SEED_PRESIDENT_PASSWORD (8+ chars) in .env first.');
-  process.exit(1);
-}
+  const { data: existing, error: findErr } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
+  if (findErr) throw findErr;
+  if (existing) {
+    console.log(`User ${email} already exists, left unchanged`);
+  } else {
+    const { error } = await supabase
+      .from('users')
+      .insert({ name: name.trim(), email, password_hash: await bcrypt.hash(pw, 12), role: 'pres' });
+    if (error) throw error;
+    console.log(`Created Co-President ${email}`);
+  }
 
-const hash = bcrypt.hashSync(pw, 12);
-const info = db
-  .prepare(`INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'pres')
-            ON CONFLICT(email) DO NOTHING`)
-  .run(name.trim(), email.trim().toLowerCase(), hash);
-console.log(info.changes ? `Created Co-President ${email}` : `User ${email} already exists, left unchanged`);
+  const { count, error: countErr } = await supabase.from('events').select('id', { count: 'exact', head: true });
+  if (countErr) throw countErr;
+  if (count > 0) return console.log('Events already present, skipped');
 
-if (db.prepare('SELECT COUNT(*) AS n FROM events').get().n === 0) {
   const sh = ['Tarot reading', 'Photobooth', 'Scavenger desk'];
   const sh2 = ['Shagai games', 'Tarot reading', 'Photobooth'];
   const std = ['gps', 'qr', 'selfie'];
@@ -38,16 +47,17 @@ if (db.prepare('SELECT COUNT(*) AS n FROM events').get().n === 0) {
     ['Animal Shelter Visit', 'Community', 2, 10, 2, 'City animal shelter', 'Nov 7', 'out', std, { waiver: 1 }],
     ['Orphanage Visit', 'Community', 2.5, 10, 2, "Children's home", 'Nov 21', 'out', std, { waiver: 1 }],
   ];
-  const ins = db.prepare(`INSERT INTO events
-    (title, sector, hours, capacity, volunteer_slots, location, date_label, type, verification,
-     shifts, points, days, waiver_required, is_setup, is_active)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
-  db.transaction(() => {
-    for (const [t, s, h, c, v, loc, d, ty, ver, x] of events) {
-      ins.run(t, s, h, c, v, loc, d, ty, JSON.stringify(ver),
-        x.shifts ? JSON.stringify(x.shifts) : null, x.points ? JSON.stringify(x.points) : null,
-        x.days || null, x.waiver || 0, x.setup || 0, x.active || 0);
-    }
-  })();
-  console.log(`Seeded ${events.length} sample events`);
-}
+  const rows = events.map(([title, sector, hours, capacity, volunteer_slots, location, date_label, type, ver, x]) => ({
+    title, sector, hours, capacity, volunteer_slots, location, date_label, type,
+    verification: JSON.stringify(ver),
+    shifts: x.shifts ? JSON.stringify(x.shifts) : null,
+    points: x.points ? JSON.stringify(x.points) : null,
+    days: x.days || null,
+    waiver_required: x.waiver || 0,
+    is_setup: x.setup || 0,
+    is_active: x.active || 0,
+  }));
+  const { error } = await supabase.from('events').insert(rows);
+  if (error) throw error;
+  console.log(`Seeded ${rows.length} sample events`);
+})().catch(err => { console.error(err); process.exit(1); });

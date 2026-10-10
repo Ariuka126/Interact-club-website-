@@ -604,7 +604,7 @@ document.addEventListener('submit',async e=>{
 
 async function boot(){
   try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render()}else authView('login')}
-  catch(e){authView('login','Cannot reach the server. Is it running?')}}
+  catch(e){authView('login',e.status?'Server error ('+e.status+'). Please try again.':'Cannot reach the server. Is it running?')}}
 boot();
 </script>
 
