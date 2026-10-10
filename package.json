@@ -1,0 +1,23 @@
+{
+  "name": "interactclub",
+  "version": "1.0.0",
+  "description": "Node.js + Express + SQLite backend with session-based login (bcrypt), serving the club hub frontend.",
+  "main": "auth.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  }
+}
