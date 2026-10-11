@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Interact Club Hub</title>
+<link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
@@ -44,6 +45,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top-in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .mark{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#3b2700;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:14px;flex:none}
+.mark-img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;background:#00A9E0;display:block}
+.authcard .mark-img{width:44px;height:44px}
 .brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1}
 .brand span{font-size:11px;opacity:.8}
 .roles{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:3px;border-radius:10px;flex-wrap:wrap}
@@ -163,7 +166,11 @@ td.n,th.n{text-align:right}
 
 .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center}
 /* auth screen */
-input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
+input[type=email],input[type=password],input[type=text].pw-input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{width:100%;padding-right:66px}
+.pw-toggle{position:absolute;right:6px;border:1px solid var(--line);background:var(--surface2);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+.pw-toggle:hover{border-color:var(--brand);color:var(--ink)}
 .authwrap{min-height:100vh;display:grid;place-items:center;padding:20px}
 .authcard{width:100%;max-width:400px}
 .authcard .brand b{color:var(--ink)}
@@ -288,7 +295,7 @@ function render(){
   const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length};
   $('#app').innerHTML=`
   <header class="top"><div class="top-in">
-    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span>Prototype with sample data</span></div></div>
+    <div class="brand"><img src="logo.png" alt="Interact Club logo" class="mark-img" onerror="this.outerHTML='<div class=&quot;mark&quot;>IC</div>'"><div><b>Interact Club Hub</b><span>Prototype with sample data</span></div></div>
     <div class="roles" role="group" aria-label="View the app as">
       ${roleChoices().map(([k,n])=>`<button data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}
       ${r==='lead'?`<select aria-label="Sector" data-ch="lsec">${SECT.filter(s=>isPres()||s===S.user.sector).map(s=>`<option ${s===S.lead?'selected':''}>${s}</option>`).join('')}</select>`:''}
@@ -568,7 +575,22 @@ const CH={
  exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;render()},
  ot(v,t){CI.ot=t.checked;ciRender()}, oth(v){CI.otH=+v;ciRender()},
  wok(v,t){$('#wgo').disabled=!(t.checked&&$('#wname').value.trim().length>2)}};
-document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
+document.addEventListener('click',e=>{
+  const pw=e.target.closest('[data-pw-toggle]');
+  if(pw){
+    const wrap=pw.closest('.pw-wrap');
+    const input=wrap?wrap.querySelector('input'):null;
+    if(!input)return;
+    const show=input.type==='password';
+    input.type=show?'text':'password';
+    input.classList.toggle('pw-input',true);
+    pw.textContent=show?'Hide':'Show';
+    pw.setAttribute('aria-label',(pw.getAttribute('aria-label')||'Show password').replace(show?'Show':'Hide',show?'Hide':'Show'));
+    pw.setAttribute('aria-pressed',String(show));
+    input.focus({preventScroll:true});
+    return;
+  }
+  const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t&&IN_[t.dataset.in])IN_[t.dataset.in](t.value,t)});
 document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)closeModal()});
@@ -598,11 +620,11 @@ function applyUser(u){
 function authView(mode,msg){
   const reg=mode==='register';
   $('#app').innerHTML=`<div class="authwrap"><form class="card stack authcard" id="authForm" data-mode="${mode}" novalidate>
-    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
+    <div class="brand"><img src="logo.png" alt="Interact Club logo" class="mark-img" onerror="this.outerHTML='<div class=&quot;mark&quot;>IC</div>'"><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
     ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
     <label>Email<input type="email" name="email" autocomplete="email"></label>
-    <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
-    ${reg?'<p class="small muted">At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>':''}
+    <label>Password<span class="pw-wrap"><input type="password" name="password" class="pw-input" autocomplete="${reg?'new-password':'current-password'}"><button type="button" class="pw-toggle" data-pw-toggle aria-label="Show password" aria-pressed="false">Show</button></span></label>
+    ${reg?`<label>Confirm password<span class="pw-wrap"><input type="password" name="confirmPassword" class="pw-input" autocomplete="new-password"><button type="button" class="pw-toggle" data-pw-toggle aria-label="Show confirm password" aria-pressed="false">Show</button></span></label><p class="small muted">Enter password 2 times. At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>`:''}
     <div class="err" id="authErr" role="alert">${esc(msg||'')}</div>
     <button class="btn pri" type="submit">${reg?'Create account':'Log in'}</button>
     <button class="btn" type="button" data-act="authswitch" data-m="${reg?'login':'register'}">${reg?'I already have an account':'Create an account'}</button>
@@ -612,7 +634,10 @@ function authView(mode,msg){
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('#authForm');if(!f)return;e.preventDefault();
   const btn=f.querySelector('[type=submit]'),err=$('#authErr');btn.disabled=true;err.textContent='';
-  try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',Object.fromEntries(new FormData(f)));
+  try{
+    const data=Object.fromEntries(new FormData(f));
+    if(f.dataset.mode==='register'&&String(data.password||'')!==String(data.confirmPassword||'')){throw new Error("Passwords don't match. Please enter the same password twice.")}
+    const {user}=await api('/api/auth/'+f.dataset.mode,'POST',data);
     applyUser(user);render();toast('Welcome, '+user.name)}
   catch(x){err.textContent=x.message;btn.disabled=false}});
 
