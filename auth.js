@@ -38,9 +38,11 @@ router.post('/register', authLimiter, async (req, res, next) => {
     const name = String(req.body.name || '').trim().replace(/\s+/g, ' ');
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
+    const confirmPassword = String(req.body.confirmPassword ?? req.body.confirm_password ?? '');
 
     if (name.length < 2 || name.length > 80) return res.status(400).json({ error: 'Enter your full name (2 to 80 characters).' });
     if (!EMAIL_RE.test(email) || email.length > 254) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (password !== confirmPassword) return res.status(400).json({ error: "Passwords don't match. Please enter the same password twice." });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
     // bcrypt only uses the first 72 bytes, so reject longer input instead of silently truncating
     if (Buffer.byteLength(password, 'utf8') > 72) return res.status(400).json({ error: 'Password must be 72 bytes or fewer.' });
