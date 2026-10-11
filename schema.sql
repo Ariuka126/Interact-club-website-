@@ -5,9 +5,9 @@ CREATE TABLE IF NOT EXISTS users (
   name                TEXT NOT NULL,
   email               TEXT NOT NULL,
   password_hash       TEXT NOT NULL,
-  -- 'volunteer' = the prototype's "keeplist". Co-Presidents promote to member/lead.
+  -- 'volunteer' = the prototype's "keeplist". Co-Presidents promote to member/lead; only 'admin' can change roles.
   role                TEXT NOT NULL DEFAULT 'volunteer'
-                      CHECK (role IN ('pres','lead','member','volunteer')),
+                      CHECK (role IN ('admin','pres','lead','member','volunteer')),
   sector              TEXT CHECK (sector IS NULL OR sector IN ('Creative','Events','Finance','Community')),
   promotion_requested INTEGER NOT NULL DEFAULT 0 CHECK (promotion_requested IN (0,1)),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

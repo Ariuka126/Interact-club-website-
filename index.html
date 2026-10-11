@@ -1,0 +1,659 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Interact Club Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky azure bar, role switcher, tab row, then one working view per role. Boldness lives in the member progress ring. */
+:root{
+  --bg:#EDF0F7; --surface:#FFFFFF; --surface2:#F5F7FC; --ink:#0E1A33; --muted:#5A6684; --line:#D9DFEC;
+  --brand:#14428C; --brand-ink:#FFFFFF; --brand-soft:#E2EAF9; --link:#14428C;
+  --gold:#F2A900; --gold-soft:#FFF2CC; --gold-ink:#6B4800;
+  --good:#17825B; --good-soft:#DDF3EA; --warn:#B26A00; --warn-soft:#FFEFD1; --bad:#C23A3A; --bad-soft:#FBE3E3;
+  --shadow:0 1px 2px rgba(14,26,51,.06),0 6px 20px rgba(14,26,51,.06);
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --f-script:'Caveat','Segoe Script',cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1120; --surface:#111B30; --surface2:#16223B; --ink:#E9EEF8; --muted:#9AA7C4; --line:#24324F;
+  --brand:#0E2F66; --brand-ink:#FFFFFF; --brand-soft:#1A2C52; --link:#8DB0FF;
+  --gold:#F5B52A; --gold-soft:#3A2D0A; --gold-ink:#F7D88A;
+  --good:#46C492; --good-soft:#12362A; --warn:#F0B050; --warn-soft:#3B2C10; --bad:#F08484; --bad-soft:#40191B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1120; --surface:#111B30; --surface2:#16223B; --ink:#E9EEF8; --muted:#9AA7C4; --line:#24324F;
+  --brand:#0E2F66; --brand-ink:#FFFFFF; --brand-soft:#1A2C52; --link:#8DB0FF;
+  --gold:#F5B52A; --gold-soft:#3A2D0A; --gold-ink:#F7D88A;
+  --good:#46C492; --good-soft:#12362A; --warn:#F0B050; --warn-soft:#3B2C10; --bad:#F08484; --bad-soft:#40191B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700} h3{font-size:16px;font-weight:700} h4{font-size:13px;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:12px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+/* top bar */
+.top{background:var(--brand);color:var(--brand-ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.top-in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#3b2700;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:14px;flex:none}
+.brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1}
+.brand span{font-size:11px;opacity:.8}
+.roles{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:3px;border-radius:10px;flex-wrap:wrap}
+.roles button{border:0;background:transparent;color:var(--brand-ink);padding:6px 11px;border-radius:8px;cursor:pointer;font-weight:500;font-size:13px}
+.roles button[aria-pressed="true"]{background:var(--gold);color:#3b2700;font-weight:700}
+.roles select{background:rgba(255,255,255,.18);color:var(--brand-ink);border:0;border-radius:8px;padding:6px 8px}
+.roles select option{color:#0E1A33}
+
+.wrap{max-width:1080px;margin:0 auto;padding:16px 16px 56px;display:flex;flex-direction:column;gap:16px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.dot{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#3b2700;font-size:11px;font-weight:700;margin-left:6px;padding:0 5px}
+
+/* primitives */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.flat{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.grid.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px;min-width:0}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13px}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn.gold{background:var(--gold);color:#3b2700;border-color:var(--gold)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.bad{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--brand-soft);color:var(--link);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.gold{background:var(--gold-soft);color:var(--gold-ink)}
+input[type=text],input[type=number],input[type=search],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+label.ck{flex-direction:row;align-items:center;gap:8px;font-weight:500;color:var(--ink);font-size:13px}
+label.ck input{width:auto}
+.bar{height:8px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--brand)}
+.bar.gold>i{background:var(--gold)}
+.bar.good>i{background:var(--good)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:460px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+th{position:sticky;top:0;background:var(--surface2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right}
+.tile b{font-family:var(--f-display);font-size:30px;font-weight:800;display:block;line-height:1.05;font-variant-numeric:tabular-nums}
+.tile span{font-size:12px;color:var(--muted)}
+.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+
+/* member home */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+@media(max-width:520px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .c b{font-family:var(--f-display);font-size:34px;font-weight:800;line-height:1}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.levels div{border:1px solid var(--line);border-radius:9px;padding:8px 6px;text-align:center;font-size:11px;background:var(--surface2);min-width:0}
+.levels div b{display:block;font-family:var(--f-display);font-size:13px}
+.levels div.on{background:var(--gold);border-color:var(--gold);color:#3b2700}
+.levels div.done{background:var(--brand-soft);color:var(--link)}
+.badge{display:flex;gap:10px;align-items:center}
+.badge .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--surface2);border:1px solid var(--line);filter:grayscale(1);opacity:.7;flex:none}
+.badge.on .ic{filter:none;opacity:1;background:var(--gold-soft);border-color:var(--gold)}
+.pie{width:112px;height:112px;flex:none}
+
+/* events */
+.ev h3{font-size:16px}
+.ev .meta{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px}
+.ev .meta dt{color:var(--muted)} .ev .meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--muted);background:var(--surface2)}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days i{width:16px;height:16px;border-radius:4px;border:1px solid var(--line);background:var(--surface2)}
+.days i.ok{background:var(--good);border-color:var(--good)} .days i.pd{background:var(--gold);border-color:var(--gold)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:700}
+.filters button[aria-pressed="true"]{border-color:var(--brand);color:var(--link);background:var(--brand-soft)}
+
+/* feed + photos */
+.photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block;background:var(--surface2)}
+.linkbox{aspect-ratio:4/3;border-radius:10px;border:1px dashed var(--line);display:grid;place-content:center;text-align:center;padding:10px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.tile-photo{position:relative}
+.tile-photo .who{position:absolute;left:6px;top:6px}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(6,12,26,.6);display:grid;place-items:end center;z-index:50;padding:0}
+@media(min-width:640px){.scrim{place-items:center;padding:20px}}
+.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+@media(min-width:640px){.sheet{border-radius:18px}}
+.sheet.wide{max-width:900px}
+.admsel{min-width:120px}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--gold)} .steps i.done{background:var(--brand)}
+.cam{aspect-ratio:4/3;border-radius:12px;background:#0b1220;color:#9db3dd;display:grid;place-content:center;text-align:center;padding:16px;position:relative;font-size:12px}
+.cam::before,.cam::after{content:"";position:absolute;width:26px;height:26px;border:3px solid var(--gold)}
+.cam::before{left:12px;top:12px;border-right:0;border-bottom:0}
+.cam::after{right:12px;bottom:12px;border-left:0;border-top:0}
+.cam b{color:#fff;font-size:14px}
+.qrwrap{display:grid;place-items:center;gap:10px}
+.qrbox{background:#fff;padding:12px;border-radius:12px;width:min(100%,280px);aspect-ratio:1}
+.qrbox svg{width:100%;height:100%;display:block}
+.code{font-family:var(--f-mono);font-size:34px;font-weight:600;letter-spacing:.18em}
+.toastbox{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;place-items:center;z-index:80;pointer-events:none;padding:0 16px}
+.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;max-width:520px;box-shadow:var(--shadow)}
+
+/* certificate */
+.cert{background:#FFFDF6;color:#14213D;border:2px solid #14428C;outline:6px double #F2A900;outline-offset:-14px;border-radius:6px;padding:34px 28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cert h2{font-size:clamp(22px,5vw,32px);color:#14428C}
+.cert .big{font-family:var(--f-display);font-size:clamp(26px,6vw,40px);font-weight:800}
+.cert .sigs{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.cert .sig{font-family:var(--f-script);font-size:28px;border-bottom:1px solid #14213D;padding:0 18px;min-width:150px}
+.cert .sl{font-size:11px;color:#4a5878;margin-top:2px}
+.cert ul{margin:0;padding:0;list-style:none;font-size:13px}
+
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center}
+/* auth screen */
+input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
+.authwrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.authcard{width:100%;max-width:400px}
+.authcard .brand b{color:var(--ink)}
+.err{color:var(--bad);font-size:12px;font-weight:700;min-height:16px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app"></div>
+<div id="modal"></div>
+<div class="toastbox"><div id="toast" class="toast" hidden></div></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const SECT=['Creative','Events','Finance','Community'];
+const LV=['Novice Interactor','Active Change Maker','Community Leader','Rotary Ambassador'];
+const LVMIN=[0,10,25,50];
+const lvl=h=>h<10?0:h<25?1:h<50?2:3;
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const fmt=ts=>new Date(ts).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const VLABEL={gps:'GPS 200 m',qr:'Live QR',selfie:'Live photo',link:'Work link'};
+
+function photo(seed,label,ts){
+  const c=document.createElement('canvas');c.width=320;c.height=240;const x=c.getContext('2d');const r=mul(seed);const h=Math.floor(r()*360);
+  const g=x.createLinearGradient(0,0,0,240);g.addColorStop(0,`hsl(${h},45%,72%)`);g.addColorStop(1,`hsl(${(h+40)%360},40%,36%)`);
+  x.fillStyle=g;x.fillRect(0,0,320,240);
+  for(let i=0;i<5;i++){x.fillStyle=`hsla(${(h+i*30)%360},40%,${25+r()*30}%,.55)`;x.beginPath();x.arc(r()*320,120+r()*110,30+r()*60,0,7);x.fill()}
+  for(let i=0;i<4;i++){const px=50+i*70+r()*18;x.fillStyle='rgba(16,28,52,.55)';x.beginPath();x.arc(px,128,16,0,7);x.fill();x.fillRect(px-21,146,42,58)}
+  x.fillStyle='rgba(8,16,32,.82)';x.fillRect(0,204,320,36);x.font='bold 11px monospace';x.fillStyle='#fff';x.fillText('LIVE CAPTURE  '+fmt(ts),10,219);x.fillStyle='#F2A900';x.fillText(label.slice(0,42),10,234);
+  return c.toDataURL('image/jpeg',.6);
+}
+
+/* ---------- sample data ---------- */
+let M,E,L,S,CI=null,lid=0;
+function init(){
+  const rnd=mul(2026);
+  const FN=['Nomin','Temuulen','Anujin','Bat-Erdene','Ariunaa','Tuguldur','Enkhjin','Munkh-Orgil','Khulan','Tselmeg','Dorjsuren','Narantsetseg','Orgil','Misheel','Zolboo','Amar','Bayarmaa','Chinguun','Delger','Erdene','Gerel','Ichinkhorloo','Jargal','Naran','Odgerel','Sukhbat','Uyanga','Yesui','Tamir','Altan'];
+  const IN='BGDESTMNOU'.split('');
+  const nm=i=>FN[i%30]+' '+IN[(i*7+Math.floor(i/30)*3+3)%10]+'.';
+  M=[];
+  for(let i=0;i<60;i++){
+    const lead=i>=1&&i<=4;
+    M.push({id:'m'+i,name:i===0?'Nomin B.':nm(i),st:lead?'lead':'active',sec:i===0?'Creative':lead?SECT[i-1]:SECT[Math.floor(rnd()*4)],
+      in:i===0?12:Math.round((4+rnd()*17)*2)/2,out:i===0?6:Math.round((2+rnd()*12)*2)/2,req:false});
+  }
+  for(let i=0;i<10;i++)M.push({id:'v'+i,name:i===0?'Saruul T.':nm(60+i),st:'keep',sec:SECT[Math.floor(rnd()*4)],in:0,out:0,req:false});
+  const sh=['Tarot reading','Photobooth','Scavenger desk'],sh2=['Shagai games','Tarot reading','Photobooth'];
+  E=[
+   {id:'e1',t:'Halloween Scavenger Hunt & Fashion Walk',sec:'Events',h:3,cap:15,loc:'Main Auditorium',date:'Oct 31',type:'in',v:['gps','qr','selfie'],shifts:sh,setup:true,vol:3,active:false},
+   {id:'e2',t:'Tsagaan Sar Booth Rotation',sec:'Events',h:2.5,cap:12,loc:'School gym',date:'Feb 2027',type:'in',v:['gps','qr','selfie'],shifts:sh2,setup:true,vol:2,active:false},
+   {id:'e3',t:'Club Fair Booth',sec:'Events',h:2,cap:8,loc:'School lobby',date:'Sep 24',type:'in',v:['gps','qr','selfie'],setup:true,vol:0,active:false},
+   {id:'e4',t:'Pepero Day Order Run',sec:'Finance',h:1.5,cap:10,loc:'Finance room 204',date:'Nov 11',type:'in',v:['gps','qr','selfie'],orders:{placed:42,delivered:31},vol:2,active:false},
+   {id:'e5',t:'Tsergiin Bayr Video Edit',sec:'Creative',h:4,cap:6,loc:'Off-site task',date:'Mar 2027',type:'in',v:['link'],vol:0,active:false},
+   {id:'e6',t:"Women's Day Graphics Set",sec:'Creative',h:3,cap:6,loc:'Off-site task',date:'Due Oct 20',type:'in',v:['link'],vol:0,active:true},
+   {id:'e7',t:'2-Week Tree Planting',sec:'Community',h:1,cap:20,loc:'Songino Khairkhan planting site',date:'Oct 5 to Oct 18',type:'out',v:['gps','qr','selfie'],days:14,vol:4,active:true},
+   {id:'e8',t:'City Cleanup',sec:'Community',h:2,cap:25,loc:'Peace Avenue, Sukhbaatar Sq. side',date:'Oct 10',type:'out',v:['gps','qr','selfie'],vol:5,active:true},
+   {id:'e9',t:'Khoroo Aid Delivery',sec:'Community',h:2.5,cap:12,loc:'Three drop-off zones',date:'Oct 24',type:'out',v:['gps','qr','selfie'],points:['Khoroo office (pickup)','Zone A drop-off','Zone B drop-off'],vol:3,active:false},
+   {id:'e10',t:'TYK Distribution',sec:'Community',h:2,cap:14,loc:'Two distribution points',date:'Nov 3',type:'out',v:['gps','qr','selfie'],points:['Warehouse pickup','Distribution point'],vol:3,active:false},
+   {id:'e11',t:'Animal Shelter Visit',sec:'Community',h:2,cap:10,loc:'City animal shelter',date:'Nov 7',type:'out',v:['gps','qr','selfie'],waiver:true,vol:2,active:false},
+   {id:'e12',t:'Orphanage Visit',sec:'Community',h:2.5,cap:10,loc:'Children\'s home',date:'Nov 21',type:'out',v:['gps','qr','selfie'],waiver:true,vol:2,active:false}
+  ];
+  const act=M.filter(m=>m.st!=='keep'&&m.id!=='m0');
+  E.forEach(e=>{e.signups=[];e.vsign=[];const n=Math.min(e.cap-1,Math.round(e.cap*(.35+rnd()*.5)));
+    for(let k=0;k<n;k++){const m=act[Math.floor(rnd()*act.length)];if(!e.signups.find(s=>s.m===m.id))e.signups.push({m:m.id,shift:e.shifts?e.shifts[k%3]:null})}
+    e.vsign=M.filter(m=>m.st==='keep'&&m.id!=='v0').slice(0,Math.floor(rnd()*3)).map(m=>m.id)});
+  ['e1','e7','e8','e6'].forEach(id=>{const e=E.find(x=>x.id===id);e.signups.push({m:'m0',shift:e.shifts?e.shifts[0]:null})});
+  L=[];
+  const add=(mid,eid,status,ago,x)=>{const e=E.find(q=>q.id===eid),ts=Date.now()-ago*3600e3;L.push(Object.assign({id:'l'+(++lid),mid,eid,h:e.h,status,ts,ph:e.v.includes('selfie')?photo(lid*97+3,e.t,ts):null,link:null,ot:null,fl:false,cheer:[],cm:[]},x||{}))};
+  [1,2,3].forEach(d=>add('m0','e7','approved',24*(4-d)+6,{day:d}));
+  add('m5','e7','pending',3,{day:2});add('m6','e7','pending',5,{day:1});add('m7','e7','pending',2,{day:3,ot:{hrs:1,reason:'Stayed to water the new seedlings after the crew left.',status:'pending'}});
+  add('m8','e6','pending',9,{link:'canva.com/design/women-day-poster-set'});add('m9','e6','pending',20,{link:'drive.google.com/file/womens-day-banner'});
+  add('m10','e3','pending',30);add('m11','e3','pending',31);
+  add('m12','e4','pending',12);
+  add('m20','e8','approved',50,{});add('m21','e8','approved',50,{});
+  S={role:'member',lead:'Community',tab:{member:'home',lead:'review',pres:'center',vol:'events'},filter:'all',q:'',certM:'m0',exSec:'all',exSt:'all',waived:{},pend:null};
+}
+init();
+
+/* ---------- derived ---------- */
+const P=id=>M.find(m=>m.id===id), EV=id=>E.find(e=>e.id===id);
+function hrs(mid){const m=P(mid);let i=m.in,o=m.out,pen=0;
+  L.filter(l=>l.mid===mid).forEach(l=>{const e=EV(l.eid);const ot=l.ot&&l.ot.status==='approved'?l.ot.hrs:0;
+    if(l.status==='approved'){if(e.type==='in')i+=l.h+ot;else o+=l.h+ot}else if(l.status==='pending')pen+=l.h});
+  return{i,o,t:i+o,pen}}
+function secTotals(){const t={Creative:0,Events:0,Finance:0,Community:0};
+  M.filter(m=>m.st!=='keep').forEach(m=>t[m.sec]+=m.in+m.out);
+  L.filter(l=>l.status==='approved').forEach(l=>t[EV(l.eid).sec]+=l.h+(l.ot&&l.ot.status==='approved'?l.ot.hrs:0));return t}
+function badges(mid){const al=L.filter(l=>l.mid===mid&&l.status==='approved');const b=mid==='m0'?{media:7,ops:2,trips:1,streak:3}:{media:0,ops:0,trips:0,streak:0};
+  const media=b.media+al.filter(l=>EV(l.eid).sec==='Creative').reduce((a,l)=>a+l.h,0);
+  const ops=b.ops+new Set(al.filter(l=>EV(l.eid).setup).map(l=>l.eid)).size;
+  const trips=b.trips+new Set(al.filter(l=>EV(l.eid).type==='out').map(l=>l.eid)).size;
+  return[{k:'Media Guru',ic:'🎨',v:media,n:10,d:'10+ hours in design, media or promo content'},
+    {k:'Operations Master',ic:'⚙️',v:ops,n:3,d:'3+ setups or teardowns for major school events'},
+    {k:'Community Hero',ic:'🤝',v:trips,n:3,d:'3+ out-of-school service trips'},
+    {k:'Streak Master',ic:'🔥',v:b.streak,n:3,d:'Attended 3 consecutive official initiatives'}]}
+const pending=sec=>L.filter(l=>l.status==='pending'&&(!sec||EV(l.eid).sec===sec));
+const flagged=()=>L.filter(l=>l.fl);
+const otReq=()=>L.filter(l=>l.ot&&l.ot.status==='pending');
+const leadOf=sec=>M.find(m=>m.st==='lead'&&m.sec===sec);
+const mySign=(e,mid)=>e.signups.find(s=>s.m===mid);
+const code=(eid,w)=>{let h=2166136261;for(const c of eid+':'+w){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return String((h>>>0)%1000000).padStart(6,'0')};
+const win=()=>Math.floor(Date.now()/30000);
+
+function qrSvg(c){const n=25,r=mul(parseInt(c,10)||1);let d='';
+  const fin=(x,y)=>(x<8&&y<8)||(x>=n-8&&y<8)||(x<8&&y>=n-8);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(fin(x,y))continue;if(r()>.5)d+=`M${x},${y}h1v1h-1z`}
+  const f=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#0b1220"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0b1220"/>`;
+  return`<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="Check-in QR code (visual sample)"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#0b1220"/>${f(0,0)}${f(n-7,0)}${f(0,n-7)}</svg>`}
+
+/* ---------- views ---------- */
+const TABS={
+  member:[['home','My impact'],['events','Events'],['feed','Club feed'],['cert','Certificate']],
+  vol:[['events','Events'],['status','My status']],
+  lead:[['review','Approvals'],['events','Events'],['qr','Check-in QR'],['sector','Sectors']],
+  pres:[['center','Command center'],['roster','Roster'],['over','Overrides'],['export','Export'],['certs','Certificates']]};
+const ROLES=[['pres','Co-President'],['lead','Sector Lead'],['member','Member'],['vol','Volunteer']];
+
+function render(){
+  const r=S.role,tab=S.tab[r];
+  const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length};
+  $('#app').innerHTML=`
+  <header class="top"><div class="top-in">
+    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span>Prototype with sample data</span></div></div>
+    <div class="roles" role="group" aria-label="View the app as">
+      ${roleChoices().map(([k,n])=>`<button data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}
+      ${r==='lead'?`<select aria-label="Sector" data-ch="lsec">${SECT.filter(s=>isPres()||s===S.user.sector).map(s=>`<option ${s===S.lead?'selected':''}>${s}</option>`).join('')}</select>`:''}
+    </div>
+    <div class="row" style="gap:8px">${S.user.role==='admin'?'<button class="btn sm gold" data-act="admin">Admin Panel</button>':''}<span class="small" style="opacity:.85">${esc(S.user.name)}</span><button class="btn sm" data-act="logout">Log out</button></div>
+  </div></header>
+  <main class="wrap">
+    <nav class="tabs" role="tablist">${TABS[r].map(([k,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="tab" data-t="${k}">${n}${(r==='lead'&&k==='review'&&cnt.review)?`<span class="dot">${cnt.review}</span>`:''}${(r==='pres'&&k==='over'&&cnt.over)?`<span class="dot">${cnt.over}</span>`:''}</button>`).join('')}</nav>
+    <div id="view" class="stack" style="gap:16px">${VIEW[r][tab]()}</div>
+    <div class="foot"><span>Switch roles above to try each side of the app. Camera, GPS and QR scanning are simulated in this preview.</span><button class="btn sm" data-act="reset">Reset sample data</button></div>
+  </main>`;
+}
+
+function evCard(e,mode){
+  const mid=mode==='vol'?'v0':'m0';
+  const s=mode==='vol'?null:mySign(e,mid);
+  const mine=L.filter(l=>l.mid===mid&&l.eid===e.id);
+  const full=e.signups.length>=e.cap;
+  const vOpen=e.vol-e.vsign.length;
+  let act='';
+  if(mode==='member'){
+    const slots=e.days||1,used=mine.filter(l=>l.status!=='rejected').length;
+    if(!s)act=`<button class="btn pri" data-act="signup" data-id="${e.id}" ${full?'disabled':''}>${full?'Full':'Sign up'}</button>`;
+    else if(used>=slots)act=`<span class="pill good">All logged</span>`;
+    else act=`<button class="btn gold" data-act="ci" data-id="${e.id}">${e.days?`Check in, day ${used+1}`:'Scan check-in'}</button><button class="btn sm" data-act="unsign" data-id="${e.id}">Leave</button>`;
+  }else if(mode==='vol'){
+    const joined=e.vsign.includes('v0');
+    act=joined?`<span class="pill good">Standby slot booked</span><button class="btn sm" data-act="vleave" data-id="${e.id}">Cancel</button>`:`<button class="btn pri" data-act="vsign" data-id="${e.id}" ${vOpen<=0?'disabled':''}>${vOpen>0?'Take a volunteer slot':'No open slots'}</button>`;
+  }
+  const dots=e.days?`<div class="days" aria-label="Daily check-ins">${Array.from({length:e.days},(_,i)=>{const l=mine.find(x=>x.day===i+1);return`<i class="${l?(l.status==='approved'?'ok':'pd'):''}"></i>`}).join('')}</div>`:'';
+  const names=e.signups.slice(0,8).map(x=>P(x.m).name).join(', ')+(e.signups.length>8?` and ${e.signups.length-8} more`:'');
+  return`<article class="card ev stack">
+    <div class="row between" style="align-items:flex-start"><h3>${esc(e.t)}</h3><span class="pill gold mono">${f1(e.h)} h${e.days?' / day':''}</span></div>
+    <div class="chips"><span class="pill">${e.sec}</span><span class="chip">${e.type==='in'?'In-school':'Out-of-school'}</span>${e.v.map(v=>`<span class="chip">${VLABEL[v]}</span>`).join('')}${e.waiver?'<span class="chip">Waiver required</span>':''}${e.active?'<span class="pill good">Active now</span>':''}</div>
+    <dl class="meta" style="margin:0"><dt>When</dt><dd>${e.date}</dd><dt>Where</dt><dd>${esc(e.loc)}</dd>
+      <dt>Roster</dt><dd>${e.signups.length} of ${e.cap} members${mode==='vol'?`, ${vOpen} volunteer slots open`:''}</dd>
+      ${e.points?`<dt>Zones</dt><dd>${e.points.map(esc).join(' · ')}</dd>`:''}
+      ${s&&s.shift?`<dt>Your booth</dt><dd><b>${s.shift}</b></dd>`:''}
+      ${e.orders?`<dt>Orders</dt><dd>${e.orders.placed} placed, ${e.orders.delivered} delivered</dd>`:''}</dl>
+    <div class="bar"><i style="width:${Math.min(100,e.signups.length/e.cap*100)}%"></i></div>
+    ${dots}
+    ${mode==='vol'?`<details><summary class="small muted" style="cursor:pointer">Public roster</summary><p class="small" style="margin-top:6px">${esc(names)||'No sign-ups yet'}</p></details>`:''}
+    ${mine.length&&mode==='member'&&!e.days?`<p class="small muted">Your log: ${mine.map(l=>l.status).join(', ')}</p>`:''}
+    <div class="row">${act}</div></article>`}
+
+function certHtml(mid){
+  const m=P(mid),H=hrs(mid),projs=[...new Set(L.filter(l=>l.mid===mid&&l.status==='approved').map(l=>EV(l.eid).t))].slice(0,4);
+  const role=m.st==='lead'?`Sector Lead, ${m.sec}`:`Member, ${m.sec} sector`;
+  return`<div class="cert" id="certBox">
+    <div class="eyebrow" style="color:#4a5878">Rotary Interact Club</div>
+    <h2>Certificate of Verified Service</h2>
+    <p style="font-size:13px">This certifies that</p>
+    <div class="big">${esc(m.name)}</div>
+    <p style="font-size:13px">has completed</p>
+    <div class="big mono" style="color:#B26A00">${f1(H.t)} verified hours</div>
+    <p style="font-size:13px">${LV[lvl(H.t)]} · ${esc(role)} · ${f1(H.i)} h in school, ${f1(H.o)} h in the community</p>
+    <ul>${(projs.length?projs:[m.sec+' sector service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+    <div class="sigs"><div><div class="sig">Anujin B.</div><div class="sl">Co-President</div></div><div><div class="sig">Bat-Erdene S.</div><div class="sl">Co-President</div></div></div>
+    <p style="font-size:11px;color:#4a5878">Issued ${new Date().toLocaleDateString([],{year:'numeric',month:'long',day:'numeric'})}. Hours counted only after Sector Lead approval.</p></div>`}
+
+function logRow(l){const e=EV(l.eid);const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
+  return`<div class="row between flat"><div style="min-width:0"><b>${esc(e.t)}${l.day?`, day ${l.day}`:''}</b><div class="small muted">${fmt(l.ts)}${l.ot?` · overtime +${f1(l.ot.hrs)} h (${l.ot.status})`:''}</div></div><div class="row"><span class="mono">${f1(l.h)} h</span><span class="pill ${st}">${l.status}</span></div></div>`}
+
+const VIEW={member:{},vol:{},lead:{},pres:{}};
+
+VIEW.member.home=()=>{
+  const m=P('m0'),H=hrs('m0'),lv=lvl(H.t),goal=30,C=2*Math.PI*54,pct=Math.min(1,H.t/goal);
+  const next=lv<3?LVMIN[lv+1]-H.t:0;
+  const tot=H.i+H.o||1,pi=H.i/tot*100;
+  const my=L.filter(l=>l.mid==='m0').sort((a,b)=>b.ts-a.ts).slice(0,6);
+  return`<section class="card hero">
+    <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg>
+      <div class="c"><b class="mono">${f1(H.t)}</b><span class="small muted">of ${goal} h goal</span></div></div>
+    <div class="stack"><div><div class="eyebrow">Welcome back</div><h2>${esc(m.name)}</h2></div>
+      <p>Level ${lv+1}: <b>${LV[lv]}</b>. ${lv<3?`<b class="mono">${f1(next)} h</b> to reach ${LV[lv+1]}.`:'You are at the top level.'}${H.pen?` <span class="pill warn">${f1(H.pen)} h awaiting approval</span>`:''}</p>
+      <div class="levels">${LV.map((n,i)=>`<div class="${i<lv?'done':i===lv?'on':''}"><b>L${i+1}</b>${LVMIN[i]}${i<3?'–'+LVMIN[i+1]:'+'} h</div>`).join('')}</div></div></section>
+  <div class="grid">
+    <section class="card stack"><h3>Where your hours came from</h3><div class="row">
+      <svg class="pie" viewBox="0 0 42 42" role="img" aria-label="${f1(H.i)} hours in school, ${f1(H.o)} hours out of school"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--gold)" stroke-width="7"/><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--brand)" stroke-width="7" stroke-dasharray="${pi} ${100-pi}" transform="rotate(-90 21 21)"/></svg>
+      <div class="stack" style="gap:6px"><div><span class="pill">In school</span> <b class="mono">${f1(H.i)} h</b></div><div><span class="pill gold">Out of school</span> <b class="mono">${f1(H.o)} h</b></div></div></div></section>
+    <section class="card stack"><h3>Badges</h3>${badges('m0').map(b=>`<div class="badge ${b.v>=b.n?'on':''}"><div class="ic">${b.ic}</div><div style="flex:1;min-width:0"><b>${b.k}</b> ${b.v>=b.n?'<span class="pill gold">Earned</span>':''}<div class="bar gold" style="margin:4px 0"><i style="width:${Math.min(100,b.v/b.n*100)}%"></i></div><div class="small muted">${b.d} · ${f1(Math.min(b.v,b.n))}/${b.n}</div></div></div>`).join('')}</section></div>
+  <section class="card stack"><h3>My recent logs</h3>${my.map(logRow).join('')||'<div class="empty">No logs yet. Sign up for an event and check in.</div>'}</section>`};
+
+VIEW.member.events=()=>{
+  const f=S.filter,list=E.filter(e=>f==='all'||(f==='in'&&e.type==='in')||(f==='out'&&e.type==='out')||(f==='mine'&&mySign(e,'m0')));
+  return`<div class="filters" role="group" aria-label="Filter events">${[['all','All'],['in','In school'],['out','Out of school'],['mine','My events']].map(([k,n])=>`<button data-act="filter" data-f="${k}" aria-pressed="${f===k}">${n}</button>`).join('')}</div>
+  <div class="grid">${list.map(e=>evCard(e,'member')).join('')||'<div class="empty">Nothing here yet.</div>'}</div>`};
+
+VIEW.member.feed=()=>{
+  const items=L.filter(l=>l.status==='approved'&&!l.fl).sort((a,b)=>b.ts-a.ts);
+  return`<p class="muted">Verified work from club members. Only you and other members see this feed.</p><div class="grid g3">${items.map(l=>{const e=EV(l.eid),m=P(l.mid);
+    return`<article class="card stack">${l.ph?`<img class="photo" src="${l.ph}" alt="Sample on-site photo for ${esc(e.t)}">`:`<div class="linkbox">Work file<br>${esc(l.link||'')}</div>`}
+    <div><b>${esc(m.name)}</b> <span class="small muted">${fmt(l.ts)}</span><div class="small">${esc(e.t)}${l.day?`, day ${l.day}`:''} · <span class="mono">${f1(l.h)} h</span></div></div>
+    <div class="row"><button class="btn sm" data-act="cheer" data-id="${l.id}" aria-pressed="${l.cheer.includes('m0')}">${l.cheer.includes('m0')?'Cheered':'Cheer'} · ${l.cheer.length}</button><button class="btn sm bad" data-act="flag" data-id="${l.id}">Flag log</button></div>
+    ${l.cm.map(c=>`<div class="small flat"><b>${esc(c.n)}</b> ${esc(c.t)}</div>`).join('')}
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="cm-${l.id}" placeholder="Add a comment" aria-label="Comment"><button class="btn sm" data-act="comment" data-id="${l.id}">Post</button></div></article>`}).join('')}</div>`};
+
+VIEW.member.cert=()=>`<div class="card stack"><div class="row between"><h3>Your verified service certificate</h3><button class="btn pri" data-act="copycert" data-m="m0">Copy summary</button></div>${certHtml('m0')}<p class="small muted">The final app exports this as a signed PDF. This preview shows the layout and the numbers it will carry.</p></div>`;
+
+VIEW.vol.events=()=>`<p class="muted">You are on the keeplist. Browse the public rosters and take an open volunteer slot.</p><div class="grid">${E.map(e=>evCard(e,'vol')).join('')}</div>`;
+VIEW.vol.status=()=>{const m=P('v0');return`<section class="card stack"><div class="eyebrow">Standby status</div><h2>${esc(m.name)}</h2><p>You are a volunteer on the keeplist. You can see rosters and sign up for open volunteer slots. Check-in, hour logging and badges unlock when the Co-Presidents move you to Active.</p>
+  <div class="row">${m.st!=='keep'?'<span class="pill good">Promoted to Active</span>':m.req?'<span class="pill warn">Promotion requested</span>':`<button class="btn gold" data-act="promo">Request promotion to Active</button>`}</div></section>`};
+
+function groupReview(sec){
+  const ls=pending(sec);if(!ls.length)return`<div class="empty">No pending hours for the ${sec} sector.</div>`;
+  const by={};ls.forEach(l=>(by[l.eid]=by[l.eid]||[]).push(l));
+  return Object.keys(by).map(eid=>{const e=EV(eid);return`<section class="card stack"><div class="row between"><div><h3>${esc(e.t)}</h3><span class="small muted">${by[eid].length} submitted · ${f1(e.h)} h each</span></div><button class="btn pri" data-act="apprall" data-id="${eid}" data-s="${sec}">Approve all (${by[eid].length})</button></div>
+    <div class="grid g3" style="gap:12px">${by[eid].map(l=>`<div class="stack" style="gap:6px"><div class="tile-photo">${l.ph?`<img class="photo" src="${l.ph}" alt="On-site capture by ${esc(P(l.mid).name)}">`:`<div class="linkbox">Submitted link<br>${esc(l.link)}</div>`}</div>
+      <div class="row between"><b>${esc(P(l.mid).name)}${l.day?` · day ${l.day}`:''}</b><span class="small muted">${fmt(l.ts)}</span></div>
+      ${l.ot?`<span class="pill gold">Overtime request goes to Co-President</span>`:''}
+      <div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')}</div></section>`}).join('')}
+
+VIEW.lead.review=()=>{const ld=leadOf(S.lead);return`<div><div class="eyebrow">${S.lead} sector</div><h2>Hours waiting for you${ld?`, ${esc(ld.name)}`:''}</h2></div>${groupReview(S.lead)}`};
+
+VIEW.lead.events=()=>{
+  const mine=E.filter(e=>e.sec===S.lead);
+  return`<section class="card stack"><h3>Create a ${S.lead} event</h3><p class="small muted">Sector Leads can only create events for their own sector. Hours are set here, so members cannot type their own.</p>
+   <div class="grid g3" style="gap:10px"><label>Title<input type="text" id="nf-t" placeholder="e.g. Library Book Drive"></label>
+   <label>Pre-set hours<input type="number" id="nf-h" value="2" min="0.5" max="8" step="0.5"></label>
+   <label>Capacity<input type="number" id="nf-c" value="12" min="1" max="60"></label>
+   <label>Location<input type="text" id="nf-l" placeholder="Venue name"></label>
+   <label>Date<input type="text" id="nf-d" placeholder="e.g. Nov 14"></label>
+   <label>Type<select id="nf-y"><option value="in">In-school</option><option value="out">Out-of-school</option></select></label></div>
+   <div class="row"><label class="ck"><input type="checkbox" id="nf-g" checked>GPS 200 m</label><label class="ck"><input type="checkbox" id="nf-q" checked>Live QR</label><label class="ck"><input type="checkbox" id="nf-s" checked>Live photo</label><label class="ck"><input type="checkbox" id="nf-k">Work link</label><label class="ck"><input type="checkbox" id="nf-w">Waiver</label></div>
+   <div><button class="btn pri" data-act="newev">Publish event</button></div></section>
+  <h3>${S.lead} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}${e.orders?`<div class="card stack"><h4>Order tracker</h4><div class="row between"><span class="mono">${e.orders.placed} placed · ${e.orders.delivered} delivered</span><button class="btn sm" data-act="deliv" data-id="${e.id}">Log a delivery</button></div><div class="bar good"><i style="width:${e.orders.delivered/e.orders.placed*100}%"></i></div></div>`:''}</div>`).join('')}</div>`};
+
+VIEW.lead.qr=()=>{
+  const mine=E.filter(e=>e.sec===S.lead&&e.v.includes('qr'));
+  if(!mine.length)return`<div class="empty">No events in this sector use a live QR yet.</div>`;
+  S.qrE=S.qrE&&mine.find(e=>e.id===S.qrE)?S.qrE:mine[0].id;
+  const c=code(S.qrE,win());
+  return`<section class="card qrwrap"><label style="width:100%;max-width:420px">Event<select data-ch="qre">${mine.map(e=>`<option value="${e.id}" ${e.id===S.qrE?'selected':''}>${esc(e.t)}</option>`).join('')}</select></label>
+   <div class="qrbox" id="qrSvg">${qrSvg(c)}</div><div class="code" id="qrCode">${c}</div>
+   <div style="width:min(100%,280px)"><div class="bar gold"><i id="qrBar" style="width:100%"></i></div><p class="small muted" style="margin-top:6px;text-align:center">Changes every 30 seconds, so a photo of this screen is useless to absent members. <span id="qrSec" class="mono"></span></p></div></section>`};
+
+function leaderboard(){const t=secTotals(),mx=Math.max(...Object.values(t)),order=SECT.slice().sort((a,b)=>t[b]-t[a]);
+  return`<section class="card stack"><div class="row between"><h3>Sector leaderboard</h3><span class="pill gold">Sector of the Month: ${order[0]}</span></div>${order.map(s=>`<div><div class="row between"><b>${s}</b><span class="mono">${f1(t[s])} h</span></div><div class="bar ${s===order[0]?'gold':''}"><i style="width:${t[s]/mx*100}%"></i></div></div>`).join('')}</section>`}
+VIEW.lead.sector=()=>{const ms=M.filter(m=>m.sec===S.lead&&m.st!=='keep').map(m=>({m,h:hrs(m.id)})).sort((a,b)=>b.h.t-a.h.t).slice(0,10);
+  return`${leaderboard()}<section class="card stack"><h3>${S.lead} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')}</tbody></table></div></section>`};
+
+VIEW.pres.center=()=>{
+  const act=M.filter(m=>m.st!=='keep'),tot=act.reduce((a,m)=>a+hrs(m.id).t,0),dist=[0,0,0,0];act.forEach(m=>dist[lvl(hrs(m.id).t)]++);
+  const T=(v,l)=>`<div class="card tile"><b>${v}</b><span>${l}</span></div>`;
+  return`<div><div class="eyebrow">Co-President dashboard</div><h2>Command center</h2></div>
+  <div class="grid g3" style="gap:12px">${T(Math.round(tot).toLocaleString(),'Total club hours')}${T(act.length,'Active members')}${T(M.filter(m=>m.st==='keep').length,'On the keeplist')}${T(pending().length,'Pending approvals')}${T(flagged().length,'Flagged entries')}${T(E.filter(e=>e.active).length,'Events active')}</div>
+  <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn" data-act="tab" data-t="over">Overrides</button><button class="btn gold" data-act="tab" data-t="export">Export report</button></div>
+  <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${dist[i]}</b></div><div class="bar"><i style="width:${dist[i]/act.length*100}%"></i></div></div>`).join('')}</section></div>`};
+
+function rosterRows(){const q=S.q.toLowerCase();
+  return M.filter(m=>!q||m.name.toLowerCase().includes(q)).map(m=>{const H=hrs(m.id);
+  return`<tr><td>${esc(m.name)} ${m.req&&m.st==='keep'?'<span class="pill warn">Requested</span>':''}</td>
+  <td><select data-ch="mst" data-id="${m.id}" aria-label="Status for ${esc(m.name)}"><option value="active" ${m.st==='active'?'selected':''}>Active member</option><option value="lead" ${m.st==='lead'?'selected':''}>Sector lead</option><option value="keep" ${m.st==='keep'?'selected':''}>Keeplist</option></select></td>
+  <td>${m.sec}</td><td class="n mono">${f1(H.t)}</td><td>L${lvl(H.t)+1}</td></tr>`}).join('')}
+VIEW.pres.roster=()=>{const req=M.filter(m=>m.st==='keep'&&m.req);
+  return`<h2>Roster</h2>${req.length?`<section class="card stack"><h3>Promotion requests</h3>${req.map(m=>`<div class="row between flat"><b>${esc(m.name)}</b><button class="btn sm pri" data-act="promote" data-id="${m.id}">Promote to Active</button></div>`).join('')}</section>`:''}
+  <input type="search" data-in="q" placeholder="Search members" value="${esc(S.q)}" aria-label="Search members" id="rq">
+  <div class="tbl"><table><thead><tr><th>Name</th><th>Status</th><th>Sector</th><th class="n">Hours</th><th>Level</th></tr></thead><tbody id="rbody">${rosterRows()}</tbody></table></div>`};
+
+VIEW.pres.over=()=>{
+  const ots=otReq(),pl=pending(),fl=flagged();
+  return`<h2>Overrides and review</h2>
+  <section class="card stack"><h3>Extended shift requests</h3>${ots.map(l=>`<div class="flat stack"><div class="row between"><b>${esc(P(l.mid).name)} · ${esc(EV(l.eid).t)}</b><span class="pill gold mono">+${f1(l.ot.hrs)} h</span></div><p class="small">${esc(l.ot.reason)}</p><div class="row"><button class="btn sm pri" data-act="otok" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="otno" data-id="${l.id}">Deny</button></div></div>`).join('')||'<div class="empty">No overtime requests.</div>'}</section>
+  <section class="card stack"><h3>Flagged entries</h3>${fl.map(l=>`<div class="flat row between"><div>${logRow(l).replace('flat','')}</div><div class="row"><button class="btn sm" data-act="fkeep" data-id="${l.id}">Dismiss flag</button><button class="btn sm bad" data-act="fdel" data-id="${l.id}">Remove hours</button></div></div>`).join('')||'<div class="empty">No flagged entries. Flags from the club feed are anonymous and land here.</div>'}</section>
+  <section class="card stack"><h3>All pending approvals</h3>${pl.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(P(l.mid).name)}</b> <span class="small muted">${esc(EV(l.eid).t)} · ${EV(l.eid).sec} lead</span></div><div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')||'<div class="empty">Nothing pending.</div>'}</section>`};
+
+function csvRows(){return M.filter(m=>(S.exSec==='all'||m.sec===S.exSec)&&(S.exSt==='all'||m.st===S.exSt)).map(m=>{const H=hrs(m.id);return[m.id,m.name,m.st,m.sec,f1(H.i),f1(H.o),f1(H.t),'L'+(lvl(H.t)+1)]})}
+function csvText(){return[['id','name','status','sector','in_school_hrs','out_of_school_hrs','total_hrs','level'],...csvRows()].map(r=>r.join(',')).join('\n')}
+VIEW.pres.export=()=>`<h2>Export Rotary report</h2><section class="card stack"><div class="grid g3" style="gap:10px"><label>Sector<select data-ch="exs"><option value="all">All sectors</option>${SECT.map(s=>`<option ${S.exSec===s?'selected':''}>${s}</option>`).join('')}</select></label>
+  <label>Status<select data-ch="exst">${[['all','All'],['active','Active'],['lead','Sector leads'],['keep','Keeplist']].map(([k,n])=>`<option value="${k}" ${S.exSt===k?'selected':''}>${n}</option>`).join('')}</select></label></div>
+  <p class="small muted">${csvRows().length} rows. Copy the CSV and paste it into Excel or Sheets. File downloads are not available in this preview.</p>
+  <textarea id="csv" rows="9" readonly class="mono" style="font-size:12px">${esc(csvText())}</textarea><div><button class="btn pri" data-act="copycsv">Copy CSV</button></div></section>`;
+VIEW.pres.certs=()=>`<h2>Verified certificates</h2><label style="max-width:320px">Member<select data-ch="certm">${M.filter(m=>m.st!=='keep').map(m=>`<option value="${m.id}" ${S.certM===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></label><div class="card">${certHtml(S.certM)}</div>`;
+
+/* ---------- modals ---------- */
+function modal(h,wide){$('#modal').innerHTML=h?`<div class="scrim"><div class="sheet${wide?' wide':''}" role="dialog" aria-modal="true">${h}</div></div>`:''}
+function closeModal(){CI=null;S.pend=null;modal('')}
+function steps(e){return[...e.v,'review']}
+const STITLE={gps:'Confirm your location',qr:'Scan the live code',selfie:'Take a live photo',link:'Attach your work',review:'Review and submit'};
+function ciValid(){const e=EV(CI.eid),k=steps(e)[CI.i];
+  if(k==='gps')return CI.dist<=200;
+  if(k==='qr'){const c=(CI.code||'').trim();return c===code(e.id,win())||c===code(e.id,win()-1)}
+  if(k==='selfie')return !!CI.photo;
+  if(k==='link')return (CI.link||'').trim().length>=8&&CI.link.includes('.');
+  if(k==='review')return !CI.ot||((CI.reason||'').trim().length>=15);
+  return true}
+function ciRender(){
+  const e=EV(CI.eid),st=steps(e),k=st[CI.i];let b='';
+  if(k==='gps')b=`<p>Check-in unlocks within 200 m of <b>${esc(e.loc)}</b>.</p>${e.points?`<div class="chips">${e.points.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
+    <div class="flat stack"><label>Preview control: pretend you are this far away<input type="range" min="0" max="500" step="10" value="${CI.dist}" data-in="dist"></label><div class="row between"><b class="mono" id="dval">${CI.dist} m</b><span id="dmsg"></span></div></div>`;
+  if(k==='qr')b=`<p>Scan the code on the Sector Lead's screen. It changes every 30 seconds.</p><label>Code<input type="text" inputmode="numeric" maxlength="6" id="ccode" data-in="code" value="${esc(CI.code||'')}" placeholder="6 digits" class="mono" autocomplete="off"></label><div class="row"><span id="cmsg" class="small"></span><button class="btn sm" data-act="democode">Fill from lead screen</button></div>`;
+  if(k==='selfie')b=CI.photo?`<img class="photo" src="${CI.photo}" alt="Your captured photo"><div class="row"><button class="btn sm" data-act="retake">Retake</button><span class="pill good">Captured live</span></div>`:`<div class="cam"><div><b>Live camera</b><p style="margin-top:6px">The real app opens the native camera. Gallery and file uploads are switched off.</p></div></div><button class="btn gold" data-act="snap">Capture photo</button>`;
+  if(k==='link')b=`<p>This task is logged as off-site work. Add the file or link so the lead can review it.</p><label>Link to your work<input type="text" data-in="link" id="clink" value="${esc(CI.link||'')}" placeholder="drive.google.com/..."></label>`;
+  if(k==='review'){const tot=e.h+(CI.ot?CI.otH:0);
+    b=`<div class="flat stack"><b>${esc(e.t)}${e.days?`, day ${L.filter(l=>l.mid==='m0'&&l.eid===e.id).length+1}`:''}</b><div class="row between"><span class="muted">Pre-set hours</span><b class="mono">${f1(e.h)} h</b></div>${CI.ot?`<div class="row between"><span class="muted">Extended shift (needs Co-President)</span><b class="mono">+${f1(CI.otH)} h</b></div>`:''}</div>
+    <label class="ck"><input type="checkbox" data-ch="ot" ${CI.ot?'checked':''}>Request an extended shift</label>
+    ${CI.ot?`<label>Extra hours<select data-ch="oth">${[.5,1,1.5,2,3].map(n=>`<option ${n===CI.otH?'selected':''}>${n}</option>`).join('')}</select></label><label>Why did you stay longer?<textarea rows="3" data-in="reason" id="creason">${esc(CI.reason||'')}</textarea></label>`:''}
+    <p class="small muted">Goes to the ${e.sec} Sector Lead for approval. Hours cannot be typed in by members.</p>`}
+  const last=CI.i===st.length-1;
+  modal(`<div class="row between"><div><div class="eyebrow">${esc(e.t)}</div><h3>${STITLE[k]}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+   <div class="steps">${st.map((_,i)=>`<i class="${i<CI.i?'done':i===CI.i?'on':''}"></i>`).join('')}</div>${b}
+   <div class="row between"><button class="btn" data-act="ciback" ${CI.i===0?'disabled':''}>Back</button><button class="btn pri" id="cinext" data-act="${last?'cisub':'cinext'}">${last?'Submit for approval':'Continue'}</button></div>`);
+  ciSync()}
+function ciSync(){if(!CI)return;const ok=ciValid(),n=$('#cinext');if(n)n.disabled=!ok;
+  const e=EV(CI.eid),k=steps(e)[CI.i];
+  if(k==='gps'){$('#dval').textContent=CI.dist+' m';$('#dmsg').innerHTML=CI.dist<=200?'<span class="pill good">Inside the fence</span>':`<span class="pill bad">${CI.dist-200} m too far</span>`}
+  if(k==='qr'){const c=(CI.code||'').trim();$('#cmsg').innerHTML=c.length<6?'':(ok?'<span class="pill good">Code accepted</span>':'<span class="pill bad">Wrong or expired code</span>')}}
+
+/* ---------- actions ---------- */
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
+function setStatus(l,st){const m=P(l.mid),b=hrs(l.mid).t;l.status=st;const a=hrs(l.mid).t;
+  if(st==='approved')toast(`Approved ${f1(l.h)} h for ${m.name}${lvl(a)>lvl(b)?`. Level up: ${LV[lvl(a)]}`:''}`);else toast('Entry rejected')}
+function waiverModal(id){const e=EV(id);S.pend=id;modal(`<div class="row between"><div><div class="eyebrow">Required before check-in</div><h3>Participation waiver</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+  <p>${esc(e.t)} involves contact with animals or children. By signing, you agree to follow the host's safety rules, stay with your team, take no photos of children without a lead's approval, and follow volunteer conduct guidelines.</p>
+  <label>Type your full name<input type="text" id="wname" data-in="wname" autocomplete="off"></label>
+  <label class="ck"><input type="checkbox" id="wok" data-ch="wok">I have read and agree to the waiver</label>
+  <button class="btn pri" id="wgo" data-act="wsign" disabled>Sign and join</button>`)}
+function doSign(id){const e=EV(id);if(e.signups.length>=e.cap)return toast('This event is full');
+  let shift=null;if(e.shifts){const c=e.shifts.map(s=>[s,e.signups.filter(x=>x.shift===s).length]).sort((a,b)=>a[1]-b[1]);shift=c[0][0]}
+  e.signups.push({m:'m0',shift});toast('You are signed up'+(shift?`. Booth: ${shift}`:''));render()}
+
+const A={
+ async logout(){try{await api('/api/auth/logout','POST')}catch(e){}S.user=null;modal('');authView('login')},
+ authswitch(d){authView(d.m)},
+ async admin(){ADM.q='';modal('<p class="muted">Loading users...</p>',true);
+  try{ADM.users=(await api('/api/admin/users')).users;admDraw()}catch(x){modal(`<p class="err">${esc(x.message)}</p><button class="btn" data-act="cic">Close</button>`)}},
+ async admsave(d,btn){
+  const tr=btn.closest('tr'),id=Number(d.id),sel=tr.querySelectorAll('select');
+  btn.disabled=true;btn.textContent='Saving...';
+  try{const {user}=await api('/api/admin/update-role','POST',{targetUserId:id,newRole:sel[0].value,sector:sel[1].value||null});
+   const i=ADM.users.findIndex(u=>u.id===id);if(i>-1)ADM.users[i]={...ADM.users[i],...user};
+   tr.outerHTML=admRowHtml(ADM.users[i]||user);admFilter();toast(user.name+' is now '+roleLabel(user.role))}
+  catch(x){btn.disabled=false;btn.textContent='Save';toast(x.message)}},
+ role(d){S.role=d.r;render()}, tab(d){S.tab[S.role]=d.t;render()}, filter(d){S.filter=d.f;render()},
+ reset(){const u=S.user;init();applyUser(u);CI=null;modal('');render();toast('Sample data reset')},
+ signup(d){const e=EV(d.id);if(e.waiver&&!S.waived[d.id])waiverModal(d.id);else doSign(d.id)},
+ wsign(){S.waived[S.pend]=true;const id=S.pend;closeModal();doSign(id)},
+ unsign(d){const e=EV(d.id);e.signups=e.signups.filter(s=>s.m!=='m0');render()},
+ vsign(d){const e=EV(d.id);if(e.vol-e.vsign.length>0){e.vsign.push('v0');toast('Volunteer slot booked');render()}},
+ vleave(d){const e=EV(d.id);e.vsign=e.vsign.filter(x=>x!=='v0');render()},
+ promo(){P('v0').req=true;toast('Request sent to the Co-Presidents');render()},
+ promote(d){const m=P(d.id);m.st='active';m.req=false;toast(m.name+' is now an Active member');render()},
+ ci(d){CI={eid:d.id,i:0,dist:320,code:'',photo:null,link:'',ot:false,otH:1,reason:''};ciRender()},
+ cic(){closeModal()},
+ cinext(){if(ciValid()){CI.i++;ciRender()}}, ciback(){if(CI.i>0){CI.i--;ciRender()}},
+ democode(){CI.code=code(CI.eid,win());const i=$('#ccode');if(i)i.value=CI.code;ciSync()},
+ snap(){const e=EV(CI.eid);CI.photo=photo(Date.now()%100000,e.t,Date.now());ciRender()},
+ retake(){CI.photo=null;ciRender()},
+ cisub(){if(!ciValid())return;const e=EV(CI.eid),ts=Date.now();const prev=L.filter(l=>l.mid==='m0'&&l.eid===e.id).length;
+   L.push({id:'l'+(++lid),mid:'m0',eid:e.id,h:e.h,status:'pending',ts,ph:CI.photo,link:CI.link||null,day:e.days?prev+1:undefined,ot:CI.ot?{hrs:CI.otH,reason:CI.reason.trim(),status:'pending'}:null,fl:false,cheer:[],cm:[]});
+   closeModal();render();toast(`Sent to the ${e.sec} lead for approval`)},
+ appr(d){setStatus(L.find(l=>l.id===d.id),'approved');render()}, rej(d){setStatus(L.find(l=>l.id===d.id),'rejected');render()},
+ apprall(d){const ls=pending(d.s).filter(l=>l.eid===d.id);ls.forEach(l=>l.status='approved');toast(`Approved ${ls.length} logs in one tap`);render()},
+ otok(d){const l=L.find(x=>x.id===d.id);l.ot.status='approved';toast('Extended shift approved');render()}, otno(d){L.find(x=>x.id===d.id).ot.status='denied';render()},
+ cheer(d){const l=L.find(x=>x.id===d.id);l.cheer=l.cheer.includes('m0')?l.cheer.filter(x=>x!=='m0'):[...l.cheer,'m0'];render()},
+ comment(d){const i=$('#cm-'+d.id);if(i&&i.value.trim()){L.find(x=>x.id===d.id).cm.push({n:'Nomin B.',t:i.value.trim()});render()}},
+ flag(d){L.find(x=>x.id===d.id).fl=true;toast('Flag sent privately to the Co-Presidents');render()},
+ fkeep(d){L.find(x=>x.id===d.id).fl=false;render()}, fdel(d){const l=L.find(x=>x.id===d.id);l.fl=false;l.status='rejected';toast('Hours removed');render()},
+ deliv(d){const e=EV(d.id);if(e.orders.delivered<e.orders.placed)e.orders.delivered++;render()},
+ newev(){const v=id=>$('#'+id),t=v('nf-t').value.trim();if(!t)return toast('Add a title first');
+   const ver=[];if(v('nf-g').checked)ver.push('gps');if(v('nf-q').checked)ver.push('qr');if(v('nf-s').checked)ver.push('selfie');if(v('nf-k').checked)ver.push('link');
+   if(!ver.length)return toast('Pick at least one verification method');
+   E.push({id:'e'+(E.length+20),t,sec:S.lead,h:Math.max(.5,+v('nf-h').value||1),cap:Math.max(1,+v('nf-c').value||10),loc:v('nf-l').value.trim()||'To be announced',date:v('nf-d').value.trim()||'Date to be set',type:v('nf-y').value,v:ver,waiver:v('nf-w').checked,vol:2,active:true,signups:[],vsign:[]});
+   toast('Event published to members');render()},
+ copycsv(){cp(csvText(),$('#csv'))}, copycert(d){const m=P(d.m),H=hrs(d.m);cp(`${m.name}: ${f1(H.t)} verified hours (${f1(H.i)} in school, ${f1(H.o)} community). ${LV[lvl(H.t)]}.`)}
+};
+function cp(t,el){try{navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>{if(el)el.select();toast('Press Ctrl+C to copy')})}catch(e){if(el)el.select();toast('Press Ctrl+C to copy')}}
+const IN_={
+ admq(v){ADM.q=v;admFilter()},
+ q(v){S.q=v;$('#rbody').innerHTML=rosterRows()},
+ dist(v){CI.dist=+v;ciSync()}, code(v){CI.code=v;ciSync()}, link(v){CI.link=v;ciSync()}, reason(v){CI.reason=v;ciSync()},
+ wname(v){$('#wgo').disabled=!(v.trim().length>2&&$('#wok').checked)}};
+const CH={
+ admrole(v,t){t.closest('tr').querySelectorAll('select')[1].disabled=v!=='lead'},
+ lsec(v){S.lead=v;S.qrE=null;render()}, qre(v){S.qrE=v;render()},
+ mst(v,t,d){const m=P(d.id);m.st=v;toast(m.name+' updated');},
+ exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;render()},
+ ot(v,t){CI.ot=t.checked;ciRender()}, oth(v){CI.otH=+v;ciRender()},
+ wok(v,t){$('#wgo').disabled=!(t.checked&&$('#wname').value.trim().length>2)}};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t&&IN_[t.dataset.in])IN_[t.dataset.in](t.value,t)});
+document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)closeModal()});
+
+/* live QR refresh without redrawing the page */
+setInterval(()=>{const c=$('#qrCode');if(!c||!S.qrE)return;const sec=30-(Date.now()/1000%30),n=code(S.qrE,win());
+  if(c.textContent!==n){c.textContent=n;$('#qrSvg').innerHTML=qrSvg(n)}$('#qrBar').style.width=(sec/30*100)+'%';$('#qrSec').textContent=Math.ceil(sec)+' s left'},500);
+
+/* ---------- accounts (talks to the Express backend) ---------- */
+async function api(path,method='GET',body){
+  const r=await fetch(path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(data.error||'Request failed'),{status:r.status});
+  return data}
+
+/* DB role -> the prototype's view key */
+const ROLE_MAP={admin:'pres',pres:'pres',lead:'lead',member:'member',volunteer:'vol'};
+const isPres=()=>['pres','admin'].includes(S.user.role);
+/* Co-Presidents can preview every view; everyone else is locked to their own */
+const roleChoices=()=>isPres()?ROLES:ROLES.filter(([k])=>k===ROLE_MAP[S.user.role]);
+
+/* Point the sample data at the real account until events/logs move to the API */
+function applyUser(u){
+  S.user=u;S.role=ROLE_MAP[u.role]||'vol';if(u.sector)S.lead=u.sector;
+  P('m0').name=u.name;P('v0').name=u.name}
+
+function authView(mode,msg){
+  const reg=mode==='register';
+  $('#app').innerHTML=`<div class="authwrap"><form class="card stack authcard" id="authForm" data-mode="${mode}" novalidate>
+    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
+    ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
+    <label>Email<input type="email" name="email" autocomplete="email"></label>
+    <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
+    ${reg?'<p class="small muted">At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>':''}
+    <div class="err" id="authErr" role="alert">${esc(msg||'')}</div>
+    <button class="btn pri" type="submit">${reg?'Create account':'Log in'}</button>
+    <button class="btn" type="button" data-act="authswitch" data-m="${reg?'login':'register'}">${reg?'I already have an account':'Create an account'}</button>
+  </form></div>`;
+  const first=$('#authForm input');if(first)first.focus()}
+
+document.addEventListener('submit',async e=>{
+  const f=e.target.closest('#authForm');if(!f)return;e.preventDefault();
+  const btn=f.querySelector('[type=submit]'),err=$('#authErr');btn.disabled=true;err.textContent='';
+  try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',Object.fromEntries(new FormData(f)));
+    applyUser(user);render();toast('Welcome, '+user.name)}
+  catch(x){err.textContent=x.message;btn.disabled=false}});
+
+/* ---------- admin: user role management ---------- */
+const ADM={users:[],q:''};
+const ADM_ROLES=[['volunteer','Volunteer'],['member','Member'],['lead','Sector Lead'],['pres','Co-President'],['admin','Admin']];
+const roleLabel=r=>(ADM_ROLES.find(x=>x[0]===r)||[r,r])[1];
+
+function admRowHtml(u){
+  const me=u.id===S.user.id;
+  return `<tr data-uid="${u.id}" data-s="${esc((u.name+' '+u.email).toLowerCase())}">
+   <td><b>${esc(u.name)}</b>${me?' <span class="pill">you</span>':''}</td>
+   <td class="small">${esc(u.email)}</td>
+   <td><span class="pill ${u.role==='admin'?'gold':u.role==='volunteer'?'':'good'}">${esc(roleLabel(u.role))}</span></td>
+   <td><select class="admsel" aria-label="New role for ${esc(u.name)}" data-ch="admrole" ${me?'disabled title="You cannot change your own role"':''}>
+     ${ADM_ROLES.map(([k,n])=>`<option value="${k}" ${k===u.role?'selected':''}>${n}</option>`).join('')}</select></td>
+   <td><select class="admsel" aria-label="Sector for ${esc(u.name)}" ${u.role==='lead'&&!me?'':'disabled'}>
+     <option value="">None</option>${SECT.map(s=>`<option ${s===u.sector?'selected':''}>${s}</option>`).join('')}</select></td>
+   <td><button class="btn sm pri" data-act="admsave" data-id="${u.id}" ${me?'disabled':''}>Save</button></td></tr>`}
+
+function admDraw(){
+  modal(`<div class="row" style="justify-content:space-between"><b style="font-size:17px">Admin: user roles</b><button class="btn sm" data-act="cic">Close</button></div>
+   <input type="search" placeholder="Search by name or email" aria-label="Search users" data-in="admq" value="${esc(ADM.q)}">
+   <div class="small muted" id="admCount"></div>
+   <div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Current role</th><th>New role</th><th>Sector</th><th></th></tr></thead>
+    <tbody id="admRows">${ADM.users.map(admRowHtml).join('')}</tbody></table></div>
+   <div id="admNone" class="empty" hidden>No users match your search.</div>
+   <p class="small muted">Sector is only used for Sector Leads. You cannot change your own role.</p>`,true);
+  admFilter()}
+
+/* Hide rows instead of rebuilding them, so unsaved dropdown choices survive while searching. */
+function admFilter(){
+  const q=ADM.q.trim().toLowerCase();let n=0;
+  document.querySelectorAll('#admRows tr').forEach(tr=>{const hit=!q||tr.dataset.s.includes(q);tr.hidden=!hit;if(hit)n++});
+  const c=$('#admCount');if(c)c.textContent=n+' of '+ADM.users.length+' users';
+  const none=$('#admNone');if(none)none.hidden=n>0}
+
+async function boot(){
+  try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render()}else authView('login')}
+  catch(e){authView('login',e.status?'Server error ('+e.status+'). Please try again.':'Cannot reach the server. Is it running?')}}
+boot();
+</script>
+
+</body></html>
