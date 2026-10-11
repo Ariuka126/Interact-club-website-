@@ -346,7 +346,7 @@ function certHtml(mid){
     <div class="big mono" style="color:#B26A00">${f1(H.t)} verified hours</div>
     <p style="font-size:13px">${LV[lvl(H.t)]} · ${esc(role)} · ${f1(H.i)} h in school, ${f1(H.o)} h in the community</p>
     <ul>${(projs.length?projs:[m.sec+' sector service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
-    <div class="sigs"><div><div class="sig">Anujin B.</div><div class="sl">Co-President</div></div><div><div class="sig">Bat-Erdene S.</div><div class="sl">Co-President</div></div></div>
+    <div class="sigs"><div><div class="sig">Tergelsaran S.</div><div class="sl">President</div></div><div><div class="sig">Bilguun G S.</div><div class="sl">Vice-President</div></div></div>
     <p style="font-size:11px;color:#4a5878">Issued ${new Date().toLocaleDateString([],{year:'numeric',month:'long',day:'numeric'})}. Hours counted only after Sector Lead approval.</p></div>`}
 
 function logRow(l){const e=EV(l.eid);const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
