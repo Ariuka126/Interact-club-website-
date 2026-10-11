@@ -346,7 +346,7 @@ function certHtml(mid){
     <div class="big mono" style="color:#B26A00">${f1(H.t)} verified hours</div>
     <p style="font-size:13px">${LV[lvl(H.t)]} · ${esc(role)} · ${f1(H.i)} h in school, ${f1(H.o)} h in the community</p>
     <ul>${(projs.length?projs:[m.sec+' sector service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
-    <div class="sigs"><div><div class="sig">Anujin B.</div><div class="sl">Co-President</div></div><div><div class="sig">Bat-Erdene S.</div><div class="sl">Co-President</div></div></div>
+    <div class="sigs"><div><div class="sig">Tergelsaran S.</div><div class="sl">President</div></div><div><div class="sig">Bilguun G.</div><div class="sl">Co-President</div></div></div>
     <p style="font-size:11px;color:#4a5878">Issued ${new Date().toLocaleDateString([],{year:'numeric',month:'long',day:'numeric'})}. Hours counted only after Sector Lead approval.</p></div>`}
 
 function logRow(l){const e=EV(l.eid);const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
@@ -650,10 +650,29 @@ function admFilter(){
   const c=$('#admCount');if(c)c.textContent=n+' of '+ADM.users.length+' users';
   const none=$('#admNone');if(none)none.hidden=n>0}
 
-async function boot(){
-  try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render()}else authView('login')}
-  catch(e){authView('login',e.status?'Server error ('+e.status+'). Please try again.':'Cannot reach the server. Is it running?')}}
-boot();
+async function boot() {
+  try {
+    const { user } = await api('/api/auth/me');
+    if (!user) {
+      authView('login');
+      return;
+    }
+    applyUser(user);
+    render();
+  } catch (e) {
+    if (e.status === 401) {
+      authView('login');
+      return;
+    }
+    authView(
+      'login',
+      e.status
+        ? `Server error (${e.status}). Please try again.`
+        : 'Cannot reach the server. Is it running?'
+    );
+  }
+}
+boot();   
 </script>
 
 </body></html>
