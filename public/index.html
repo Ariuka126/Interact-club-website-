@@ -346,7 +346,7 @@ function certHtml(mid){
     <div class="big mono" style="color:#B26A00">${f1(H.t)} verified hours</div>
     <p style="font-size:13px">${LV[lvl(H.t)]} · ${esc(role)} · ${f1(H.i)} h in school, ${f1(H.o)} h in the community</p>
     <ul>${(projs.length?projs:[m.sec+' sector service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
-    <div class="sigs"><div><div class="sig">Tergelsaran S.</div><div class="sl">President</div></div><div><div class="sig">Bilguun G S.</div><div class="sl">Vice-President</div></div></div>
+    <div class="sigs"><div><div class="sig">Anujin B.</div><div class="sl">Co-President</div></div><div><div class="sig">Bat-Erdene S.</div><div class="sl">Co-President</div></div></div>
     <p style="font-size:11px;color:#4a5878">Issued ${new Date().toLocaleDateString([],{year:'numeric',month:'long',day:'numeric'})}. Hours counted only after Sector Lead approval.</p></div>`}
 
 function logRow(l){const e=EV(l.eid);const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
@@ -513,8 +513,16 @@ function doSign(id){const e=EV(id);if(e.signups.length>=e.cap)return toast('This
 const A={
  async logout(){try{await api('/api/auth/logout','POST')}catch(e){}S.user=null;modal('');authView('login')},
  authswitch(d){authView(d.m)},
- async admin(){ADM.q='';modal('<p class="muted">Loading users...</p>',true);
-  try{ADM.users=(await api('/api/admin/users')).users;admDraw()}catch(x){modal(`<p class="err">${esc(x.message)}</p><button class="btn" data-act="cic">Close</button>`)}},
+ async admin(){
+  ADM.q='';ADM.tab='roster';ADM.pending=null;ADM.pendErr='';
+  modal('<p class="muted">Loading...</p>',true);
+  try{ADM.users=(await api('/api/admin/users')).users}
+  catch(x){modal(`<p class="err">${esc(x.message)}</p><button class="btn" data-act="cic">Close</button>`);return}
+  admDraw();admLoadPending()}, /* queue loads in the background so the tab badge shows the count */
+ async admtab(d){
+  ADM.tab=d.t;
+  if(d.t==='pending'){ADM.pending=null;ADM.pendErr='';admPaint();await admLoadPending()}
+  else admPaint()},
  async admsave(d,btn){
   const tr=btn.closest('tr'),id=Number(d.id),sel=tr.querySelectorAll('select');
   btn.disabled=true;btn.textContent='Saving...';
@@ -522,6 +530,20 @@ const A={
    const i=ADM.users.findIndex(u=>u.id===id);if(i>-1)ADM.users[i]={...ADM.users[i],...user};
    tr.outerHTML=admRowHtml(ADM.users[i]||user);admFilter();toast(user.name+' is now '+roleLabel(user.role))}
   catch(x){btn.disabled=false;btn.textContent='Save';toast(x.message)}},
+ async admreview(d,btn){
+  const btns=btn.closest('[data-lid]').querySelectorAll('button');btns.forEach(b=>b.disabled=true);
+  try{await api('/api/admin/review-hour','POST',{logId:Number(d.id),status:d.s});
+   toast(d.s==='approved'?'Hours approved':'Entry rejected');
+   await admLoadPending()} /* reload the queue from the server */
+  catch(x){btns.forEach(b=>b.disabled=false);toast(x.message);if(x.status===409)admLoadPending()}},
+ async admphoto(d,btn){
+  const box=$('#ph-'+d.id);if(!box)return;
+  if(box.firstChild){box.innerHTML='';btn.textContent='View photo';return}
+  btn.disabled=true;
+  try{const {photo}=await api('/api/admin/hour-photo/'+d.id);
+   box.innerHTML=`<img alt="Proof photo" src="${esc(photo)}" style="max-width:100%;max-height:360px;border-radius:10px;border:1px solid var(--line)">`;btn.textContent='Hide photo'}
+  catch(x){toast(x.message)}
+  btn.disabled=false},
  role(d){S.role=d.r;render()}, tab(d){S.tab[S.role]=d.t;render()}, filter(d){S.filter=d.f;render()},
  reset(){const u=S.user;init();applyUser(u);CI=null;modal('');render();toast('Sample data reset')},
  signup(d){const e=EV(d.id);if(e.waiver&&!S.waived[d.id])waiverModal(d.id);else doSign(d.id)},
@@ -616,10 +638,12 @@ document.addEventListener('submit',async e=>{
     applyUser(user);render();toast('Welcome, '+user.name)}
   catch(x){err.textContent=x.message;btn.disabled=false}});
 
-/* ---------- admin: user role management ---------- */
-const ADM={users:[],q:''};
+/* ---------- admin panel: member roster + pending approvals (live data) ---------- */
+const ADM={users:[],q:'',tab:'roster',pending:null,pendErr:''};
 const ADM_ROLES=[['volunteer','Volunteer'],['member','Member'],['lead','Sector Lead'],['pres','Co-President'],['admin','Admin']];
 const roleLabel=r=>(ADM_ROLES.find(x=>x[0]===r)||[r,r])[1];
+const fmtTime=iso=>{const d=new Date(iso);return isNaN(d)?'':d.toLocaleString([],{dateStyle:'medium',timeStyle:'short'})};
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:''; /* only ever link http(s) */
 
 function admRowHtml(u){
   const me=u.id===S.user.id;
@@ -633,15 +657,63 @@ function admRowHtml(u){
      <option value="">None</option>${SECT.map(s=>`<option ${s===u.sector?'selected':''}>${s}</option>`).join('')}</select></td>
    <td><button class="btn sm pri" data-act="admsave" data-id="${u.id}" ${me?'disabled':''}>Save</button></td></tr>`}
 
-function admDraw(){
-  modal(`<div class="row" style="justify-content:space-between"><b style="font-size:17px">Admin: user roles</b><button class="btn sm" data-act="cic">Close</button></div>
-   <input type="search" placeholder="Search by name or email" aria-label="Search users" data-in="admq" value="${esc(ADM.q)}">
+function admRosterHtml(){
+  return `<input type="search" placeholder="Search by name or email" aria-label="Search users" data-in="admq" value="${esc(ADM.q)}">
    <div class="small muted" id="admCount"></div>
    <div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Current role</th><th>New role</th><th>Sector</th><th></th></tr></thead>
     <tbody id="admRows">${ADM.users.map(admRowHtml).join('')}</tbody></table></div>
    <div id="admNone" class="empty" hidden>No users match your search.</div>
-   <p class="small muted">Sector is only used for Sector Leads. You cannot change your own role.</p>`,true);
-  admFilter()}
+   <p class="small muted">Sector is only used for Sector Leads. You cannot change your own role.</p>`}
+
+function admCardHtml(l){
+  const link=safeUrl(l.work_link);
+  return `<div class="card stack" data-lid="${l.id}">
+   <div class="row" style="justify-content:space-between;align-items:flex-start">
+    <div><b>${esc(l.user?l.user.name:'Unknown user')}</b><div class="small muted">${esc(l.user?l.user.email:'')}</div></div>
+    <div class="row">${l.flagged?'<span class="pill warn">Flagged</span>':''}<span class="pill">${f1(l.hours)} h</span></div>
+   </div>
+   <div>${esc(l.event?l.event.title:'Unknown event')}${l.day>1?` <span class="chip">Day ${l.day}</span>`:''}</div>
+   <div class="small muted">Submitted ${esc(fmtTime(l.created_at))}</div>
+   <div class="row">
+    ${link?`<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open work link</a>`:''}
+    ${l.has_photo?`<button class="btn sm" data-act="admphoto" data-id="${l.id}">View photo</button>`:''}
+    ${!link&&!l.has_photo?'<span class="small muted">No proof attached</span>':''}
+   </div>
+   <div id="ph-${l.id}"></div>
+   <div class="row">
+    <button class="btn sm pri" data-act="admreview" data-id="${l.id}" data-s="approved">Approve</button>
+    <button class="btn sm bad" data-act="admreview" data-id="${l.id}" data-s="rejected">Reject</button>
+   </div></div>`}
+
+function admPendingHtml(){
+  if(ADM.pendErr)return `<div class="empty">${esc(ADM.pendErr)}<br><button class="btn sm" data-act="admtab" data-t="pending" style="margin-top:8px">Retry</button></div>`;
+  if(ADM.pending===null)return '<div class="empty">Loading pending approvals...</div>';
+  if(!ADM.pending.length)return '<div class="empty">Nothing waiting for review. New submissions will appear here.</div>';
+  return `<div class="grid">${ADM.pending.map(admCardHtml).join('')}</div>`}
+
+function admTabsHtml(){
+  const n=ADM.pending?ADM.pending.length:0;
+  return [['roster','Member Roster'],['pending','Pending Approvals']].map(([k,t])=>
+   `<button role="tab" aria-selected="${ADM.tab===k}" data-act="admtab" data-t="${k}">${t}${k==='pending'&&n?`<span class="dot">${n}</span>`:''}</button>`).join('')}
+
+function admPaintTabs(){const t=$('#admTabs');if(t)t.innerHTML=admTabsHtml()}
+function admPaint(){
+  const b=$('#admBody');if(!b)return; /* modal was closed */
+  admPaintTabs();b.innerHTML=ADM.tab==='roster'?admRosterHtml():admPendingHtml();
+  if(ADM.tab==='roster')admFilter()}
+
+function admDraw(){
+  modal(`<div class="row" style="justify-content:space-between"><b style="font-size:17px">Admin Panel</b><button class="btn sm" data-act="cic">Close</button></div>
+   <nav class="tabs" role="tablist" id="admTabs"></nav><div id="admBody" class="stack"></div>`,true);
+  admPaint()}
+
+/* Fetch the queue. Repaint the body only if the Pending tab is showing, so unsaved
+   dropdown choices on the roster tab are never wiped by a background refresh. */
+async function admLoadPending(){
+  ADM.pendErr='';
+  try{ADM.pending=(await api('/api/admin/pending-hours')).logs}
+  catch(x){ADM.pendErr=x.message}
+  if(ADM.tab==='pending')admPaint();else admPaintTabs()}
 
 /* Hide rows instead of rebuilding them, so unsaved dropdown choices survive while searching. */
 function admFilter(){

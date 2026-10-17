@@ -1,5 +1,7 @@
-// Creates the first Co-President and loads the sample events into Supabase.
-// Usage: set SEED_PRESIDENT_* plus the Supabase vars in .env, then `node seed.js`.
+// Creates the first ADMIN account in Supabase. Nothing else: no fake volunteers, no fake hour logs,
+// and every timestamp comes from the database defaults (CURRENT_TIMESTAMP, the same as NOW()).
+// Usage: set SEED_PRESIDENT_* (name/email/password of the admin) plus the Supabase vars, then `node seed.js`.
+// Optional, local dev only: `node seed.js --sample-events` also loads 12 demo events.
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { createSupabase } = require('./supabase');
@@ -20,9 +22,13 @@ const { createSupabase } = require('./supabase');
   } else {
     const { error } = await supabase
       .from('users')
-      .insert({ name: name.trim(), email, password_hash: await bcrypt.hash(pw, 12), role: 'pres' });
+      .insert({ name: name.trim(), email, password_hash: await bcrypt.hash(pw, 12), role: 'admin' });
     if (error) throw error;
-    console.log(`Created Co-President ${email}`);
+    console.log(`Created admin ${email}`);
+  }
+
+  if (!process.argv.includes('--sample-events')) {
+    return console.log('Done. No sample data was inserted (use --sample-events for demo events).');
   }
 
   const { count, error: countErr } = await supabase.from('events').select('id', { count: 'exact', head: true });
