@@ -1,6 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Interact Club Hub</title>
-<link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
@@ -45,8 +44,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top-in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .mark{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#3b2700;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:14px;flex:none}
-.mark-img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;background:#00A9E0;display:block}
-.authcard .mark-img{width:44px;height:44px}
 .brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1}
 .brand span{font-size:11px;opacity:.8}
 .roles{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:3px;border-radius:10px;flex-wrap:wrap}
@@ -166,11 +163,7 @@ td.n,th.n{text-align:right}
 
 .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center}
 /* auth screen */
-input[type=email],input[type=password],input[type=text].pw-input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
-.pw-wrap{position:relative;display:flex;align-items:center}
-.pw-wrap input{width:100%;padding-right:66px}
-.pw-toggle{position:absolute;right:6px;border:1px solid var(--line);background:var(--surface2);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
-.pw-toggle:hover{border-color:var(--brand);color:var(--ink)}
+input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
 .authwrap{min-height:100vh;display:grid;place-items:center;padding:20px}
 .authcard{width:100%;max-width:400px}
 .authcard .brand b{color:var(--ink)}
@@ -292,10 +285,11 @@ const ROLES=[['pres','Co-President'],['lead','Sector Lead'],['member','Member'],
 
 function render(){
   const r=S.role,tab=S.tab[r];
+  maybeStats();
   const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length};
   $('#app').innerHTML=`
   <header class="top"><div class="top-in">
-    <div class="brand"><img src="logo.png" alt="Interact Club logo" class="mark-img" onerror="this.outerHTML='<div class=&quot;mark&quot;>IC</div>'"><div><b>Interact Club Hub</b><span>Prototype with sample data</span></div></div>
+    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span>Live data</span></div></div>
     <div class="roles" role="group" aria-label="View the app as">
       ${roleChoices().map(([k,n])=>`<button data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}
       ${r==='lead'?`<select aria-label="Sector" data-ch="lsec">${SECT.filter(s=>isPres()||s===S.user.sector).map(s=>`<option ${s===S.lead?'selected':''}>${s}</option>`).join('')}</select>`:''}
@@ -432,18 +426,24 @@ VIEW.lead.qr=()=>{
    <div class="qrbox" id="qrSvg">${qrSvg(c)}</div><div class="code" id="qrCode">${c}</div>
    <div style="width:min(100%,280px)"><div class="bar gold"><i id="qrBar" style="width:100%"></i></div><p class="small muted" style="margin-top:6px;text-align:center">Changes every 30 seconds, so a photo of this screen is useless to absent members. <span id="qrSec" class="mono"></span></p></div></section>`};
 
-function leaderboard(){const t=secTotals(),mx=Math.max(...Object.values(t)),order=SECT.slice().sort((a,b)=>t[b]-t[a]);
-  return`<section class="card stack"><div class="row between"><h3>Sector leaderboard</h3><span class="pill gold">Sector of the Month: ${order[0]}</span></div>${order.map(s=>`<div><div class="row between"><b>${s}</b><span class="mono">${f1(t[s])} h</span></div><div class="bar ${s===order[0]?'gold':''}"><i style="width:${t[s]/mx*100}%"></i></div></div>`).join('')}</section>`}
+function leaderboard(){
+  const t=LIVE.stats&&LIVE.stats.sectors;
+  if(!t)return`<section class="card stack"><h3>Sector leaderboard</h3><div class="empty">${LIVE.err?esc(LIVE.err)+'<br><button class="btn sm" data-act="statsretry" style="margin-top:8px">Retry</button>':'Loading...'}</div></section>`;
+  const order=SECT.slice().sort((a,b)=>t[b]-t[a]),mx=Math.max(...SECT.map(x=>t[x])),any=mx>0;
+  return`<section class="card stack"><div class="row between"><h3>Sector leaderboard</h3>${any?`<span class="pill gold">Sector of the Month: ${order[0]}</span>`:''}</div>${order.map(x=>`<div><div class="row between"><b>${x}</b><span class="mono">${f1(t[x])} h</span></div><div class="bar ${any&&x===order[0]?'gold':''}"><i style="width:${any?t[x]/mx*100:0}%"></i></div></div>`).join('')}${any?'':'<p class="small muted">No approved hours are linked to a sector yet.</p>'}</section>`}
 VIEW.lead.sector=()=>{const ms=M.filter(m=>m.sec===S.lead&&m.st!=='keep').map(m=>({m,h:hrs(m.id)})).sort((a,b)=>b.h.t-a.h.t).slice(0,10);
   return`${leaderboard()}<section class="card stack"><h3>${S.lead} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')}</tbody></table></div></section>`};
 
 VIEW.pres.center=()=>{
-  const act=M.filter(m=>m.st!=='keep'),tot=act.reduce((a,m)=>a+hrs(m.id).t,0),dist=[0,0,0,0];act.forEach(m=>dist[lvl(hrs(m.id).t)]++);
-  const T=(v,l)=>`<div class="card tile"><b>${v}</b><span>${l}</span></div>`;
+  const st=LIVE.stats,v=k=>st?st[k]:null,lv=v('levels'),lvTot=lv?lv.reduce((a,b)=>a+b,0):0;
+  /* null = not loaded yet ("…" or "—" on error). A real 0 is shown as 0, never replaced. */
+  const num=(x,max)=>x==null?(LIVE.err?'—':'…'):Number(x).toLocaleString(undefined,{maximumFractionDigits:max||0});
+  const T=(val,l)=>`<div class="card tile"><b>${val}</b><span>${l}</span></div>`;
   return`<div><div class="eyebrow">Co-President dashboard</div><h2>Command center</h2></div>
-  <div class="grid g3" style="gap:12px">${T(Math.round(tot).toLocaleString(),'Total club hours')}${T(act.length,'Active members')}${T(M.filter(m=>m.st==='keep').length,'On the keeplist')}${T(pending().length,'Pending approvals')}${T(flagged().length,'Flagged entries')}${T(E.filter(e=>e.active).length,'Events active')}</div>
+  ${LIVE.err?`<div class="empty">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
+  <div class="grid g3" style="gap:12px">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
   <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn" data-act="tab" data-t="over">Overrides</button><button class="btn gold" data-act="tab" data-t="export">Export report</button></div>
-  <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${dist[i]}</b></div><div class="bar"><i style="width:${dist[i]/act.length*100}%"></i></div></div>`).join('')}</section></div>`};
+  <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${lv?lv[i]:'…'}</b></div><div class="bar"><i style="width:${lv&&lvTot?lv[i]/lvTot*100:0}%"></i></div></div>`).join('')}</section></div>`};
 
 function rosterRows(){const q=S.q.toLowerCase();
   return M.filter(m=>!q||m.name.toLowerCase().includes(q)).map(m=>{const H=hrs(m.id);
@@ -541,7 +541,7 @@ const A={
   const btns=btn.closest('[data-lid]').querySelectorAll('button');btns.forEach(b=>b.disabled=true);
   try{await api('/api/admin/review-hour','POST',{logId:Number(d.id),status:d.s});
    toast(d.s==='approved'?'Hours approved':'Entry rejected');
-   await admLoadPending()} /* reload the queue from the server */
+   await admLoadPending();loadStats()} /* reload the queue, and refresh the dashboard numbers behind the modal */
   catch(x){btns.forEach(b=>b.disabled=false);toast(x.message);if(x.status===409)admLoadPending()}},
  async admphoto(d,btn){
   const box=$('#ph-'+d.id);if(!box)return;
@@ -551,7 +551,8 @@ const A={
    box.innerHTML=`<img alt="Proof photo" src="${esc(photo)}" style="max-width:100%;max-height:360px;border-radius:10px;border:1px solid var(--line)">`;btn.textContent='Hide photo'}
   catch(x){toast(x.message)}
   btn.disabled=false},
- role(d){S.role=d.r;render()}, tab(d){S.tab[S.role]=d.t;render()}, filter(d){S.filter=d.f;render()},
+ role(d){S.role=d.r;render();if(statsViewOpen())loadStats()}, tab(d){S.tab[S.role]=d.t;render();if(statsViewOpen())loadStats()},
+ statsretry(){LIVE.err='';loadStats()}, filter(d){S.filter=d.f;render()},
  reset(){const u=S.user;init();applyUser(u);CI=null;modal('');render();toast('Sample data reset')},
  signup(d){const e=EV(d.id);if(e.waiver&&!S.waived[d.id])waiverModal(d.id);else doSign(d.id)},
  wsign(){S.waived[S.pend]=true;const id=S.pend;closeModal();doSign(id)},
@@ -591,28 +592,13 @@ const IN_={
  dist(v){CI.dist=+v;ciSync()}, code(v){CI.code=v;ciSync()}, link(v){CI.link=v;ciSync()}, reason(v){CI.reason=v;ciSync()},
  wname(v){$('#wgo').disabled=!(v.trim().length>2&&$('#wok').checked)}};
 const CH={
- admrole(v,t){t.closest('tr').querySelectorAll('select')[1].disabled=v!=='lead'},
+ admrole(v,t){t.closest('tr').querySelectorAll('select')[1].disabled=!['lead','member'].includes(v)},
  lsec(v){S.lead=v;S.qrE=null;render()}, qre(v){S.qrE=v;render()},
  mst(v,t,d){const m=P(d.id);m.st=v;toast(m.name+' updated');},
  exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;render()},
  ot(v,t){CI.ot=t.checked;ciRender()}, oth(v){CI.otH=+v;ciRender()},
  wok(v,t){$('#wgo').disabled=!(t.checked&&$('#wname').value.trim().length>2)}};
-document.addEventListener('click',e=>{
-  const pw=e.target.closest('[data-pw-toggle]');
-  if(pw){
-    const wrap=pw.closest('.pw-wrap');
-    const input=wrap?wrap.querySelector('input'):null;
-    if(!input)return;
-    const show=input.type==='password';
-    input.type=show?'text':'password';
-    input.classList.toggle('pw-input',true);
-    pw.textContent=show?'Hide':'Show';
-    pw.setAttribute('aria-label',(pw.getAttribute('aria-label')||'Show password').replace(show?'Show':'Hide',show?'Hide':'Show'));
-    pw.setAttribute('aria-pressed',String(show));
-    input.focus({preventScroll:true});
-    return;
-  }
-  const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t&&IN_[t.dataset.in])IN_[t.dataset.in](t.value,t)});
 document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)closeModal()});
@@ -636,17 +622,18 @@ const roleChoices=()=>isPres()?ROLES:ROLES.filter(([k])=>k===ROLE_MAP[S.user.rol
 
 /* Point the sample data at the real account until events/logs move to the API */
 function applyUser(u){
+  LIVE.stats=null;LIVE.err='';
   S.user=u;S.role=ROLE_MAP[u.role]||'vol';if(u.sector)S.lead=u.sector;
   P('m0').name=u.name;P('v0').name=u.name}
 
 function authView(mode,msg){
   const reg=mode==='register';
   $('#app').innerHTML=`<div class="authwrap"><form class="card stack authcard" id="authForm" data-mode="${mode}" novalidate>
-    <div class="brand"><img src="logo.png" alt="Interact Club logo" class="mark-img" onerror="this.outerHTML='<div class=&quot;mark&quot;>IC</div>'"><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
+    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
     ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
     <label>Email<input type="email" name="email" autocomplete="email"></label>
-    <label>Password<span class="pw-wrap"><input type="password" name="password" class="pw-input" autocomplete="${reg?'new-password':'current-password'}"><button type="button" class="pw-toggle" data-pw-toggle aria-label="Show password" aria-pressed="false">Show</button></span></label>
-    ${reg?`<label>Confirm password<span class="pw-wrap"><input type="password" name="confirmPassword" class="pw-input" autocomplete="new-password"><button type="button" class="pw-toggle" data-pw-toggle aria-label="Show confirm password" aria-pressed="false">Show</button></span></label><p class="small muted">Enter password 2 times. At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>`:''}
+    <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
+    ${reg?'<p class="small muted">At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>':''}
     <div class="err" id="authErr" role="alert">${esc(msg||'')}</div>
     <button class="btn pri" type="submit">${reg?'Create account':'Log in'}</button>
     <button class="btn" type="button" data-act="authswitch" data-m="${reg?'login':'register'}">${reg?'I already have an account':'Create an account'}</button>
@@ -656,10 +643,7 @@ function authView(mode,msg){
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('#authForm');if(!f)return;e.preventDefault();
   const btn=f.querySelector('[type=submit]'),err=$('#authErr');btn.disabled=true;err.textContent='';
-  try{
-    const data=Object.fromEntries(new FormData(f));
-    if(f.dataset.mode==='register'&&String(data.password||'')!==String(data.confirmPassword||'')){throw new Error("Passwords don't match. Please enter the same password twice.")}
-    const {user}=await api('/api/auth/'+f.dataset.mode,'POST',data);
+  try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',Object.fromEntries(new FormData(f)));
     applyUser(user);render();toast('Welcome, '+user.name)}
   catch(x){err.textContent=x.message;btn.disabled=false}});
 
@@ -678,7 +662,7 @@ function admRowHtml(u){
    <td><span class="pill ${u.role==='admin'?'gold':u.role==='volunteer'?'':'good'}">${esc(roleLabel(u.role))}</span></td>
    <td><select class="admsel" aria-label="New role for ${esc(u.name)}" data-ch="admrole" ${me?'disabled title="You cannot change your own role"':''}>
      ${ADM_ROLES.map(([k,n])=>`<option value="${k}" ${k===u.role?'selected':''}>${n}</option>`).join('')}</select></td>
-   <td><select class="admsel" aria-label="Sector for ${esc(u.name)}" ${u.role==='lead'&&!me?'':'disabled'}>
+   <td><select class="admsel" aria-label="Sector for ${esc(u.name)}" ${['lead','member'].includes(u.role)&&!me?'':'disabled'}>
      <option value="">None</option>${SECT.map(s=>`<option ${s===u.sector?'selected':''}>${s}</option>`).join('')}</select></td>
    <td><button class="btn sm pri" data-act="admsave" data-id="${u.id}" ${me?'disabled':''}>Save</button></td></tr>`}
 
@@ -688,7 +672,7 @@ function admRosterHtml(){
    <div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Current role</th><th>New role</th><th>Sector</th><th></th></tr></thead>
     <tbody id="admRows">${ADM.users.map(admRowHtml).join('')}</tbody></table></div>
    <div id="admNone" class="empty" hidden>No users match your search.</div>
-   <p class="small muted">Sector is only used for Sector Leads. You cannot change your own role.</p>`}
+   <p class="small muted">Sector is required for Sector Leads and optional for Members; it feeds the sector leaderboard. You cannot change your own role.</p>`}
 
 function admCardHtml(l){
   const link=safeUrl(l.work_link);
@@ -746,6 +730,23 @@ function admFilter(){
   document.querySelectorAll('#admRows tr').forEach(tr=>{const hit=!q||tr.dataset.s.includes(q);tr.hidden=!hit;if(hit)n++});
   const c=$('#admCount');if(c)c.textContent=n+' of '+ADM.users.length+' users';
   const none=$('#admNone');if(none)none.hidden=n>0}
+
+/* ---------- live dashboard stats (GET /api/stats) ---------- */
+const LIVE={stats:null,err:'',loading:false,again:false};
+const statsViewOpen=()=>!!S.user&&((S.role==='pres'&&S.tab.pres==='center')||(S.role==='lead'&&S.tab.lead==='sector'));
+
+async function loadStats(){
+  if(LIVE.loading){LIVE.again=true;return} /* a change landed mid-request: fetch once more afterwards */
+  LIVE.loading=true;
+  try{LIVE.stats=await api('/api/stats');LIVE.err=''}
+  catch(x){LIVE.err=x.message||'Could not load stats'}
+  LIVE.loading=false;
+  if(LIVE.again){LIVE.again=false;return loadStats()}
+  if(statsViewOpen())render()}
+
+/* render() calls this: fetch the first time a stats view is shown. Not after an error,
+   so a failing server cannot cause a request loop. The Retry button clears the error. */
+function maybeStats(){if(statsViewOpen()&&!LIVE.stats&&!LIVE.err&&!LIVE.loading)loadStats()}
 
 async function boot(){
   try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render()}else authView('login')}

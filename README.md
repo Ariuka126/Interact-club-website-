@@ -8,6 +8,7 @@ Express + Supabase (Postgres) backend with session login (bcryptjs), serving the
 server.js        app setup, sessions, user loading, routes, static hosting
 auth.js          /api/auth/register | login | logout | me
 admin.js         /api/admin/users | update-role | pending-hours | review-hour | hour-photo/:id (admin only)
+stats.js         GET /api/stats: live dashboard numbers (any logged-in user)
 middleware.js    requireAuth, requireRole, requireAdmin
 migrations/      SQL to run in Supabase (002 adds the admin role, 003 wipes sample data)
 supabase.js      Supabase client (service_role key)
@@ -33,3 +34,11 @@ Admin Panel > Pending Approvals lists every `hour_logs` row with `status = 'pend
 Approve/Reject calls `POST /api/admin/review-hour`, which records `reviewed_by` and `reviewed_at`.
 Admins cannot review their own hours. The queue stays empty until members can submit hours
 (a `POST /api/hours` route, not built yet).
+
+## Live dashboard
+
+`GET /api/stats` returns aggregates only: `totalHours` (approved), `activeMembers` (all users), `keeplist` (volunteers),
+`pendingApprovals`, `flaggedEntries`, `activeEvents`, `sectors` (approved hours by the member's sector) and
+`levels` (members by level). The Command center and the sector leaderboard read it; a real 0 is shown as 0.
+Sector totals only include people who have a sector set (Admin Panel > Member Roster, for Sector Leads and Members).
+The other tabs (events, overrides, export) still run on in-browser sample data.

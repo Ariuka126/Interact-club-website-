@@ -49,6 +49,10 @@ router.post('/update-role', async (req, res, next) => {
       const sector = req.body.sector || target.sector;
       if (!SECTORS.includes(sector)) return res.status(400).json({ error: 'Choose a sector for a Sector Lead.' });
       update.sector = sector;
+    } else if (newRole === 'member' && req.body.sector) {
+      // Members may belong to a sector too: the dashboard's sector leaderboard is built from it.
+      if (!SECTORS.includes(req.body.sector)) return res.status(400).json({ error: 'Invalid sector.' });
+      update.sector = req.body.sector;
     }
 
     const { data: user, error } = await supabase
