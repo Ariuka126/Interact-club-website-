@@ -209,7 +209,7 @@ function init(){
   for(let i=0;i<60;i++){
     const lead=i>=1&&i<=4;
     M.push({id:'m'+i,name:i===0?'Nomin B.':nm(i),st:lead?'lead':'active',sec:i===0?'Creative':lead?SECT[i-1]:SECT[Math.floor(rnd()*4)],
-      in:i===0?12:Math.round((4+rnd()*17)*2)/2,out:i===0?6:Math.round((2+rnd()*12)*2)/2,req:false});
+      in:i===0?0:Math.round((4+rnd()*17)*2)/2,out:i===0?0:Math.round((2+rnd()*12)*2)/2,req:false});
   }
   for(let i=0;i<10;i++)M.push({id:'v'+i,name:i===0?'Saruul T.':nm(60+i),st:'keep',sec:SECT[Math.floor(rnd()*4)],in:0,out:0,req:false});
   const sh=['Tarot reading','Photobooth','Scavenger desk'],sh2=['Shagai games','Tarot reading','Photobooth'];
@@ -234,7 +234,7 @@ function init(){
   ['e1','e7','e8','e6'].forEach(id=>{const e=E.find(x=>x.id===id);e.signups.push({m:'m0',shift:e.shifts?e.shifts[0]:null})});
   L=[];
   const add=(mid,eid,status,ago,x)=>{const e=E.find(q=>q.id===eid),ts=Date.now()-ago*3600e3;L.push(Object.assign({id:'l'+(++lid),mid,eid,h:e.h,status,ts,ph:e.v.includes('selfie')?photo(lid*97+3,e.t,ts):null,link:null,ot:null,fl:false,cheer:[],cm:[]},x||{}))};
-  [1,2,3].forEach(d=>add('m0','e7','approved',24*(4-d)+6,{day:d}));
+  /* the signed-in account (m0) starts with no logs: it is a placeholder, so its hours must read 0 */
   add('m5','e7','pending',3,{day:2});add('m6','e7','pending',5,{day:1});add('m7','e7','pending',2,{day:3,ot:{hrs:1,reason:'Stayed to water the new seedlings after the crew left.',status:'pending'}});
   add('m8','e6','pending',9,{link:'canva.com/design/women-day-poster-set'});add('m9','e6','pending',20,{link:'drive.google.com/file/womens-day-banner'});
   add('m10','e3','pending',30);add('m11','e3','pending',31);
@@ -253,7 +253,7 @@ function hrs(mid){const m=P(mid);let i=m.in,o=m.out,pen=0;
 function secTotals(){const t={Creative:0,Events:0,Finance:0,Community:0};
   M.filter(m=>m.st!=='keep').forEach(m=>t[m.sec]+=m.in+m.out);
   L.filter(l=>l.status==='approved').forEach(l=>t[EV(l.eid).sec]+=l.h+(l.ot&&l.ot.status==='approved'?l.ot.hrs:0));return t}
-function badges(mid){const al=L.filter(l=>l.mid===mid&&l.status==='approved');const b=mid==='m0'?{media:7,ops:2,trips:1,streak:3}:{media:0,ops:0,trips:0,streak:0};
+function badges(mid){const al=L.filter(l=>l.mid===mid&&l.status==='approved');const b={media:0,ops:0,trips:0,streak:0};
   const media=b.media+al.filter(l=>EV(l.eid).sec==='Creative').reduce((a,l)=>a+l.h,0);
   const ops=b.ops+new Set(al.filter(l=>EV(l.eid).setup).map(l=>l.eid)).size;
   const trips=b.trips+new Set(al.filter(l=>EV(l.eid).type==='out').map(l=>l.eid)).size;
