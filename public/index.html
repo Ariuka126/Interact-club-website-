@@ -813,6 +813,7 @@ function authView(mode,msg){
     ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
     <label>Email<input type="email" name="email" autocomplete="email"></label>
     <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
+    ${reg?`<label>Confirm password<input type="password" name="confirm" autocomplete="new-password" placeholder="Type your password again"></label>`:''}
     ${reg?'<p class="small muted">At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>':''}
     <div class="err" id="authErr" role="alert">${esc(msg||'')}</div>
     <button class="btn pri" type="submit">${reg?'Create account':'Log in'}</button>
@@ -822,8 +823,14 @@ function authView(mode,msg){
 
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('#authForm');if(!f)return;e.preventDefault();
-  const btn=f.querySelector('[type=submit]'),err=$('#authErr');btn.disabled=true;err.textContent='';
-  try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',Object.fromEntries(new FormData(f)));
+  const btn=f.querySelector('[type=submit]'),err=$('#authErr');err.textContent='';
+  const data=Object.fromEntries(new FormData(f));
+  if(f.dataset.mode==='register'){
+    if(data.password!==data.confirm){err.textContent="Passwords don't match. Please enter the same password twice.";const c=f.querySelector('[name=confirm]');if(c)c.focus();return}
+    delete data.confirm; /* only a typing check: the server never needs it */
+  }
+  btn.disabled=true;
+  try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',data);
     applyUser(user);render();loadAll();toast('Welcome, '+user.name)}
   catch(x){err.textContent=x.message;btn.disabled=false}});
 
