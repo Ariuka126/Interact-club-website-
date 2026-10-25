@@ -1,24 +1,12 @@
 const express = require('express');
 const { requireAuth } = require('./middleware');
+const { fetchAll, logHours } = require('./lib');
 
 const router = express.Router();
 const SECTORS = ['Creative', 'Events', 'Finance', 'Community'];
 // Keep in sync with lvl() in public/index.html: L1 < 10 h, L2 < 25 h, L3 < 50 h, L4 50+ h.
 const levelOf = h => (h < 10 ? 0 : h < 25 ? 1 : h < 50 ? 2 : 3);
 const round2 = n => Math.round(n * 100) / 100;
-
-// Supabase returns at most 1000 rows per request, so read big tables page by page.
-async function fetchAll(buildQuery) {
-  const PAGE = 1000;
-  const rows = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await buildQuery().range(from, from + PAGE - 1);
-    if (error) throw error;
-    rows.push(...data);
-    if (data.length < PAGE) break;
-  }
-  return rows;
-}
 
 // Row counts are done by the database (head request, no rows transferred).
 async function count(query) {
@@ -42,14 +30,15 @@ router.get('/', requireAuth, async (req, res, next) => {
         count(sb.from('hour_logs').select('id', head).eq('status', 'pending').eq('flagged', 1)),
         count(sb.from('events').select('id', head).eq('is_active', 1)),
         fetchAll(() => sb.from('users').select('id, role, sector').order('id')),
-        fetchAll(() => sb.from('hour_logs').select('id, user_id, hours').eq('status', 'approved').order('id')),
+        fetchAll(() => sb.from('hour_logs').select('id, user_id, hours, overtime_hours, overtime_status').eq('status', 'approved').order('id')),
       ]);
 
     let totalHours = 0;
     const hoursByUser = new Map();
     for (const l of approved) {
-      totalHours += l.hours;
-      hoursByUser.set(l.user_id, (hoursByUser.get(l.user_id) || 0) + l.hours);
+      const h = logHours(l); // event hours plus any approved overtime
+      totalHours += h;
+      hoursByUser.set(l.user_id, (hoursByUser.get(l.user_id) || 0) + h);
     }
 
     // Sector totals follow the member's sector (users.sector). People without a sector

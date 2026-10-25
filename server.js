@@ -73,6 +73,7 @@ app.use(async (req, _res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', require('./admin')); // admin-only; guarded inside the router
 app.use('/api/stats', require('./stats')); // live dashboard numbers; any logged-in user
+app.use('/api', require('./bootstrap'), require('./events'), require('./hours'), require('./people')); // the app itself
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
 
 // Only the public/ folder is served, so server.js, auth.js etc. are never downloadable.

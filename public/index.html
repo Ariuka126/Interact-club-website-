@@ -1,291 +1,384 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0B0F19"><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:transparent;color:#E6EAF2}html{background:#0B0F19}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Interact Club Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <style>
-/* Layout: sticky azure bar, role switcher, tab row, then one working view per role. Boldness lives in the member progress ring. */
+/* =====================================================================
+   Interact Club Hub: dark glass design system
+   Layers: ambient background > glass surfaces > gradient accents.
+   Colour roles: blue->cyan = primary action, amber = Rotary / admin highlight.
+   Every variable below is referenced by name from the page's JavaScript templates
+   (--bad, --brand, --gold, --line, --surface2), so keep those names.
+   ===================================================================== */
 :root{
-  --bg:#EDF0F7; --surface:#FFFFFF; --surface2:#F5F7FC; --ink:#0E1A33; --muted:#5A6684; --line:#D9DFEC;
-  --brand:#14428C; --brand-ink:#FFFFFF; --brand-soft:#E2EAF9; --link:#14428C;
-  --gold:#F2A900; --gold-soft:#FFF2CC; --gold-ink:#6B4800;
-  --good:#17825B; --good-soft:#DDF3EA; --warn:#B26A00; --warn-soft:#FFEFD1; --bad:#C23A3A; --bad-soft:#FBE3E3;
-  --shadow:0 1px 2px rgba(14,26,51,.06),0 6px 20px rgba(14,26,51,.06);
-  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
-  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+  --bg:#0B0F19; --bg-2:#111827;
+  --surface:rgba(255,255,255,.03); --surface2:rgba(255,255,255,.055); --surface-solid:#0F1626;
+  --ink:#E6EAF2; --muted:#94A3B8; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+  --brand:#3B82F6; --brand-2:#06B6D4; --brand-ink:#04111F; --brand-soft:rgba(59,130,246,.15); --link:#7DD3FC;
+  --gold:#F59E0B; --gold-2:#FBBF24; --gold-soft:rgba(245,158,11,.15); --gold-ink:#FCD34D;
+  --good:#34D399; --good-soft:rgba(52,211,153,.14); --warn:#FBBF24; --warn-soft:rgba(251,191,36,.14);
+  --bad:#F87171; --bad-soft:rgba(248,113,113,.14);
+  --grad:linear-gradient(135deg,#3B82F6 0%,#06B6D4 100%);
+  --grad-gold:linear-gradient(135deg,#FBBF24 0%,#F59E0B 100%);
+  --r:16px; --r-sm:12px; --ease:cubic-bezier(.22,1,.36,1);
+  --shadow:0 8px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
+  --f-display:'Plus Jakarta Sans','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
   --f-script:'Caveat','Segoe Script',cursive;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0A1120; --surface:#111B30; --surface2:#16223B; --ink:#E9EEF8; --muted:#9AA7C4; --line:#24324F;
-  --brand:#0E2F66; --brand-ink:#FFFFFF; --brand-soft:#1A2C52; --link:#8DB0FF;
-  --gold:#F5B52A; --gold-soft:#3A2D0A; --gold-ink:#F7D88A;
-  --good:#46C492; --good-soft:#12362A; --warn:#F0B050; --warn-soft:#3B2C10; --bad:#F08484; --bad-soft:#40191B;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0A1120; --surface:#111B30; --surface2:#16223B; --ink:#E9EEF8; --muted:#9AA7C4; --line:#24324F;
-  --brand:#0E2F66; --brand-ink:#FFFFFF; --brand-soft:#1A2C52; --link:#8DB0FF;
-  --gold:#F5B52A; --gold-soft:#3A2D0A; --gold-ink:#F7D88A;
-  --good:#46C492; --good-soft:#12362A; --warn:#F0B050; --warn-soft:#3B2C10; --bad:#F08484; --bad-soft:#40191B;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark}
-
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
-h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
-h2{font-size:22px;font-weight:700} h3{font-size:16px;font-weight:700} h4{font-size:13px;font-weight:700}
+html{background:var(--bg);scrollbar-color:rgba(255,255,255,.18) transparent}
+body{background:transparent;color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01"}
+/* ambient colour behind everything (fixed layer, so it never repaints while scrolling) */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(900px 520px at 8% -8%,rgba(59,130,246,.20),transparent 62%),
+             radial-gradient(760px 520px at 100% 0%,rgba(6,182,212,.13),transparent 58%),
+             radial-gradient(700px 480px at 50% 120%,rgba(245,158,11,.07),transparent 60%),
+             linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 140%)}
+::selection{background:rgba(59,130,246,.45)}
+a{color:var(--link);text-decoration-color:rgba(125,211,252,.4);text-underline-offset:3px;transition:all .2s ease-in-out}
+a:hover{color:#BAE6FD}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.02em;color:#F8FAFC}
+h2{font-size:clamp(22px,2.6vw,27px);font-weight:700;line-height:1.2} h3{font-size:16px;font-weight:700} h4{font-size:13px;font-weight:700}
 p{margin:0}
 button,input,select,textarea{font:inherit;color:inherit}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)} .small{font-size:12px}
-.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#67E8F9;font-weight:700}
 
-/* top bar */
-.top{background:var(--brand);color:var(--brand-ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
-.top-in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:10px;min-width:0}
-.mark{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#3b2700;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:14px;flex:none}
-.brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1}
-.brand span{font-size:11px;opacity:.8}
-.roles{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:3px;border-radius:10px;flex-wrap:wrap}
-.roles button{border:0;background:transparent;color:var(--brand-ink);padding:6px 11px;border-radius:8px;cursor:pointer;font-weight:500;font-size:13px}
-.roles button[aria-pressed="true"]{background:var(--gold);color:#3b2700;font-weight:700}
-.roles select{background:rgba(255,255,255,.18);color:var(--brand-ink);border:0;border-radius:8px;padding:6px 8px}
-.roles select option{color:#0E1A33}
+/* ---------- top bar: frosted glass ---------- */
+.top{background:rgba(11,15,25,.72);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+  border-bottom:1px solid var(--line);color:var(--ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.top-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:38px;height:38px;border-radius:12px;background:var(--grad-gold);color:#2A1700;display:grid;place-items:center;
+  font-family:var(--f-display);font-weight:800;font-size:14px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 6px 20px rgba(245,158,11,.35)}
+.brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1;letter-spacing:-.02em;color:#F8FAFC}
+.brand span{font-size:11px;color:var(--muted)}
+.top .brand span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px;animation:live 2.4s ease-out infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%,100%{box-shadow:0 0 0 7px rgba(52,211,153,0)}}
+.roles{display:flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:4px;border-radius:14px;flex-wrap:wrap}
+.roles button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s ease-in-out}
+.roles button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.roles button[aria-pressed="true"]{background:var(--grad-gold);color:#2A1700;font-weight:700;box-shadow:0 4px 16px rgba(245,158,11,.35)}
+.roles select{background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;width:auto}
 
-.wrap{max-width:1080px;margin:0 auto;padding:16px 16px 56px;display:flex;flex-direction:column;gap:16px}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
-.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;font-weight:500}
-.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
-.dot{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#3b2700;font-size:11px;font-weight:700;margin-left:6px;padding:0 5px}
+/* ---------- layout ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 72px;display:flex;flex-direction:column;gap:22px}
+.wrap>*{animation:rise .32s var(--ease) both}
+.wrap>*:nth-child(2){animation-delay:.04s}.wrap>*:nth-child(3){animation-delay:.08s}.wrap>*:nth-child(4){animation-delay:.12s}.wrap>*:nth-child(n+5){animation-delay:.16s}
+@keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:9px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;font-weight:600;transition:all .2s ease-in-out}
+.tabs button:hover{color:var(--ink);border-color:var(--line-2);background:var(--surface2);transform:translateY(-1px)}
+.tabs button[aria-selected="true"]{background:var(--grad);color:var(--brand-ink);border-color:transparent;font-weight:700;box-shadow:0 6px 20px rgba(59,130,246,.38)}
+.dot{display:inline-grid;place-items:center;min-width:19px;height:19px;border-radius:10px;background:var(--grad-gold);color:#2A1700;font-size:11px;font-weight:800;margin-left:7px;padding:0 6px;box-shadow:0 0 12px rgba(245,158,11,.45)}
 
-/* primitives */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0}
-.flat{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+/* ---------- glass surfaces ---------- */
+.card{background:var(--surface);-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%);
+  border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0;transition:all .2s ease-in-out}
+.card:hover{border-color:rgba(255,255,255,.12)}
+article.card:hover{transform:translateY(-3px);border-color:var(--line-2);box-shadow:0 18px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
+.flat{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;min-width:0}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
 .grid.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .between{justify-content:space-between}
-.stack{display:flex;flex-direction:column;gap:10px;min-width:0}
-.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13px}
-.btn:hover{border-color:var(--brand)}
-.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
-.btn.gold{background:var(--gold);color:#3b2700;border-color:var(--gold)}
-.btn.sm{padding:5px 10px;font-size:12px}
-.btn.bad{color:var(--bad)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--brand-soft);color:var(--link);white-space:nowrap}
+.stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.card,.top{background:rgba(17,24,39,.94)}}
+@media (prefers-reduced-transparency:reduce){.card,.top{background:#121826;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* ---------- buttons ---------- */
+.btn{border:1px solid var(--line-2);background:var(--surface2);color:var(--ink);padding:9px 16px;border-radius:12px;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s ease-in-out}
+.btn:hover{border-color:rgba(125,211,252,.55);background:rgba(255,255,255,.09);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.pri{background:var(--grad);color:var(--brand-ink);border-color:transparent;font-weight:700;box-shadow:0 6px 18px rgba(59,130,246,.35)}
+.btn.pri:hover{box-shadow:0 10px 26px rgba(6,182,212,.45);filter:brightness(1.07)}
+.btn.gold{background:var(--grad-gold);color:#2A1700;border-color:transparent;font-weight:700;box-shadow:0 6px 18px rgba(245,158,11,.3)}
+.btn.gold:hover{box-shadow:0 10px 26px rgba(245,158,11,.45);filter:brightness(1.06)}
+.btn.sm{padding:6px 12px;font-size:12px;border-radius:10px}
+.btn.bad{color:var(--bad);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.07)}
+.btn.bad:hover{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.6)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
+.btn[aria-pressed="true"]{border-color:rgba(59,130,246,.6);background:var(--brand-soft);color:#BFDBFE}
+:focus-visible{outline:2px solid #67E8F9;outline-offset:2px}
+
+/* ---------- badges, chips ---------- */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--brand-soft);color:var(--link);white-space:nowrap;border:1px solid rgba(255,255,255,.04)}
 .pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
-.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.gold{background:var(--gold-soft);color:var(--gold-ink)}
-input[type=text],input[type=number],input[type=search],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
-label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
-label.ck{flex-direction:row;align-items:center;gap:8px;font-weight:500;color:var(--ink);font-size:13px}
-label.ck input{width:auto}
-.bar{height:8px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.bar>i{display:block;height:100%;background:var(--brand)}
-.bar.gold>i{background:var(--gold)}
-.bar.good>i{background:var(--good)}
-.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:460px;overflow-y:auto}
-table{border-collapse:collapse;width:100%;min-width:560px}
-th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
-th{position:sticky;top:0;background:var(--surface2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-td.n,th.n{text-align:right}
-.tile b{font-family:var(--f-display);font-size:30px;font-weight:800;display:block;line-height:1.05;font-variant-numeric:tabular-nums}
-.tile span{font-size:12px;color:var(--muted)}
-.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
-
-/* member home */
-.hero{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
-@media(max-width:520px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center}}
-.ring{position:relative;width:150px;height:150px}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.ring .c b{font-family:var(--f-display);font-size:34px;font-weight:800;line-height:1}
-.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.levels div{border:1px solid var(--line);border-radius:9px;padding:8px 6px;text-align:center;font-size:11px;background:var(--surface2);min-width:0}
-.levels div b{display:block;font-family:var(--f-display);font-size:13px}
-.levels div.on{background:var(--gold);border-color:var(--gold);color:#3b2700}
-.levels div.done{background:var(--brand-soft);color:var(--link)}
-.badge{display:flex;gap:10px;align-items:center}
-.badge .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--surface2);border:1px solid var(--line);filter:grayscale(1);opacity:.7;flex:none}
-.badge.on .ic{filter:none;opacity:1;background:var(--gold-soft);border-color:var(--gold)}
-.pie{width:112px;height:112px;flex:none}
-
-/* events */
-.ev h3{font-size:16px}
-.ev .meta{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px}
-.ev .meta dt{color:var(--muted)} .ev .meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.pill.bad{background:var(--bad-soft);color:#FCA5A5} .pill.gold{background:var(--gold-soft);color:var(--gold-ink);border-color:rgba(245,158,11,.25)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--muted);background:var(--surface2)}
-.days{display:flex;gap:4px;flex-wrap:wrap}
-.days i{width:16px;height:16px;border-radius:4px;border:1px solid var(--line);background:var(--surface2)}
-.days i.ok{background:var(--good);border-color:var(--good)} .days i.pd{background:var(--gold);border-color:var(--gold)}
-.filters{display:flex;gap:6px;flex-wrap:wrap}
-.filters button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:700}
-.filters button[aria-pressed="true"]{border-color:var(--brand);color:var(--link);background:var(--brand-soft)}
+.chip{font-size:11px;border:1px solid var(--line);border-radius:8px;padding:2px 8px;color:var(--muted);background:var(--surface2)}
 
-/* feed + photos */
-.photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block;background:var(--surface2)}
-.linkbox{aspect-ratio:4/3;border-radius:10px;border:1px dashed var(--line);display:grid;place-content:center;text-align:center;padding:10px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+/* ---------- forms ---------- */
+input[type=text],input[type=number],input[type=search],input[type=email],input[type=password],select,textarea{width:100%;border:1px solid var(--line-2);background:rgba(255,255,255,.04);border-radius:12px;padding:10px 12px;transition:all .2s ease-in-out}
+input::placeholder,textarea::placeholder{color:#94A3B8}
+input:hover,select:hover,textarea:hover{border-color:rgba(255,255,255,.26)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);background:rgba(59,130,246,.07);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+select option{background:#111827;color:var(--ink)}
+label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+label.ck{flex-direction:row;align-items:center;gap:8px;font-weight:500;color:var(--ink);font-size:13px}
+label.ck input{width:auto;accent-color:var(--brand)}
+input[type=checkbox]{accent-color:var(--brand)}
+
+/* ---------- progress bars: gradient fill that grows in when data arrives ---------- */
+.bar{height:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.05);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--grad);box-shadow:0 0 14px rgba(59,130,246,.55);animation:fill .9s var(--ease) both;transition:width .6s var(--ease)}
+.bar.gold>i{background:var(--grad-gold);box-shadow:0 0 14px rgba(245,158,11,.5)}
+.bar.good>i{background:linear-gradient(135deg,#34D399,#10B981);box-shadow:0 0 14px rgba(52,211,153,.45)}
+@keyframes fill{from{clip-path:inset(0 100% 0 0 round 999px)}to{clip-path:inset(0 0 0 0 round 999px)}}
+
+/* ---------- tables ---------- */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-sm);max-height:460px;overflow-y:auto;background:rgba(255,255,255,.02)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+tbody tr{transition:background .2s ease-in-out} tbody tr:hover{background:rgba(255,255,255,.035)} tbody tr:last-child td{border-bottom:0}
+th{position:sticky;top:0;background:#141B2B;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.n,th.n{text-align:right}
+
+/* ---------- Command Center stat tiles: neon edge, icon, glow, lift ---------- */
+.tile{--a:#3B82F6;--glow:rgba(59,130,246,.35);position:relative;overflow:hidden;padding:22px 20px 20px;display:flex;flex-direction:column;gap:6px;
+  box-shadow:0 10px 40px -18px var(--glow),inset 0 1px 0 rgba(255,255,255,.05);cursor:default}
+.tile::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,var(--a) 0%,rgba(255,255,255,0) 52%,var(--a) 135%);opacity:.75;transition:all .2s ease-in-out;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.tile::before{content:"";position:absolute;top:18px;right:18px;width:24px;height:24px;background:var(--a);filter:drop-shadow(0 0 8px var(--glow));
+  -webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat;opacity:.95}
+.tile:hover{transform:translateY(-4px);box-shadow:0 22px 50px -16px var(--glow),inset 0 1px 0 rgba(255,255,255,.08)}
+.tile:hover::after{opacity:1}
+.tile b{font-family:var(--f-display);font-size:34px;font-weight:800;display:block;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:#fff;text-shadow:0 0 28px var(--glow)}
+.tile span{font-size:12px;color:var(--muted);font-weight:500}
+.tile:nth-child(1){--a:#3B82F6;--glow:rgba(59,130,246,.42);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E")}
+.tile:nth-child(2){--a:#06B6D4;--glow:rgba(6,182,212,.4);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20'/%3E%3Ccircle cx='10' cy='8' r='3.2'/%3E%3Cpath d='M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4'/%3E%3Cpath d='M15.5 4.9a3.2 3.2 0 0 1 0 6.2'/%3E%3C/svg%3E")}
+.tile:nth-child(3){--a:#A78BFA;--glow:rgba(167,139,250,.4);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E")}
+.tile:nth-child(4){--a:#F59E0B;--glow:rgba(245,158,11,.4);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 3h10M7 21h10M8 3v3.5a4 4 0 0 0 1.6 3.2L12 12l2.4-2.3A4 4 0 0 0 16 6.5V3M8 21v-3.5a4 4 0 0 1 1.6-3.2L12 12l2.4 2.3A4 4 0 0 1 16 17.5V21'/%3E%3C/svg%3E")}
+.tile:nth-child(5){--a:#FB7185;--glow:rgba(251,113,133,.4);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 21V4'/%3E%3Cpath d='M5 4h11l-2 4 2 4H5'/%3E%3C/svg%3E")}
+.tile:nth-child(6){--a:#34D399;--glow:rgba(52,211,153,.38);--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5' width='16' height='15' rx='2'/%3E%3Cpath d='M8 3v4M16 3v4M4 10h16'/%3E%3C/svg%3E")}
+.tile.is-loading b{color:transparent;text-shadow:none;position:relative}
+.tile.is-loading b::after{content:"";position:absolute;left:0;top:4px;bottom:4px;width:62%;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.14) 37%,rgba(255,255,255,.05) 63%);background-size:240% 100%;animation:shimmer 1.4s linear infinite}
+
+/* ---------- member home ---------- */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;
+  background:radial-gradient(520px 240px at 0% 0%,rgba(245,158,11,.11),transparent 70%),radial-gradient(520px 260px at 100% 100%,rgba(59,130,246,.10),transparent 70%),var(--surface)}
+@media(max-width:520px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.ring{position:relative;width:156px;height:156px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.ring svg circle:first-child{stroke:rgba(255,255,255,.07)}
+.ring svg circle:last-child{stroke:url(#gAmber);filter:drop-shadow(0 0 7px rgba(245,158,11,.55));animation:ring 1.1s var(--ease) both}
+@keyframes ring{from{stroke-dashoffset:339.3}}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .c b{font-family:var(--f-display);font-size:34px;font-weight:800;line-height:1;letter-spacing:-.03em;color:#fff}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.levels div{border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center;font-size:11px;background:var(--surface2);min-width:0;color:var(--muted);transition:all .2s ease-in-out}
+.levels div b{display:block;font-family:var(--f-display);font-size:13px;color:var(--ink)}
+.levels div.on{background:var(--grad-gold);border-color:transparent;color:#3A2200;box-shadow:0 6px 20px rgba(245,158,11,.35)}
+.levels div.on b{color:#2A1700}
+.levels div.done{background:var(--brand-soft);border-color:rgba(59,130,246,.35);color:#BFDBFE}
+.levels div.done b{color:#DBEAFE}
+.badge{display:flex;gap:12px;align-items:center}
+.badge .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:var(--surface2);border:1px solid var(--line);filter:grayscale(1);opacity:.65;flex:none;transition:all .2s ease-in-out}
+.badge.on .ic{filter:none;opacity:1;background:var(--gold-soft);border-color:rgba(245,158,11,.5);box-shadow:0 0 18px rgba(245,158,11,.3)}
+.pie{width:116px;height:116px;flex:none}
+.pie circle{transition:all .6s var(--ease)}
+
+/* ---------- events ---------- */
+.ev h3{font-size:16px}
+.ev .meta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.ev .meta dt{color:var(--muted)} .ev .meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.days{display:flex;gap:5px;flex-wrap:wrap}
+.days i{width:17px;height:17px;border-radius:5px;border:1px solid var(--line-2);background:var(--surface2);transition:all .2s ease-in-out}
+.days i.ok{background:var(--good);border-color:var(--good);box-shadow:0 0 10px rgba(52,211,153,.45)} .days i.pd{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(245,158,11,.4)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s ease-in-out}
+.filters button:hover{color:var(--ink);border-color:var(--line-2);transform:translateY(-1px)}
+.filters button[aria-pressed="true"]{border-color:rgba(59,130,246,.6);color:#BFDBFE;background:var(--brand-soft)}
+
+/* ---------- feed + photos ---------- */
+.photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;background:var(--surface2);border:1px solid var(--line)}
+.linkbox{aspect-ratio:4/3;border-radius:12px;border:1px dashed var(--line-2);display:grid;place-content:center;text-align:center;padding:12px;font-size:12px;color:var(--muted);overflow-wrap:anywhere;background:rgba(255,255,255,.02)}
 .tile-photo{position:relative}
-.tile-photo .who{position:absolute;left:6px;top:6px}
 
-/* modal */
-.scrim{position:fixed;inset:0;background:rgba(6,12,26,.6);display:grid;place-items:end center;z-index:50;padding:0}
+/* ---------- empty states: deliberate, not blank ---------- */
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:36px 24px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:var(--r);
+  background:radial-gradient(420px 160px at 50% 0%,rgba(59,130,246,.07),transparent 70%),rgba(255,255,255,.015)}
+.empty::before{content:"";width:52px;height:52px;margin-bottom:8px;border-radius:16px;border:1px solid rgba(147,197,253,.22);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393C5FD' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='22 12 16 12 14 15 10 15 8 12 2 12'/%3E%3Cpath d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/%3E%3C/svg%3E") center/24px no-repeat,linear-gradient(145deg,rgba(59,130,246,.18),rgba(6,182,212,.08));box-shadow:0 8px 24px -8px rgba(59,130,246,.45)}
+.empty b{font-family:var(--f-display);font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.empty span{max-width:46ch;font-size:13px}
+.empty .btn{margin-top:8px}
+.empty br{display:none}
+.empty.err{border-color:rgba(248,113,113,.4);background:radial-gradient(420px 160px at 50% 0%,rgba(248,113,113,.09),transparent 70%),rgba(255,255,255,.015);color:#FCA5A5}
+.empty.err::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FCA5A5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 8v5M12 16.5v.01'/%3E%3C/svg%3E") center/24px no-repeat,linear-gradient(145deg,rgba(248,113,113,.2),rgba(248,113,113,.06));border-color:rgba(248,113,113,.3);box-shadow:0 8px 24px -8px rgba(248,113,113,.45)}
+td.muted{padding:22px 14px;text-align:center}
+
+/* ---------- loading: skeleton shimmer ---------- */
+@keyframes shimmer{to{background-position:-240% 0}}
+.skel{display:block;min-height:96px;border-radius:var(--r);border:1px solid var(--line);
+  background:linear-gradient(90deg,rgba(255,255,255,.035) 25%,rgba(255,255,255,.09) 37%,rgba(255,255,255,.035) 63%);background-size:240% 100%;animation:shimmer 1.4s linear infinite}
+.skel.tall{min-height:200px}
+.empty.loading{border-style:solid;border-color:var(--line);color:var(--muted);min-height:96px;justify-content:center;
+  background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.08) 37%,rgba(255,255,255,.03) 63%);background-size:240% 100%;animation:shimmer 1.4s linear infinite}
+.empty.loading::before{display:none}
+.boot-top{height:66px;border-bottom:1px solid var(--line);background:rgba(11,15,25,.72)}
+.boot-top .skel{height:100%;border:0;border-radius:0;min-height:0;opacity:.5}
+.boot .wrap{padding-top:24px}
+.boot-msg{text-align:center;font-weight:500}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(3,7,18,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:end center;z-index:50;padding:0;animation:fade .18s ease-out both}
 @media(min-width:640px){.scrim{place-items:center;padding:20px}}
-.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
-@media(min-width:640px){.sheet{border-radius:18px}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{background:linear-gradient(180deg,#131B2D,#0F1626);border:1px solid var(--line-2);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop .24s var(--ease) both}
+@keyframes pop{from{opacity:.2;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@media(min-width:640px){.sheet{border-radius:22px}}
 .sheet.wide{max-width:900px}
 .admsel{min-width:120px}
 .steps{display:flex;gap:6px}
-.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
-.steps i.on{background:var(--gold)} .steps i.done{background:var(--brand)}
-.cam{aspect-ratio:4/3;border-radius:12px;background:#0b1220;color:#9db3dd;display:grid;place-content:center;text-align:center;padding:16px;position:relative;font-size:12px}
-.cam::before,.cam::after{content:"";position:absolute;width:26px;height:26px;border:3px solid var(--gold)}
+.steps i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.1);transition:all .2s ease-in-out}
+.steps i.on{background:var(--grad-gold);box-shadow:0 0 10px rgba(245,158,11,.5)} .steps i.done{background:var(--grad)}
+.cam{aspect-ratio:4/3;border-radius:14px;background:#070B14;color:#9db3dd;display:grid;place-content:center;text-align:center;padding:16px;position:relative;font-size:12px;border:1px solid var(--line)}
+.cam::before,.cam::after{content:"";position:absolute;width:26px;height:26px;border:3px solid var(--gold-2);border-radius:4px}
 .cam::before{left:12px;top:12px;border-right:0;border-bottom:0}
 .cam::after{right:12px;bottom:12px;border-left:0;border-top:0}
 .cam b{color:#fff;font-size:14px}
-.qrwrap{display:grid;place-items:center;gap:10px}
-.qrbox{background:#fff;padding:12px;border-radius:12px;width:min(100%,280px);aspect-ratio:1}
-.qrbox svg{width:100%;height:100%;display:block}
-.code{font-family:var(--f-mono);font-size:34px;font-weight:600;letter-spacing:.18em}
-.toastbox{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;place-items:center;z-index:80;pointer-events:none;padding:0 16px}
-.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;max-width:520px;box-shadow:var(--shadow)}
+.qrwrap{display:grid;place-items:center;gap:14px;padding:28px 20px}
+.code{font-family:var(--f-mono);font-size:44px;font-weight:600;letter-spacing:.22em;padding-left:.22em;color:#fff;
+  background:linear-gradient(135deg,#BFDBFE,#67E8F9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 18px rgba(6,182,212,.45))}
+.toastbox{position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:grid;place-items:center;z-index:80;pointer-events:none;padding:0 16px}
+.toast{background:rgba(17,24,39,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);padding:12px 18px;border-radius:14px;font-weight:600;font-size:13px;max-width:520px;
+  border:1px solid var(--line-2);border-left:3px solid var(--brand-2);box-shadow:0 18px 50px rgba(0,0,0,.55);animation:toast .26s var(--ease) both}
+@keyframes toast{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 
-/* certificate */
-.cert{background:#FFFDF6;color:#14213D;border:2px solid #14428C;outline:6px double #F2A900;outline-offset:-14px;border-radius:6px;padding:34px 28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+/* ---------- certificate: stays light, it is a document that gets printed ---------- */
+.cert{background:#FFFDF6;color:#14213D;border:2px solid #14428C;outline:6px double #F2A900;outline-offset:-14px;border-radius:8px;padding:38px 30px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:0 24px 60px -20px rgba(0,0,0,.65)}
 .cert h2{font-size:clamp(22px,5vw,32px);color:#14428C}
-.cert .big{font-family:var(--f-display);font-size:clamp(26px,6vw,40px);font-weight:800}
+.cert .big{font-family:var(--f-display);font-size:clamp(26px,6vw,40px);font-weight:800;color:#14213D}
 .cert .sigs{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;margin-top:10px}
 .cert .sig{font-family:var(--f-script);font-size:28px;border-bottom:1px solid #14213D;padding:0 18px;min-width:150px}
 .cert .sl{font-size:11px;color:#4a5878;margin-top:2px}
 .cert ul{margin:0;padding:0;list-style:none;font-size:13px}
 
-.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center}
-/* auth screen */
-input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center;padding-top:8px;border-top:1px solid var(--line)}
+@media print{body::before{display:none}html{background:#fff}body *{visibility:hidden}#certBox,#certBox *{visibility:visible}#certBox{position:absolute;left:0;top:0;width:100%;box-shadow:none}}
+
+/* ---------- sign-in ---------- */
 .authwrap{min-height:100vh;display:grid;place-items:center;padding:20px}
-.authcard{width:100%;max-width:400px}
-.authcard .brand b{color:var(--ink)}
+.authcard{width:100%;max-width:410px;padding:28px;gap:14px;box-shadow:0 30px 80px -20px rgba(0,0,0,.65),0 0 60px -20px rgba(59,130,246,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.authcard .brand b{color:#F8FAFC}
+.authcard .brand span{display:block;margin-top:2px}
+.authcard .btn{padding:11px 16px}
 .err{color:var(--bad);font-size:12px;font-weight:700;min-height:16px}
-@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+@media (max-width:520px){.wrap{padding:18px 14px 64px}.top-in{padding:12px 14px}.tile b{font-size:30px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 </style>
 
 <div id="app"></div>
 <div id="modal"></div>
 <div class="toastbox"><div id="toast" class="toast" hidden></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="gAmber" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#F59E0B"/></linearGradient></defs></svg>
 
 <script>
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const SECT=['Creative','Events','Finance','Community'];
 const LV=['Novice Interactor','Active Change Maker','Community Leader','Rotary Ambassador'];
 const LVMIN=[0,10,25,50];
 const lvl=h=>h<10?0:h<25?1:h<50?2:3;
 const f1=n=>(Math.round(n*10)/10).toFixed(1);
 const fmt=ts=>new Date(ts).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-const VLABEL={gps:'GPS 200 m',qr:'Live QR',selfie:'Live photo',link:'Work link'};
+const VLABEL={gps:'GPS 200 m',qr:'Live code',selfie:'Live photo',link:'Work link'};
 
-function photo(seed,label,ts){
-  const c=document.createElement('canvas');c.width=320;c.height=240;const x=c.getContext('2d');const r=mul(seed);const h=Math.floor(r()*360);
-  const g=x.createLinearGradient(0,0,0,240);g.addColorStop(0,`hsl(${h},45%,72%)`);g.addColorStop(1,`hsl(${(h+40)%360},40%,36%)`);
-  x.fillStyle=g;x.fillRect(0,0,320,240);
-  for(let i=0;i<5;i++){x.fillStyle=`hsla(${(h+i*30)%360},40%,${25+r()*30}%,.55)`;x.beginPath();x.arc(r()*320,120+r()*110,30+r()*60,0,7);x.fill()}
-  for(let i=0;i<4;i++){const px=50+i*70+r()*18;x.fillStyle='rgba(16,28,52,.55)';x.beginPath();x.arc(px,128,16,0,7);x.fill();x.fillRect(px-21,146,42,58)}
-  x.fillStyle='rgba(8,16,32,.82)';x.fillRect(0,204,320,36);x.font='bold 11px monospace';x.fillStyle='#fff';x.fillText('LIVE CAPTURE  '+fmt(ts),10,219);x.fillStyle='#F2A900';x.fillText(label.slice(0,42),10,234);
-  return c.toDataURL('image/jpeg',.6);
-}
+/* ---------- live data: one call to /api/bootstrap fills M (members), E (events), L (logs) ---------- */
+let M=[],E=[],L=[],ME='',CI=null;
+const DATA={ready:false,err:''};
+let S={role:'member',lead:'Community',tab:{member:'home',lead:'review',pres:'center',vol:'events'},filter:'all',q:'',certM:'',exSec:'all',exSt:'all',pend:null,user:null,
+  qrE:null,qrFor:null,qrCode:null,qrExp:0,qrErr:'',qrBusy:false,nfPos:null};
+const ST_OF={volunteer:'keep',member:'active',pres:'active',admin:'active',lead:'lead'};
+const ROLE_LABEL={volunteer:'Volunteer',member:'Member',lead:'Sector Lead',pres:'Co-President',admin:'Admin'};
+const P=id=>M.find(m=>m.id===id), EV=id=>E.find(e=>e.id===id);
+const nameOf=id=>{const m=P(id);return m?m.name:'Former member'};
 
-/* ---------- sample data ---------- */
-let M,E,L,S,CI=null,lid=0;
-function init(){
-  const rnd=mul(2026);
-  const FN=['Nomin','Temuulen','Anujin','Bat-Erdene','Ariunaa','Tuguldur','Enkhjin','Munkh-Orgil','Khulan','Tselmeg','Dorjsuren','Narantsetseg','Orgil','Misheel','Zolboo','Amar','Bayarmaa','Chinguun','Delger','Erdene','Gerel','Ichinkhorloo','Jargal','Naran','Odgerel','Sukhbat','Uyanga','Yesui','Tamir','Altan'];
-  const IN='BGDESTMNOU'.split('');
-  const nm=i=>FN[i%30]+' '+IN[(i*7+Math.floor(i/30)*3+3)%10]+'.';
-  M=[];
-  for(let i=0;i<60;i++){
-    const lead=i>=1&&i<=4;
-    M.push({id:'m'+i,name:i===0?'Nomin B.':nm(i),st:lead?'lead':'active',sec:i===0?'Creative':lead?SECT[i-1]:SECT[Math.floor(rnd()*4)],
-      in:i===0?0:Math.round((4+rnd()*17)*2)/2,out:i===0?0:Math.round((2+rnd()*12)*2)/2,req:false});
-  }
-  for(let i=0;i<10;i++)M.push({id:'v'+i,name:i===0?'Saruul T.':nm(60+i),st:'keep',sec:SECT[Math.floor(rnd()*4)],in:0,out:0,req:false});
-  const sh=['Tarot reading','Photobooth','Scavenger desk'],sh2=['Shagai games','Tarot reading','Photobooth'];
-  E=[
-   {id:'e1',t:'Halloween Scavenger Hunt & Fashion Walk',sec:'Events',h:3,cap:15,loc:'Main Auditorium',date:'Oct 31',type:'in',v:['gps','qr','selfie'],shifts:sh,setup:true,vol:3,active:false},
-   {id:'e2',t:'Tsagaan Sar Booth Rotation',sec:'Events',h:2.5,cap:12,loc:'School gym',date:'Feb 2027',type:'in',v:['gps','qr','selfie'],shifts:sh2,setup:true,vol:2,active:false},
-   {id:'e3',t:'Club Fair Booth',sec:'Events',h:2,cap:8,loc:'School lobby',date:'Sep 24',type:'in',v:['gps','qr','selfie'],setup:true,vol:0,active:false},
-   {id:'e4',t:'Pepero Day Order Run',sec:'Finance',h:1.5,cap:10,loc:'Finance room 204',date:'Nov 11',type:'in',v:['gps','qr','selfie'],orders:{placed:42,delivered:31},vol:2,active:false},
-   {id:'e5',t:'Tsergiin Bayr Video Edit',sec:'Creative',h:4,cap:6,loc:'Off-site task',date:'Mar 2027',type:'in',v:['link'],vol:0,active:false},
-   {id:'e6',t:"Women's Day Graphics Set",sec:'Creative',h:3,cap:6,loc:'Off-site task',date:'Due Oct 20',type:'in',v:['link'],vol:0,active:true},
-   {id:'e7',t:'2-Week Tree Planting',sec:'Community',h:1,cap:20,loc:'Songino Khairkhan planting site',date:'Oct 5 to Oct 18',type:'out',v:['gps','qr','selfie'],days:14,vol:4,active:true},
-   {id:'e8',t:'City Cleanup',sec:'Community',h:2,cap:25,loc:'Peace Avenue, Sukhbaatar Sq. side',date:'Oct 10',type:'out',v:['gps','qr','selfie'],vol:5,active:true},
-   {id:'e9',t:'Khoroo Aid Delivery',sec:'Community',h:2.5,cap:12,loc:'Three drop-off zones',date:'Oct 24',type:'out',v:['gps','qr','selfie'],points:['Khoroo office (pickup)','Zone A drop-off','Zone B drop-off'],vol:3,active:false},
-   {id:'e10',t:'TYK Distribution',sec:'Community',h:2,cap:14,loc:'Two distribution points',date:'Nov 3',type:'out',v:['gps','qr','selfie'],points:['Warehouse pickup','Distribution point'],vol:3,active:false},
-   {id:'e11',t:'Animal Shelter Visit',sec:'Community',h:2,cap:10,loc:'City animal shelter',date:'Nov 7',type:'out',v:['gps','qr','selfie'],waiver:true,vol:2,active:false},
-   {id:'e12',t:'Orphanage Visit',sec:'Community',h:2.5,cap:10,loc:'Children\'s home',date:'Nov 21',type:'out',v:['gps','qr','selfie'],waiver:true,vol:2,active:false}
-  ];
-  const act=M.filter(m=>m.st!=='keep'&&m.id!=='m0');
-  E.forEach(e=>{e.signups=[];e.vsign=[];const n=Math.min(e.cap-1,Math.round(e.cap*(.35+rnd()*.5)));
-    for(let k=0;k<n;k++){const m=act[Math.floor(rnd()*act.length)];if(!e.signups.find(s=>s.m===m.id))e.signups.push({m:m.id,shift:e.shifts?e.shifts[k%3]:null})}
-    e.vsign=M.filter(m=>m.st==='keep'&&m.id!=='v0').slice(0,Math.floor(rnd()*3)).map(m=>m.id)});
-  ['e1','e7','e8','e6'].forEach(id=>{const e=E.find(x=>x.id===id);e.signups.push({m:'m0',shift:e.shifts?e.shifts[0]:null})});
-  L=[];
-  const add=(mid,eid,status,ago,x)=>{const e=E.find(q=>q.id===eid),ts=Date.now()-ago*3600e3;L.push(Object.assign({id:'l'+(++lid),mid,eid,h:e.h,status,ts,ph:e.v.includes('selfie')?photo(lid*97+3,e.t,ts):null,link:null,ot:null,fl:false,cheer:[],cm:[]},x||{}))};
-  /* the signed-in account (m0) starts with no logs: it is a placeholder, so its hours must read 0 */
-  add('m5','e7','pending',3,{day:2});add('m6','e7','pending',5,{day:1});add('m7','e7','pending',2,{day:3,ot:{hrs:1,reason:'Stayed to water the new seedlings after the crew left.',status:'pending'}});
-  add('m8','e6','pending',9,{link:'canva.com/design/women-day-poster-set'});add('m9','e6','pending',20,{link:'drive.google.com/file/womens-day-banner'});
-  add('m10','e3','pending',30);add('m11','e3','pending',31);
-  add('m12','e4','pending',12);
-  add('m20','e8','approved',50,{});add('m21','e8','approved',50,{});
-  S={role:'member',lead:'Community',tab:{member:'home',lead:'review',pres:'center',vol:'events'},filter:'all',q:'',certM:'m0',exSec:'all',exSt:'all',waived:{},pend:null};
-}
-init();
+/* Turn the server's answer into the shapes the screens use. All ids become strings. */
+function adopt(d){
+  ME=String(d.me.id);
+  M=d.members.map(m=>({id:String(m.id),name:m.name,role:m.role,st:ST_OF[m.role]||'active',sec:m.sector||'',in:m.in||0,out:m.out||0,req:!!m.req}));
+  E=d.events.map(e=>({id:String(e.id),t:e.title,sec:e.sector,h:e.hours,cap:e.capacity,loc:e.location,date:e.dateLabel,type:e.type,v:e.verification,
+    shifts:e.shifts||undefined,points:e.points||undefined,days:e.days>1?e.days:undefined,waiver:!!e.waiver,setup:!!e.setup,vol:e.volunteerSlots,
+    active:!!e.active,lat:e.lat,lng:e.lng,signups:e.signups.map(s=>({m:String(s.u),shift:s.shift})),vsign:e.vsign.map(String)}));
+  const ev=new Map(E.map(e=>[e.id,e]));
+  L=d.logs.filter(l=>ev.has(String(l.eid))).map(l=>{const e=ev.get(String(l.eid));
+    return{id:String(l.id),mid:String(l.uid),eid:String(l.eid),h:l.hours,day:e.days?l.day:undefined,status:l.status,ts:Date.parse(l.ts),
+      ph:l.hasPhoto?'/api/hours/'+l.id+'/photo':null,link:l.link||null,ot:l.ot?{hrs:l.ot.hrs,reason:l.ot.reason,status:l.ot.status}:null,
+      fl:!!l.flagged,feed:!!l.feed,cheer:l.cheers.map(String),cm:l.comments}})}
+
+async function reload(){adopt(await api('/api/bootstrap'));CERT.map={};EXPORT.key='';DATA.ready=true;DATA.err=''}
+function expired(x){if(x&&x.status===401){S.user=null;DATA.ready=false;modal('');authView('login','Your session expired. Please log in again.');return true}return false}
+async function loadAll(){try{await reload()}catch(x){if(expired(x))return;DATA.err=x.message||'Could not load your club data.'}render()}
 
 /* ---------- derived ---------- */
-const P=id=>M.find(m=>m.id===id), EV=id=>E.find(e=>e.id===id);
-function hrs(mid){const m=P(mid);let i=m.in,o=m.out,pen=0;
-  L.filter(l=>l.mid===mid).forEach(l=>{const e=EV(l.eid);const ot=l.ot&&l.ot.status==='approved'?l.ot.hrs:0;
-    if(l.status==='approved'){if(e.type==='in')i+=l.h+ot;else o+=l.h+ot}else if(l.status==='pending')pen+=l.h});
-  return{i,o,t:i+o,pen}}
-function secTotals(){const t={Creative:0,Events:0,Finance:0,Community:0};
-  M.filter(m=>m.st!=='keep').forEach(m=>t[m.sec]+=m.in+m.out);
-  L.filter(l=>l.status==='approved').forEach(l=>t[EV(l.eid).sec]+=l.h+(l.ot&&l.ot.status==='approved'?l.ot.hrs:0));return t}
-function badges(mid){const al=L.filter(l=>l.mid===mid&&l.status==='approved');const b={media:0,ops:0,trips:0,streak:0};
-  const media=b.media+al.filter(l=>EV(l.eid).sec==='Creative').reduce((a,l)=>a+l.h,0);
-  const ops=b.ops+new Set(al.filter(l=>EV(l.eid).setup).map(l=>l.eid)).size;
-  const trips=b.trips+new Set(al.filter(l=>EV(l.eid).type==='out').map(l=>l.eid)).size;
+function hrs(mid){const m=P(mid)||{in:0,out:0};
+  const pen=L.filter(l=>l.mid===mid&&l.status==='pending').reduce((a,l)=>a+l.h,0);
+  return{i:m.in,o:m.out,t:m.in+m.out,pen}}
+function badges(mid){const al=L.filter(l=>l.mid===mid&&l.status==='approved'&&EV(l.eid));
+  const media=al.filter(l=>EV(l.eid).sec==='Creative').reduce((a,l)=>a+l.h,0);
+  const ops=new Set(al.filter(l=>EV(l.eid).setup).map(l=>l.eid)).size;
+  const trips=new Set(al.filter(l=>EV(l.eid).type==='out').map(l=>l.eid)).size;
   return[{k:'Media Guru',ic:'🎨',v:media,n:10,d:'10+ hours in design, media or promo content'},
     {k:'Operations Master',ic:'⚙️',v:ops,n:3,d:'3+ setups or teardowns for major school events'},
-    {k:'Community Hero',ic:'🤝',v:trips,n:3,d:'3+ out-of-school service trips'},
-    {k:'Streak Master',ic:'🔥',v:b.streak,n:3,d:'Attended 3 consecutive official initiatives'}]}
-const pending=sec=>L.filter(l=>l.status==='pending'&&(!sec||EV(l.eid).sec===sec));
+    {k:'Community Hero',ic:'🤝',v:trips,n:3,d:'3+ out-of-school service trips'}]}
+/* never list your own hours for review: the server would refuse to let you decide them */
+const pending=sec=>L.filter(l=>l.status==='pending'&&l.mid!==ME&&EV(l.eid)&&(!sec||EV(l.eid).sec===sec));
 const flagged=()=>L.filter(l=>l.fl);
-const otReq=()=>L.filter(l=>l.ot&&l.ot.status==='pending');
+const otReq=()=>L.filter(l=>l.ot&&l.ot.status==='pending'&&l.mid!==ME);
 const leadOf=sec=>M.find(m=>m.st==='lead'&&m.sec===sec);
 const mySign=(e,mid)=>e.signups.find(s=>s.m===mid);
-const code=(eid,w)=>{let h=2166136261;for(const c of eid+':'+w){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return String((h>>>0)%1000000).padStart(6,'0')};
-const win=()=>Math.floor(Date.now()/30000);
+const linkHtml=u=>{const s=safeUrl(u);return s?`<a href="${esc(s)}" target="_blank" rel="noopener noreferrer">${esc(s)}</a>`:esc(u||'')};
+const hav=(a,b,c,d)=>{const R=6371000,r=x=>x*Math.PI/180,q=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(q))};
 
-function qrSvg(c){const n=25,r=mul(parseInt(c,10)||1);let d='';
-  const fin=(x,y)=>(x<8&&y<8)||(x>=n-8&&y<8)||(x<8&&y>=n-8);
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(fin(x,y))continue;if(r()>.5)d+=`M${x},${y}h1v1h-1z`}
-  const f=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#0b1220"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0b1220"/>`;
-  return`<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" role="img" aria-label="Check-in QR code (visual sample)"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#0b1220"/>${f(0,0)}${f(n-7,0)}${f(0,n-7)}</svg>`}
+/* ---------- certificate and Rotary report: fetched when the screen opens ---------- */
+const CERT={map:{},loading:{},err:''};
+const certId=()=>S.role==='member'&&S.tab.member==='cert'?ME:(S.role==='pres'&&S.tab.pres==='certs'?(S.certM||ME):null);
+async function loadCert(id){
+  if(CERT.loading[id])return;CERT.loading[id]=true;
+  try{CERT.map[id]=await api('/api/certificate/'+id);CERT.err=''}catch(x){CERT.loading[id]=false;if(expired(x))return;CERT.err=x.message}
+  CERT.loading[id]=false;if(certId()===id)render()}
+/* not after an error, so a failing server cannot cause a request loop; Retry clears it */
+function maybeCert(){const id=certId();if(id&&!CERT.map[id]&&!CERT.loading[id]&&!CERT.err)loadCert(id)}
+
+const EXPORT={key:'',text:'',err:'',loading:false};
+const exKey=()=>S.exSec+'|'+S.exSt;
+const exOpen=()=>S.role==='pres'&&S.tab.pres==='export';
+const exUrl=extra=>'/api/export?sector='+encodeURIComponent(S.exSec)+'&status='+encodeURIComponent(S.exSt)+(extra||'');
+async function loadExport(){
+  if(EXPORT.loading)return;const key=exKey();EXPORT.loading=true;EXPORT.err='';
+  try{const r=await fetch(exUrl(),{credentials:'same-origin'});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw Object.assign(new Error(d.error||'Could not load the report'),{status:r.status})}
+    EXPORT.text=await r.text()}
+  catch(x){if(expired(x)){EXPORT.loading=false;return}EXPORT.err=x.message;EXPORT.text=''}
+  EXPORT.key=key;EXPORT.loading=false;
+  if(exKey()!==key)return loadExport(); /* the filters changed while loading */
+  if(exOpen())render()}
+function maybeExport(){if(exOpen()&&EXPORT.key!==exKey()&&!EXPORT.loading)loadExport()}
 
 /* ---------- views ---------- */
 const TABS={
   member:[['home','My impact'],['events','Events'],['feed','Club feed'],['cert','Certificate']],
   vol:[['events','Events'],['status','My status']],
-  lead:[['review','Approvals'],['events','Events'],['qr','Check-in QR'],['sector','Sectors']],
+  lead:[['review','Approvals'],['events','Events'],['qr','Check-in code'],['sector','Sectors']],
   pres:[['center','Command center'],['roster','Roster'],['over','Overrides'],['export','Export'],['certs','Certificates']]};
 const ROLES=[['pres','Co-President'],['lead','Sector Lead'],['member','Member'],['vol','Volunteer']];
 
 function render(){
+  if(!S.user)return;
+  if(!DATA.ready){$('#app').innerHTML=DATA.err?`<div class="authwrap"><div class="card stack authcard"><p class="err">${esc(DATA.err)}</p><button class="btn pri" data-act="retry">Try again</button></div></div>`:`<div class="boot" role="status" aria-live="polite"><div class="boot-top"><i class="skel"></i></div><div class="wrap"><p class="muted boot-msg">Loading your club data...</p><div class="grid g3"><i class="skel"></i><i class="skel"></i><i class="skel"></i></div><div class="grid"><i class="skel tall"></i><i class="skel tall"></i></div></div></div>`;return}
   const r=S.role,tab=S.tab[r];
-  maybeStats();
+  maybeStats();maybeCert();maybeExport();
   const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length};
   $('#app').innerHTML=`
   <header class="top"><div class="top-in">
@@ -299,14 +392,13 @@ function render(){
   <main class="wrap">
     <nav class="tabs" role="tablist">${TABS[r].map(([k,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="tab" data-t="${k}">${n}${(r==='lead'&&k==='review'&&cnt.review)?`<span class="dot">${cnt.review}</span>`:''}${(r==='pres'&&k==='over'&&cnt.over)?`<span class="dot">${cnt.over}</span>`:''}</button>`).join('')}</nav>
     <div id="view" class="stack" style="gap:16px">${VIEW[r][tab]()}</div>
-    <div class="foot"><span>Switch roles above to try each side of the app. Camera, GPS and QR scanning are simulated in this preview.</span><button class="btn sm" data-act="reset">Reset sample data</button></div>
+    <div class="foot"><span>${isPres()?'Switch roles above to preview each side of the app. Everything shown is live club data.':'Everything shown here is live club data.'}</span></div>
   </main>`;
 }
 
 function evCard(e,mode){
-  const mid=mode==='vol'?'v0':'m0';
-  const s=mode==='vol'?null:mySign(e,mid);
-  const mine=L.filter(l=>l.mid===mid&&l.eid===e.id);
+  const s=mode==='vol'?null:mySign(e,ME);
+  const mine=L.filter(l=>l.mid===ME&&l.eid===e.id);
   const full=e.signups.length>=e.cap;
   const vOpen=e.vol-e.vsign.length;
   let act='';
@@ -314,52 +406,53 @@ function evCard(e,mode){
     const slots=e.days||1,used=mine.filter(l=>l.status!=='rejected').length;
     if(!s)act=`<button class="btn pri" data-act="signup" data-id="${e.id}" ${full?'disabled':''}>${full?'Full':'Sign up'}</button>`;
     else if(used>=slots)act=`<span class="pill good">All logged</span>`;
-    else act=`<button class="btn gold" data-act="ci" data-id="${e.id}">${e.days?`Check in, day ${used+1}`:'Scan check-in'}</button><button class="btn sm" data-act="unsign" data-id="${e.id}">Leave</button>`;
+    else act=`<button class="btn gold" data-act="ci" data-id="${e.id}">${e.days?`Check in, day ${used+1}`:'Check in'}</button><button class="btn sm" data-act="unsign" data-id="${e.id}">Leave</button>`;
   }else if(mode==='vol'){
-    const joined=e.vsign.includes('v0');
+    const joined=e.vsign.includes(ME);
     act=joined?`<span class="pill good">Standby slot booked</span><button class="btn sm" data-act="vleave" data-id="${e.id}">Cancel</button>`:`<button class="btn pri" data-act="vsign" data-id="${e.id}" ${vOpen<=0?'disabled':''}>${vOpen>0?'Take a volunteer slot':'No open slots'}</button>`;
   }
   const dots=e.days?`<div class="days" aria-label="Daily check-ins">${Array.from({length:e.days},(_,i)=>{const l=mine.find(x=>x.day===i+1);return`<i class="${l?(l.status==='approved'?'ok':'pd'):''}"></i>`}).join('')}</div>`:'';
-  const names=e.signups.slice(0,8).map(x=>P(x.m).name).join(', ')+(e.signups.length>8?` and ${e.signups.length-8} more`:'');
+  const names=e.signups.slice(0,8).map(x=>nameOf(x.m)).join(', ')+(e.signups.length>8?` and ${e.signups.length-8} more`:'');
   return`<article class="card ev stack">
     <div class="row between" style="align-items:flex-start"><h3>${esc(e.t)}</h3><span class="pill gold mono">${f1(e.h)} h${e.days?' / day':''}</span></div>
-    <div class="chips"><span class="pill">${e.sec}</span><span class="chip">${e.type==='in'?'In-school':'Out-of-school'}</span>${e.v.map(v=>`<span class="chip">${VLABEL[v]}</span>`).join('')}${e.waiver?'<span class="chip">Waiver required</span>':''}${e.active?'<span class="pill good">Active now</span>':''}</div>
-    <dl class="meta" style="margin:0"><dt>When</dt><dd>${e.date}</dd><dt>Where</dt><dd>${esc(e.loc)}</dd>
+    <div class="chips"><span class="pill">${e.sec}</span><span class="chip">${e.type==='in'?'In-school':'Out-of-school'}</span>${e.v.map(v=>`<span class="chip">${VLABEL[v]||esc(v)}</span>`).join('')}${e.waiver?'<span class="chip">Waiver required</span>':''}${e.active?'<span class="pill good">Active now</span>':''}</div>
+    <dl class="meta" style="margin:0"><dt>When</dt><dd>${esc(e.date)}</dd><dt>Where</dt><dd>${esc(e.loc)}</dd>
       <dt>Roster</dt><dd>${e.signups.length} of ${e.cap} members${mode==='vol'?`, ${vOpen} volunteer slots open`:''}</dd>
       ${e.points?`<dt>Zones</dt><dd>${e.points.map(esc).join(' · ')}</dd>`:''}
-      ${s&&s.shift?`<dt>Your booth</dt><dd><b>${s.shift}</b></dd>`:''}
-      ${e.orders?`<dt>Orders</dt><dd>${e.orders.placed} placed, ${e.orders.delivered} delivered</dd>`:''}</dl>
+      ${s&&s.shift?`<dt>Your booth</dt><dd><b>${esc(s.shift)}</b></dd>`:''}</dl>
     <div class="bar"><i style="width:${Math.min(100,e.signups.length/e.cap*100)}%"></i></div>
     ${dots}
     ${mode==='vol'?`<details><summary class="small muted" style="cursor:pointer">Public roster</summary><p class="small" style="margin-top:6px">${esc(names)||'No sign-ups yet'}</p></details>`:''}
     ${mine.length&&mode==='member'&&!e.days?`<p class="small muted">Your log: ${mine.map(l=>l.status).join(', ')}</p>`:''}
     <div class="row">${act}</div></article>`}
 
-function certHtml(mid){
-  const m=P(mid),H=hrs(mid),projs=[...new Set(L.filter(l=>l.mid===mid&&l.status==='approved').map(l=>EV(l.eid).t))].slice(0,4);
-  const role=m.st==='lead'?`Sector Lead, ${m.sec}`:`Member, ${m.sec} sector`;
+function certHtml(id){
+  const c=CERT.map[id];
+  if(!c)return`<div class="empty${CERT.err?' err':' loading'}">${CERT.err?esc(CERT.err)+'<br><button class="btn sm" data-act="certretry" style="margin-top:8px">Retry</button>':'Loading certificate...'}</div>`;
+  const t=c.in+c.out,role=(ROLE_LABEL[c.role]||c.role)+(c.sector?`, ${c.sector}`:'');
+  const sigs=(c.signers.length?c.signers:['']).map(n=>`<div><div class="sig">${esc(n)||'&nbsp;'}</div><div class="sl">Co-President</div></div>`).join('');
   return`<div class="cert" id="certBox">
     <div class="eyebrow" style="color:#4a5878">Rotary Interact Club</div>
     <h2>Certificate of Verified Service</h2>
     <p style="font-size:13px">This certifies that</p>
-    <div class="big">${esc(m.name)}</div>
+    <div class="big">${esc(c.name)}</div>
     <p style="font-size:13px">has completed</p>
-    <div class="big mono" style="color:#B26A00">${f1(H.t)} verified hours</div>
-    <p style="font-size:13px">${LV[lvl(H.t)]} · ${esc(role)} · ${f1(H.i)} h in school, ${f1(H.o)} h in the community</p>
-    <ul>${(projs.length?projs:[m.sec+' sector service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
-    <div class="sigs"><div><div class="sig">Anujin B.</div><div class="sl">Co-President</div></div><div><div class="sig">Bat-Erdene S.</div><div class="sl">Co-President</div></div></div>
+    <div class="big mono" style="color:#B26A00">${f1(t)} verified hours</div>
+    <p style="font-size:13px">${LV[lvl(t)]} · ${esc(role)} · ${f1(c.in)} h in school, ${f1(c.out)} h in the community</p>
+    <ul>${(c.projects.length?c.projects:['Club service']).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+    <div class="sigs">${sigs}</div>
     <p style="font-size:11px;color:#4a5878">Issued ${new Date().toLocaleDateString([],{year:'numeric',month:'long',day:'numeric'})}. Hours counted only after Sector Lead approval.</p></div>`}
 
-function logRow(l){const e=EV(l.eid);const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
+function logRow(l){const e=EV(l.eid)||{t:'Removed event'};const st={pending:'warn',approved:'good',rejected:'bad'}[l.status];
   return`<div class="row between flat"><div style="min-width:0"><b>${esc(e.t)}${l.day?`, day ${l.day}`:''}</b><div class="small muted">${fmt(l.ts)}${l.ot?` · overtime +${f1(l.ot.hrs)} h (${l.ot.status})`:''}</div></div><div class="row"><span class="mono">${f1(l.h)} h</span><span class="pill ${st}">${l.status}</span></div></div>`}
 
 const VIEW={member:{},vol:{},lead:{},pres:{}};
 
 VIEW.member.home=()=>{
-  const m=P('m0'),H=hrs('m0'),lv=lvl(H.t),goal=30,C=2*Math.PI*54,pct=Math.min(1,H.t/goal);
+  const m=P(ME)||{name:S.user.name},H=hrs(ME),lv=lvl(H.t),goal=30,C=2*Math.PI*54,pct=Math.min(1,H.t/goal);
   const next=lv<3?LVMIN[lv+1]-H.t:0;
   const tot=H.i+H.o||1,pi=H.i/tot*100;
-  const my=L.filter(l=>l.mid==='m0').sort((a,b)=>b.ts-a.ts).slice(0,6);
+  const my=L.filter(l=>l.mid===ME).sort((a,b)=>b.ts-a.ts).slice(0,6);
   return`<section class="card hero">
     <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg>
       <div class="c"><b class="mono">${f1(H.t)}</b><span class="small muted">of ${goal} h goal</span></div></div>
@@ -368,37 +461,39 @@ VIEW.member.home=()=>{
       <div class="levels">${LV.map((n,i)=>`<div class="${i<lv?'done':i===lv?'on':''}"><b>L${i+1}</b>${LVMIN[i]}${i<3?'–'+LVMIN[i+1]:'+'} h</div>`).join('')}</div></div></section>
   <div class="grid">
     <section class="card stack"><h3>Where your hours came from</h3><div class="row">
-      <svg class="pie" viewBox="0 0 42 42" role="img" aria-label="${f1(H.i)} hours in school, ${f1(H.o)} hours out of school"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--gold)" stroke-width="7"/><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--brand)" stroke-width="7" stroke-dasharray="${pi} ${100-pi}" transform="rotate(-90 21 21)"/></svg>
+      <svg class="pie" viewBox="0 0 42 42" role="img" aria-label="${f1(H.i)} hours in school, ${f1(H.o)} hours out of school"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--gold)" stroke-width="7"/><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--brand)" stroke-width="7" stroke-dasharray="${H.t?pi:0} ${H.t?100-pi:100}" transform="rotate(-90 21 21)"/></svg>
       <div class="stack" style="gap:6px"><div><span class="pill">In school</span> <b class="mono">${f1(H.i)} h</b></div><div><span class="pill gold">Out of school</span> <b class="mono">${f1(H.o)} h</b></div></div></div></section>
-    <section class="card stack"><h3>Badges</h3>${badges('m0').map(b=>`<div class="badge ${b.v>=b.n?'on':''}"><div class="ic">${b.ic}</div><div style="flex:1;min-width:0"><b>${b.k}</b> ${b.v>=b.n?'<span class="pill gold">Earned</span>':''}<div class="bar gold" style="margin:4px 0"><i style="width:${Math.min(100,b.v/b.n*100)}%"></i></div><div class="small muted">${b.d} · ${f1(Math.min(b.v,b.n))}/${b.n}</div></div></div>`).join('')}</section></div>
-  <section class="card stack"><h3>My recent logs</h3>${my.map(logRow).join('')||'<div class="empty">No logs yet. Sign up for an event and check in.</div>'}</section>`};
+    <section class="card stack"><h3>Badges</h3>${badges(ME).map(b=>`<div class="badge ${b.v>=b.n?'on':''}"><div class="ic">${b.ic}</div><div style="flex:1;min-width:0"><b>${b.k}</b> ${b.v>=b.n?'<span class="pill gold">Earned</span>':''}<div class="bar gold" style="margin:4px 0"><i style="width:${Math.min(100,b.v/b.n*100)}%"></i></div><div class="small muted">${b.d} · ${f1(Math.min(b.v,b.n))}/${b.n}</div></div></div>`).join('')}</section></div>
+  <section class="card stack"><h3>My recent logs</h3>${my.map(logRow).join('')||'<div class="empty"><b>No logs yet.</b><span>Sign up for an event and check in.</span></div>'}</section>`};
 
 VIEW.member.events=()=>{
-  const f=S.filter,list=E.filter(e=>f==='all'||(f==='in'&&e.type==='in')||(f==='out'&&e.type==='out')||(f==='mine'&&mySign(e,'m0')));
+  const f=S.filter,list=E.filter(e=>f==='all'||(f==='in'&&e.type==='in')||(f==='out'&&e.type==='out')||(f==='mine'&&mySign(e,ME)));
+  const none=!E.length?'<b>No events yet.</b><span>Your Sector Leads will post events here.</span>':f==='mine'?"<b>You haven't signed up for any events yet.</b><span>Pick one from the All tab.</span>":'<b>No events match this filter.</b><span>Try another filter.</span>';
   return`<div class="filters" role="group" aria-label="Filter events">${[['all','All'],['in','In school'],['out','Out of school'],['mine','My events']].map(([k,n])=>`<button data-act="filter" data-f="${k}" aria-pressed="${f===k}">${n}</button>`).join('')}</div>
-  <div class="grid">${list.map(e=>evCard(e,'member')).join('')||'<div class="empty">Nothing here yet.</div>'}</div>`};
+  <div class="grid">${list.map(e=>evCard(e,'member')).join('')||`<div class="empty">${none}</div>`}</div>`};
 
 VIEW.member.feed=()=>{
-  const items=L.filter(l=>l.status==='approved'&&!l.fl).sort((a,b)=>b.ts-a.ts);
-  return`<p class="muted">Verified work from club members. Only you and other members see this feed.</p><div class="grid g3">${items.map(l=>{const e=EV(l.eid),m=P(l.mid);
-    return`<article class="card stack">${l.ph?`<img class="photo" src="${l.ph}" alt="Sample on-site photo for ${esc(e.t)}">`:`<div class="linkbox">Work file<br>${esc(l.link||'')}</div>`}
-    <div><b>${esc(m.name)}</b> <span class="small muted">${fmt(l.ts)}</span><div class="small">${esc(e.t)}${l.day?`, day ${l.day}`:''} · <span class="mono">${f1(l.h)} h</span></div></div>
-    <div class="row"><button class="btn sm" data-act="cheer" data-id="${l.id}" aria-pressed="${l.cheer.includes('m0')}">${l.cheer.includes('m0')?'Cheered':'Cheer'} · ${l.cheer.length}</button><button class="btn sm bad" data-act="flag" data-id="${l.id}">Flag log</button></div>
+  const items=L.filter(l=>l.feed&&EV(l.eid)).sort((a,b)=>b.ts-a.ts);
+  if(!items.length)return`<p class="muted">Verified work from club members. Only you and other members see this feed.</p><div class="empty"><b>No posts yet.</b><span>Approved work from club members will show up here.</span></div>`;
+  return`<p class="muted">Verified work from club members. Only you and other members see this feed.</p><div class="grid g3">${items.map(l=>{const e=EV(l.eid);
+    return`<article class="card stack">${l.ph?`<img class="photo" loading="lazy" src="${l.ph}" alt="On-site photo for ${esc(e.t)}">`:`<div class="linkbox">Work file<br>${linkHtml(l.link)}</div>`}
+    <div><b>${esc(nameOf(l.mid))}</b> <span class="small muted">${fmt(l.ts)}</span><div class="small">${esc(e.t)}${l.day?`, day ${l.day}`:''} · <span class="mono">${f1(l.h)} h</span></div></div>
+    <div class="row"><button class="btn sm" data-act="cheer" data-id="${l.id}" aria-pressed="${l.cheer.includes(ME)}">${l.cheer.includes(ME)?'Cheered':'Cheer'} · ${l.cheer.length}</button><button class="btn sm bad" data-act="flag" data-id="${l.id}">Flag log</button></div>
     ${l.cm.map(c=>`<div class="small flat"><b>${esc(c.n)}</b> ${esc(c.t)}</div>`).join('')}
-    <div class="row" style="flex-wrap:nowrap"><input type="text" id="cm-${l.id}" placeholder="Add a comment" aria-label="Comment"><button class="btn sm" data-act="comment" data-id="${l.id}">Post</button></div></article>`}).join('')}</div>`};
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="cm-${l.id}" maxlength="300" placeholder="Add a comment" aria-label="Comment"><button class="btn sm" data-act="comment" data-id="${l.id}">Post</button></div></article>`}).join('')}</div>`};
 
-VIEW.member.cert=()=>`<div class="card stack"><div class="row between"><h3>Your verified service certificate</h3><button class="btn pri" data-act="copycert" data-m="m0">Copy summary</button></div>${certHtml('m0')}<p class="small muted">The final app exports this as a signed PDF. This preview shows the layout and the numbers it will carry.</p></div>`;
+VIEW.member.cert=()=>`<div class="card stack"><div class="row between"><h3>Your verified service certificate</h3><div class="row"><button class="btn" data-act="copycert" data-m="${ME}">Copy summary</button><button class="btn pri" data-act="printcert">Print or save as PDF</button></div></div>${certHtml(ME)}<p class="small muted">Choose Print, then "Save as PDF". Hours count only after Sector Lead approval.</p></div>`;
 
-VIEW.vol.events=()=>`<p class="muted">You are on the keeplist. Browse the public rosters and take an open volunteer slot.</p><div class="grid">${E.map(e=>evCard(e,'vol')).join('')}</div>`;
-VIEW.vol.status=()=>{const m=P('v0');return`<section class="card stack"><div class="eyebrow">Standby status</div><h2>${esc(m.name)}</h2><p>You are a volunteer on the keeplist. You can see rosters and sign up for open volunteer slots. Check-in, hour logging and badges unlock when the Co-Presidents move you to Active.</p>
+VIEW.vol.events=()=>`<p class="muted">You are on the keeplist. Browse the public rosters and take an open volunteer slot.</p><div class="grid">${E.map(e=>evCard(e,'vol')).join('')||'<div class="empty"><b>No events yet.</b><span>Check back soon.</span></div>'}</div>`;
+VIEW.vol.status=()=>{const m=P(ME)||{name:S.user.name,st:'keep',req:false};return`<section class="card stack"><div class="eyebrow">Standby status</div><h2>${esc(m.name)}</h2><p>You are a volunteer on the keeplist. You can see rosters and sign up for open volunteer slots. Check-in, hour logging and badges unlock when the Co-Presidents move you to Active.</p>
   <div class="row">${m.st!=='keep'?'<span class="pill good">Promoted to Active</span>':m.req?'<span class="pill warn">Promotion requested</span>':`<button class="btn gold" data-act="promo">Request promotion to Active</button>`}</div></section>`};
 
 function groupReview(sec){
-  const ls=pending(sec);if(!ls.length)return`<div class="empty">No pending hours for the ${sec} sector.</div>`;
+  const ls=pending(sec);if(!ls.length)return`<div class="empty"><b>No pending hours for the ${sec} sector.</b><span>New check-ins will appear here for approval.</span></div>`;
   const by={};ls.forEach(l=>(by[l.eid]=by[l.eid]||[]).push(l));
-  return Object.keys(by).map(eid=>{const e=EV(eid);return`<section class="card stack"><div class="row between"><div><h3>${esc(e.t)}</h3><span class="small muted">${by[eid].length} submitted · ${f1(e.h)} h each</span></div><button class="btn pri" data-act="apprall" data-id="${eid}" data-s="${sec}">Approve all (${by[eid].length})</button></div>
-    <div class="grid g3" style="gap:12px">${by[eid].map(l=>`<div class="stack" style="gap:6px"><div class="tile-photo">${l.ph?`<img class="photo" src="${l.ph}" alt="On-site capture by ${esc(P(l.mid).name)}">`:`<div class="linkbox">Submitted link<br>${esc(l.link)}</div>`}</div>
-      <div class="row between"><b>${esc(P(l.mid).name)}${l.day?` · day ${l.day}`:''}</b><span class="small muted">${fmt(l.ts)}</span></div>
+  return Object.keys(by).map(eid=>{const e=EV(eid);return`<section class="card stack"><div class="row between"><div><h3>${esc(e.t)}</h3><span class="small muted">${by[eid].length} submitted · ${f1(e.h)} h each</span></div><button class="btn pri" data-act="apprall" data-id="${eid}">Approve all (${by[eid].length})</button></div>
+    <div class="grid g3" style="gap:12px">${by[eid].map(l=>`<div class="stack" style="gap:6px"><div class="tile-photo">${l.ph?`<img class="photo" loading="lazy" src="${l.ph}" alt="On-site capture by ${esc(nameOf(l.mid))}">`:`<div class="linkbox">Submitted link<br>${linkHtml(l.link)}</div>`}</div>
+      <div class="row between"><b>${esc(nameOf(l.mid))}${l.day?` · day ${l.day}`:''}</b><span class="small muted">${fmt(l.ts)}</span></div>
       ${l.ot?`<span class="pill gold">Overtime request goes to Co-President</span>`:''}
       <div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')}</div></section>`}).join('')}
 
@@ -407,77 +502,90 @@ VIEW.lead.review=()=>{const ld=leadOf(S.lead);return`<div><div class="eyebrow">$
 VIEW.lead.events=()=>{
   const mine=E.filter(e=>e.sec===S.lead);
   return`<section class="card stack"><h3>Create a ${S.lead} event</h3><p class="small muted">Sector Leads can only create events for their own sector. Hours are set here, so members cannot type their own.</p>
-   <div class="grid g3" style="gap:10px"><label>Title<input type="text" id="nf-t" placeholder="e.g. Library Book Drive"></label>
-   <label>Pre-set hours<input type="number" id="nf-h" value="2" min="0.5" max="8" step="0.5"></label>
-   <label>Capacity<input type="number" id="nf-c" value="12" min="1" max="60"></label>
-   <label>Location<input type="text" id="nf-l" placeholder="Venue name"></label>
-   <label>Date<input type="text" id="nf-d" placeholder="e.g. Nov 14"></label>
-   <label>Type<select id="nf-y"><option value="in">In-school</option><option value="out">Out-of-school</option></select></label></div>
-   <div class="row"><label class="ck"><input type="checkbox" id="nf-g" checked>GPS 200 m</label><label class="ck"><input type="checkbox" id="nf-q" checked>Live QR</label><label class="ck"><input type="checkbox" id="nf-s" checked>Live photo</label><label class="ck"><input type="checkbox" id="nf-k">Work link</label><label class="ck"><input type="checkbox" id="nf-w">Waiver</label></div>
+   <div class="grid g3" style="gap:10px"><label>Title<input type="text" id="nf-t" maxlength="120" placeholder="e.g. Library Book Drive"></label>
+   <label>Pre-set hours<input type="number" id="nf-h" value="2" min="0.5" max="12" step="0.5"></label>
+   <label>Capacity<input type="number" id="nf-c" value="12" min="1" max="500"></label>
+   <label>Volunteer slots<input type="number" id="nf-v" value="2" min="0" max="100"></label>
+   <label>Days (1 = single day)<input type="number" id="nf-n" value="1" min="1" max="60"></label>
+   <label>Location<input type="text" id="nf-l" maxlength="120" placeholder="Venue name"></label>
+   <label>Date<input type="text" id="nf-d" maxlength="60" placeholder="e.g. Nov 14"></label>
+   <label>Type<select id="nf-y"><option value="in">In-school</option><option value="out">Out-of-school</option></select></label>
+   <label>Booths (optional, comma separated)<input type="text" id="nf-b" placeholder="Tarot, Photobooth"></label>
+   <label>Zones (optional, comma separated)<input type="text" id="nf-z" placeholder="Pickup, Drop-off"></label></div>
+   <div class="row"><label class="ck"><input type="checkbox" id="nf-g" checked>GPS 200 m</label><label class="ck"><input type="checkbox" id="nf-q" checked>Live code</label><label class="ck"><input type="checkbox" id="nf-s" checked>Live photo</label><label class="ck"><input type="checkbox" id="nf-k">Work link</label><label class="ck"><input type="checkbox" id="nf-w">Waiver</label><label class="ck"><input type="checkbox" id="nf-u">Setup / teardown</label></div>
+   <div class="row"><button class="btn" data-act="nfloc">Use my current location as the venue</button><span id="nfpos" class="small muted">${S.nfPos?'Venue location set ✓':'Not set. Needed for GPS check-in.'}</span></div>
    <div><button class="btn pri" data-act="newev">Publish event</button></div></section>
-  <h3>${S.lead} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}${e.orders?`<div class="card stack"><h4>Order tracker</h4><div class="row between"><span class="mono">${e.orders.placed} placed · ${e.orders.delivered} delivered</span><button class="btn sm" data-act="deliv" data-id="${e.id}">Log a delivery</button></div><div class="bar good"><i style="width:${e.orders.delivered/e.orders.placed*100}%"></i></div></div>`:''}</div>`).join('')}</div>`};
+  <h3>${S.lead} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}<div class="row"><button class="btn sm" data-act="evactive" data-id="${e.id}">${e.active?'Mark inactive':'Mark active'}</button><button class="btn sm bad" data-act="evdelete" data-id="${e.id}">Delete</button></div></div>`).join('')||`<div class="empty"><b>No ${S.lead} events yet.</b><span>Publish the first one above.</span></div>`}</div>`};
 
 VIEW.lead.qr=()=>{
   const mine=E.filter(e=>e.sec===S.lead&&e.v.includes('qr'));
-  if(!mine.length)return`<div class="empty">No events in this sector use a live QR yet.</div>`;
+  if(!mine.length)return`<div class="empty"><b>No events in this sector use a live check-in code yet.</b><span>Create an event with the live code method and it will show up here.</span></div>`;
   S.qrE=S.qrE&&mine.find(e=>e.id===S.qrE)?S.qrE:mine[0].id;
-  const c=code(S.qrE,win());
+  if(S.qrFor!==S.qrE){S.qrFor=S.qrE;S.qrCode=null;S.qrExp=0;S.qrErr=''}
   return`<section class="card qrwrap"><label style="width:100%;max-width:420px">Event<select data-ch="qre">${mine.map(e=>`<option value="${e.id}" ${e.id===S.qrE?'selected':''}>${esc(e.t)}</option>`).join('')}</select></label>
-   <div class="qrbox" id="qrSvg">${qrSvg(c)}</div><div class="code" id="qrCode">${c}</div>
+   <p class="muted" style="text-align:center;max-width:420px">Members type this code to check in. Show it only to people who are at the event.</p>
+   <div class="code" id="qrCode">${S.qrCode||'------'}</div><p class="small" id="qrErr" style="color:var(--bad)"></p>
    <div style="width:min(100%,280px)"><div class="bar gold"><i id="qrBar" style="width:100%"></i></div><p class="small muted" style="margin-top:6px;text-align:center">Changes every 30 seconds, so a photo of this screen is useless to absent members. <span id="qrSec" class="mono"></span></p></div></section>`};
 
 function leaderboard(){
   const t=LIVE.stats&&LIVE.stats.sectors;
-  if(!t)return`<section class="card stack"><h3>Sector leaderboard</h3><div class="empty">${LIVE.err?esc(LIVE.err)+'<br><button class="btn sm" data-act="statsretry" style="margin-top:8px">Retry</button>':'Loading...'}</div></section>`;
+  if(!t)return`<section class="card stack"><h3>Sector leaderboard</h3><div class="empty${LIVE.err?' err':' loading'}">${LIVE.err?esc(LIVE.err)+'<br><button class="btn sm" data-act="statsretry" style="margin-top:8px">Retry</button>':'Loading...'}</div></section>`;
   const order=SECT.slice().sort((a,b)=>t[b]-t[a]),mx=Math.max(...SECT.map(x=>t[x])),any=mx>0;
   return`<section class="card stack"><div class="row between"><h3>Sector leaderboard</h3>${any?`<span class="pill gold">Sector of the Month: ${order[0]}</span>`:''}</div>${order.map(x=>`<div><div class="row between"><b>${x}</b><span class="mono">${f1(t[x])} h</span></div><div class="bar ${any&&x===order[0]?'gold':''}"><i style="width:${any?t[x]/mx*100:0}%"></i></div></div>`).join('')}${any?'':'<p class="small muted">No approved hours are linked to a sector yet.</p>'}</section>`}
 VIEW.lead.sector=()=>{const ms=M.filter(m=>m.sec===S.lead&&m.st!=='keep').map(m=>({m,h:hrs(m.id)})).sort((a,b)=>b.h.t-a.h.t).slice(0,10);
-  return`${leaderboard()}<section class="card stack"><h3>${S.lead} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')}</tbody></table></div></section>`};
+  return`${leaderboard()}<section class="card stack"><h3>${S.lead} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')||'<tr><td colspan="4" class="muted">No members in this sector yet. Sectors are set in the Admin Panel.</td></tr>'}</tbody></table></div></section>`};
 
 VIEW.pres.center=()=>{
   const st=LIVE.stats,v=k=>st?st[k]:null,lv=v('levels'),lvTot=lv?lv.reduce((a,b)=>a+b,0):0;
   /* null = not loaded yet ("…" or "—" on error). A real 0 is shown as 0, never replaced. */
   const num=(x,max)=>x==null?(LIVE.err?'—':'…'):Number(x).toLocaleString(undefined,{maximumFractionDigits:max||0});
-  const T=(val,l)=>`<div class="card tile"><b>${val}</b><span>${l}</span></div>`;
+  const T=(val,l)=>`<div class="card tile${val==='…'?' is-loading':''}"><b>${val}</b><span>${l}</span></div>`;
   return`<div><div class="eyebrow">Co-President dashboard</div><h2>Command center</h2></div>
-  ${LIVE.err?`<div class="empty">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
+  ${LIVE.err?`<div class="empty err">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
   <div class="grid g3" style="gap:12px">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
   <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn" data-act="tab" data-t="over">Overrides</button><button class="btn gold" data-act="tab" data-t="export">Export report</button></div>
   <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${lv?lv[i]:'…'}</b></div><div class="bar"><i style="width:${lv&&lvTot?lv[i]/lvTot*100:0}%"></i></div></div>`).join('')}</section></div>`};
 
-function rosterRows(){const q=S.q.toLowerCase();
-  return M.filter(m=>!q||m.name.toLowerCase().includes(q)).map(m=>{const H=hrs(m.id);
+function rosterRows(){const q=S.q.toLowerCase();const rows=M.filter(m=>!q||m.name.toLowerCase().includes(q));
+  if(!rows.length)return'<tr><td colspan="5" class="muted">No members match.</td></tr>';
+  return rows.map(m=>{const H=hrs(m.id);
   return`<tr><td>${esc(m.name)} ${m.req&&m.st==='keep'?'<span class="pill warn">Requested</span>':''}</td>
-  <td><select data-ch="mst" data-id="${m.id}" aria-label="Status for ${esc(m.name)}"><option value="active" ${m.st==='active'?'selected':''}>Active member</option><option value="lead" ${m.st==='lead'?'selected':''}>Sector lead</option><option value="keep" ${m.st==='keep'?'selected':''}>Keeplist</option></select></td>
-  <td>${m.sec}</td><td class="n mono">${f1(H.t)}</td><td>L${lvl(H.t)+1}</td></tr>`}).join('')}
+  <td><span class="pill ${m.role==='admin'?'gold':m.role==='volunteer'?'':'good'}">${ROLE_LABEL[m.role]||esc(m.role)}</span></td>
+  <td>${esc(m.sec)||'—'}</td><td class="n mono">${f1(H.t)}</td><td>L${lvl(H.t)+1}</td></tr>`}).join('')}
 VIEW.pres.roster=()=>{const req=M.filter(m=>m.st==='keep'&&m.req);
   return`<h2>Roster</h2>${req.length?`<section class="card stack"><h3>Promotion requests</h3>${req.map(m=>`<div class="row between flat"><b>${esc(m.name)}</b><button class="btn sm pri" data-act="promote" data-id="${m.id}">Promote to Active</button></div>`).join('')}</section>`:''}
+  <p class="small muted">Co-Presidents promote volunteers here. Other role and sector changes are made by an admin in the Admin Panel.</p>
   <input type="search" data-in="q" placeholder="Search members" value="${esc(S.q)}" aria-label="Search members" id="rq">
-  <div class="tbl"><table><thead><tr><th>Name</th><th>Status</th><th>Sector</th><th class="n">Hours</th><th>Level</th></tr></thead><tbody id="rbody">${rosterRows()}</tbody></table></div>`};
+  <div class="tbl"><table><thead><tr><th>Name</th><th>Role</th><th>Sector</th><th class="n">Hours</th><th>Level</th></tr></thead><tbody id="rbody">${rosterRows()}</tbody></table></div>`};
 
 VIEW.pres.over=()=>{
-  const ots=otReq(),pl=pending(),fl=flagged();
+  const ots=otReq(),pl=pending(),fl=flagged().filter(l=>EV(l.eid));
   return`<h2>Overrides and review</h2>
-  <section class="card stack"><h3>Extended shift requests</h3>${ots.map(l=>`<div class="flat stack"><div class="row between"><b>${esc(P(l.mid).name)} · ${esc(EV(l.eid).t)}</b><span class="pill gold mono">+${f1(l.ot.hrs)} h</span></div><p class="small">${esc(l.ot.reason)}</p><div class="row"><button class="btn sm pri" data-act="otok" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="otno" data-id="${l.id}">Deny</button></div></div>`).join('')||'<div class="empty">No overtime requests.</div>'}</section>
-  <section class="card stack"><h3>Flagged entries</h3>${fl.map(l=>`<div class="flat row between"><div>${logRow(l).replace('flat','')}</div><div class="row"><button class="btn sm" data-act="fkeep" data-id="${l.id}">Dismiss flag</button><button class="btn sm bad" data-act="fdel" data-id="${l.id}">Remove hours</button></div></div>`).join('')||'<div class="empty">No flagged entries. Flags from the club feed are anonymous and land here.</div>'}</section>
-  <section class="card stack"><h3>All pending approvals</h3>${pl.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(P(l.mid).name)}</b> <span class="small muted">${esc(EV(l.eid).t)} · ${EV(l.eid).sec} lead</span></div><div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')||'<div class="empty">Nothing pending.</div>'}</section>`};
+  <section class="card stack"><h3>Extended shift requests</h3>${ots.map(l=>`<div class="flat stack"><div class="row between"><b>${esc(nameOf(l.mid))} · ${esc(EV(l.eid).t)}</b><span class="pill gold mono">+${f1(l.ot.hrs)} h</span></div><p class="small">${esc(l.ot.reason)}</p><div class="row"><button class="btn sm pri" data-act="otok" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="otno" data-id="${l.id}">Deny</button></div></div>`).join('')||'<div class="empty"><b>No override requests.</b><span>Extended-shift requests from members will appear here.</span></div>'}</section>
+  <section class="card stack"><h3>Flagged entries</h3>${fl.map(l=>`<div class="flat row between"><div><div class="small muted">Submitted by <b>${esc(nameOf(l.mid))}</b></div>${logRow(l).replace('flat','')}</div><div class="row"><button class="btn sm" data-act="fkeep" data-id="${l.id}">Dismiss flag</button><button class="btn sm bad" data-act="fdel" data-id="${l.id}">Remove hours</button></div></div>`).join('')||'<div class="empty"><b>No flagged entries.</b><span>Flags from the club feed are anonymous and land here.</span></div>'}</section>
+  <section class="card stack"><h3>All pending approvals</h3>${pl.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(nameOf(l.mid))}</b> <span class="small muted">${esc(EV(l.eid).t)} · ${EV(l.eid).sec} lead</span></div><div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')||'<div class="empty"><b>Nothing pending.</b><span>You are all caught up.</span></div>'}</section>`};
 
-function csvRows(){return M.filter(m=>(S.exSec==='all'||m.sec===S.exSec)&&(S.exSt==='all'||m.st===S.exSt)).map(m=>{const H=hrs(m.id);return[m.id,m.name,m.st,m.sec,f1(H.i),f1(H.o),f1(H.t),'L'+(lvl(H.t)+1)]})}
-function csvText(){return[['id','name','status','sector','in_school_hrs','out_of_school_hrs','total_hrs','level'],...csvRows()].map(r=>r.join(',')).join('\n')}
-VIEW.pres.export=()=>`<h2>Export Rotary report</h2><section class="card stack"><div class="grid g3" style="gap:10px"><label>Sector<select data-ch="exs"><option value="all">All sectors</option>${SECT.map(s=>`<option ${S.exSec===s?'selected':''}>${s}</option>`).join('')}</select></label>
+VIEW.pres.export=()=>{
+  const rows=EXPORT.text?Math.max(0,EXPORT.text.split('\n').length-1):0;
+  const body=EXPORT.err?`<div class="empty err">${esc(EXPORT.err)}<br><button class="btn sm" data-act="exretry" style="margin-top:8px">Retry</button></div>`
+    :EXPORT.key!==exKey()?'<div class="empty loading">Loading report...</div>'
+    :rows?`<textarea id="csv" rows="9" readonly class="mono" style="font-size:12px">${esc(EXPORT.text)}</textarea><div class="row"><button class="btn pri" data-act="copycsv">Copy CSV</button><button class="btn" data-act="dlcsv">Download CSV</button></div>`
+    :'<div class="empty"><b>No members match these filters.</b><span>Try a different sector or status.</span></div>';
+  return`<h2>Export Rotary report</h2><section class="card stack"><div class="grid g3" style="gap:10px"><label>Sector<select data-ch="exs"><option value="all">All sectors</option>${SECT.map(s=>`<option ${S.exSec===s?'selected':''}>${s}</option>`).join('')}</select></label>
   <label>Status<select data-ch="exst">${[['all','All'],['active','Active'],['lead','Sector leads'],['keep','Keeplist']].map(([k,n])=>`<option value="${k}" ${S.exSt===k?'selected':''}>${n}</option>`).join('')}</select></label></div>
-  <p class="small muted">${csvRows().length} rows. Copy the CSV and paste it into Excel or Sheets. File downloads are not available in this preview.</p>
-  <textarea id="csv" rows="9" readonly class="mono" style="font-size:12px">${esc(csvText())}</textarea><div><button class="btn pri" data-act="copycsv">Copy CSV</button></div></section>`;
-VIEW.pres.certs=()=>`<h2>Verified certificates</h2><label style="max-width:320px">Member<select data-ch="certm">${M.filter(m=>m.st!=='keep').map(m=>`<option value="${m.id}" ${S.certM===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></label><div class="card">${certHtml(S.certM)}</div>`;
+  <p class="small muted">${rows} rows. Approved hours only. Admin accounts are not listed.</p>${body}</section>`};
+VIEW.pres.certs=()=>{const id=S.certM||ME;
+  return`<h2>Verified certificates</h2><label style="max-width:320px">Member<select data-ch="certm">${M.filter(m=>m.st!=='keep').map(m=>`<option value="${m.id}" ${id===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></label><div class="card">${certHtml(id)}</div>`};
 
 /* ---------- modals ---------- */
 function modal(h,wide){$('#modal').innerHTML=h?`<div class="scrim"><div class="sheet${wide?' wide':''}" role="dialog" aria-modal="true">${h}</div></div>`:''}
-function closeModal(){CI=null;S.pend=null;modal('')}
+function stopCam(){if(CI&&CI.cam){CI.cam.getTracks().forEach(t=>t.stop());CI.cam=null}}
+function closeModal(){stopCam();CI=null;S.pend=null;modal('')}
 function steps(e){return[...e.v,'review']}
-const STITLE={gps:'Confirm your location',qr:'Scan the live code',selfie:'Take a live photo',link:'Attach your work',review:'Review and submit'};
+const STITLE={gps:'Confirm your location',qr:'Enter the live code',selfie:'Take a live photo',link:'Attach your work',review:'Review and submit'};
 function ciValid(){const e=EV(CI.eid),k=steps(e)[CI.i];
-  if(k==='gps')return CI.dist<=200;
-  if(k==='qr'){const c=(CI.code||'').trim();return c===code(e.id,win())||c===code(e.id,win()-1)}
+  if(k==='gps')return CI.dist!=null&&CI.dist<=200;
+  if(k==='qr')return CI.qrState==='ok';
   if(k==='selfie')return !!CI.photo;
   if(k==='link')return (CI.link||'').trim().length>=8&&CI.link.includes('.');
   if(k==='review')return !CI.ot||((CI.reason||'').trim().length>=15);
@@ -485,12 +593,15 @@ function ciValid(){const e=EV(CI.eid),k=steps(e)[CI.i];
 function ciRender(){
   const e=EV(CI.eid),st=steps(e),k=st[CI.i];let b='';
   if(k==='gps')b=`<p>Check-in unlocks within 200 m of <b>${esc(e.loc)}</b>.</p>${e.points?`<div class="chips">${e.points.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
-    <div class="flat stack"><label>Preview control: pretend you are this far away<input type="range" min="0" max="500" step="10" value="${CI.dist}" data-in="dist"></label><div class="row between"><b class="mono" id="dval">${CI.dist} m</b><span id="dmsg"></span></div></div>`;
-  if(k==='qr')b=`<p>Scan the code on the Sector Lead's screen. It changes every 30 seconds.</p><label>Code<input type="text" inputmode="numeric" maxlength="6" id="ccode" data-in="code" value="${esc(CI.code||'')}" placeholder="6 digits" class="mono" autocomplete="off"></label><div class="row"><span id="cmsg" class="small"></span><button class="btn sm" data-act="democode">Fill from lead screen</button></div>`;
-  if(k==='selfie')b=CI.photo?`<img class="photo" src="${CI.photo}" alt="Your captured photo"><div class="row"><button class="btn sm" data-act="retake">Retake</button><span class="pill good">Captured live</span></div>`:`<div class="cam"><div><b>Live camera</b><p style="margin-top:6px">The real app opens the native camera. Gallery and file uploads are switched off.</p></div></div><button class="btn gold" data-act="snap">Capture photo</button>`;
+    ${e.lat==null||e.lng==null?`<div class="flat stack"><span class="pill bad">No venue location</span><p class="small muted">The lead has not set this venue's location yet, so GPS check-in cannot work. Ask your Sector Lead.</p></div>`
+    :`<div class="flat stack"><div class="row between"><button class="btn gold" data-act="locate" ${CI.posBusy?'disabled':''}>${CI.posBusy?'Locating...':CI.pos?'Check again':'Check my location'}</button><span id="dmsg"></span></div>${CI.posErr?`<p class="small" style="color:var(--bad)">${esc(CI.posErr)}</p>`:''}</div>`}`;
+  if(k==='qr')b=`<p>Enter the code shown on the Sector Lead's screen. It changes every 30 seconds.</p><label>Code<input type="text" inputmode="numeric" maxlength="6" id="ccode" data-in="code" value="${esc(CI.code||'')}" placeholder="6 digits" class="mono" autocomplete="off"></label><div class="row"><span id="cmsg" class="small"></span></div>`;
+  if(k==='selfie')b=CI.photo?`<img class="photo" src="${CI.photo}" alt="Your captured photo"><div class="row"><button class="btn sm" data-act="retake">Retake</button><span class="pill good">Captured live</span></div>`
+    :CI.cam?`<video id="camv" class="photo" autoplay playsinline muted></video><button class="btn gold" data-act="snap">Capture photo</button>`
+    :`<div class="cam"><div><b>Live camera</b><p style="margin-top:6px">The photo must be taken now with your camera. Gallery and file uploads are switched off.</p>${CI.camErr?`<p style="margin-top:6px;color:#ffb4b4">${esc(CI.camErr)}</p>`:''}</div></div><button class="btn gold" data-act="startcam">Open camera</button>`;
   if(k==='link')b=`<p>This task is logged as off-site work. Add the file or link so the lead can review it.</p><label>Link to your work<input type="text" data-in="link" id="clink" value="${esc(CI.link||'')}" placeholder="drive.google.com/..."></label>`;
-  if(k==='review'){const tot=e.h+(CI.ot?CI.otH:0);
-    b=`<div class="flat stack"><b>${esc(e.t)}${e.days?`, day ${L.filter(l=>l.mid==='m0'&&l.eid===e.id).length+1}`:''}</b><div class="row between"><span class="muted">Pre-set hours</span><b class="mono">${f1(e.h)} h</b></div>${CI.ot?`<div class="row between"><span class="muted">Extended shift (needs Co-President)</span><b class="mono">+${f1(CI.otH)} h</b></div>`:''}</div>
+  if(k==='review'){
+    b=`<div class="flat stack"><b>${esc(e.t)}${e.days?`, day ${L.filter(l=>l.mid===ME&&l.eid===e.id&&l.status!=='rejected').length+1}`:''}</b><div class="row between"><span class="muted">Pre-set hours</span><b class="mono">${f1(e.h)} h</b></div>${CI.ot?`<div class="row between"><span class="muted">Extended shift (needs Co-President)</span><b class="mono">+${f1(CI.otH)} h</b></div>`:''}</div>
     <label class="ck"><input type="checkbox" data-ch="ot" ${CI.ot?'checked':''}>Request an extended shift</label>
     ${CI.ot?`<label>Extra hours<select data-ch="oth">${[.5,1,1.5,2,3].map(n=>`<option ${n===CI.otH?'selected':''}>${n}</option>`).join('')}</select></label><label>Why did you stay longer?<textarea rows="3" data-in="reason" id="creason">${esc(CI.reason||'')}</textarea></label>`:''}
     <p class="small muted">Goes to the ${e.sec} Sector Lead for approval. Hours cannot be typed in by members.</p>`}
@@ -498,31 +609,42 @@ function ciRender(){
   modal(`<div class="row between"><div><div class="eyebrow">${esc(e.t)}</div><h3>${STITLE[k]}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
    <div class="steps">${st.map((_,i)=>`<i class="${i<CI.i?'done':i===CI.i?'on':''}"></i>`).join('')}</div>${b}
    <div class="row between"><button class="btn" data-act="ciback" ${CI.i===0?'disabled':''}>Back</button><button class="btn pri" id="cinext" data-act="${last?'cisub':'cinext'}">${last?'Submit for approval':'Continue'}</button></div>`);
+  const v=$('#camv');if(v&&CI.cam&&v.srcObject!==CI.cam)v.srcObject=CI.cam;
   ciSync()}
-function ciSync(){if(!CI)return;const ok=ciValid(),n=$('#cinext');if(n)n.disabled=!ok;
+function ciSync(){if(!CI)return;const ok=ciValid(),n=$('#cinext');if(n)n.disabled=!ok||CI.busy;
   const e=EV(CI.eid),k=steps(e)[CI.i];
-  if(k==='gps'){$('#dval').textContent=CI.dist+' m';$('#dmsg').innerHTML=CI.dist<=200?'<span class="pill good">Inside the fence</span>':`<span class="pill bad">${CI.dist-200} m too far</span>`}
-  if(k==='qr'){const c=(CI.code||'').trim();$('#cmsg').innerHTML=c.length<6?'':(ok?'<span class="pill good">Code accepted</span>':'<span class="pill bad">Wrong or expired code</span>')}}
+  if(k==='gps'){const m=$('#dmsg');if(m)m.innerHTML=CI.dist==null?'':CI.dist<=200?`<span class="pill good">Inside the fence (${CI.dist} m)</span>`:`<span class="pill bad">${CI.dist-200} m too far (${CI.dist} m away)</span>`}
+  if(k==='qr'){const m=$('#cmsg');if(m)m.innerHTML={ok:'<span class="pill good">Code accepted</span>',bad:'<span class="pill bad">Wrong or expired code</span>',checking:'<span class="muted">Checking...</span>',err:`<span class="pill bad">${esc(CI.qrErr||'Could not check the code')}</span>`}[CI.qrState]||''}}
+async function verifyQr(){
+  const mine=CI&&CI.code,eid=CI&&CI.eid;
+  try{const r=await api('/api/events/'+eid+'/verify-qr','POST',{code:mine});
+    if(!CI||CI.code!==mine)return;CI.qrState=r.ok?'ok':'bad'}
+  catch(x){if(expired(x))return;if(!CI||CI.code!==mine)return;CI.qrState='err';CI.qrErr=x.message}
+  ciSync()}
 
 /* ---------- actions ---------- */
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
-function setStatus(l,st){const m=P(l.mid),b=hrs(l.mid).t;l.status=st;const a=hrs(l.mid).t;
-  if(st==='approved')toast(`Approved ${f1(l.h)} h for ${m.name}${lvl(a)>lvl(b)?`. Level up: ${LV[lvl(a)]}`:''}`);else toast('Entry rejected')}
+/* Do something on the server, then reload everything from it. Nothing is changed locally first. */
+async function run(fn,ok){
+  try{await fn()}
+  catch(x){if(expired(x))return false;toast(x.message||'Something went wrong');
+    if(x.status===404||x.status===409){try{await reload();render()}catch(e){}}return false}
+  try{await reload()}catch(x){if(expired(x))return false;toast('Saved, but the page could not refresh. Reload to see it.');return true}
+  render();loadStats();if(ok)toast(ok);return true}
 function waiverModal(id){const e=EV(id);S.pend=id;modal(`<div class="row between"><div><div class="eyebrow">Required before check-in</div><h3>Participation waiver</h3></div><button class="btn sm" data-act="cic">Close</button></div>
   <p>${esc(e.t)} involves contact with animals or children. By signing, you agree to follow the host's safety rules, stay with your team, take no photos of children without a lead's approval, and follow volunteer conduct guidelines.</p>
   <label>Type your full name<input type="text" id="wname" data-in="wname" autocomplete="off"></label>
   <label class="ck"><input type="checkbox" id="wok" data-ch="wok">I have read and agree to the waiver</label>
   <button class="btn pri" id="wgo" data-act="wsign" disabled>Sign and join</button>`)}
-function doSign(id){const e=EV(id);if(e.signups.length>=e.cap)return toast('This event is full');
-  let shift=null;if(e.shifts){const c=e.shifts.map(s=>[s,e.signups.filter(x=>x.shift===s).length]).sort((a,b)=>a[1]-b[1]);shift=c[0][0]}
-  e.signups.push({m:'m0',shift});toast('You are signed up'+(shift?`. Booth: ${shift}`:''));render()}
 
 const A={
- async logout(){try{await api('/api/auth/logout','POST')}catch(e){}S.user=null;modal('');authView('login')},
+ async logout(){try{await api('/api/auth/logout','POST')}catch(e){}
+  closeModal();S.user=null;M=[];E=[];L=[];ME='';DATA.ready=false;CERT.map={};EXPORT.key='';LIVE.stats=null;authView('login')},
  authswitch(d){authView(d.m)},
+ retry(){DATA.ready=false;DATA.err='';render();loadAll()},
  async admin(){
   ADM.q='';ADM.tab='roster';ADM.pending=null;ADM.pendErr='';
-  modal('<p class="muted">Loading...</p>',true);
+  modal('<div class="empty loading">Loading...</div>',true);
   try{ADM.users=(await api('/api/admin/users')).users}
   catch(x){modal(`<p class="err">${esc(x.message)}</p><button class="btn" data-act="cic">Close</button>`);return}
   admDraw();admLoadPending()}, /* queue loads in the background so the tab badge shows the count */
@@ -553,49 +675,94 @@ const A={
   btn.disabled=false},
  role(d){S.role=d.r;render();if(statsViewOpen())loadStats()}, tab(d){S.tab[S.role]=d.t;render();if(statsViewOpen())loadStats()},
  statsretry(){LIVE.err='';loadStats()}, filter(d){S.filter=d.f;render()},
- reset(){const u=S.user;init();applyUser(u);CI=null;modal('');render();toast('Sample data reset')},
- signup(d){const e=EV(d.id);if(e.waiver&&!S.waived[d.id])waiverModal(d.id);else doSign(d.id)},
- wsign(){S.waived[S.pend]=true;const id=S.pend;closeModal();doSign(id)},
- unsign(d){const e=EV(d.id);e.signups=e.signups.filter(s=>s.m!=='m0');render()},
- vsign(d){const e=EV(d.id);if(e.vol-e.vsign.length>0){e.vsign.push('v0');toast('Volunteer slot booked');render()}},
- vleave(d){const e=EV(d.id);e.vsign=e.vsign.filter(x=>x!=='v0');render()},
- promo(){P('v0').req=true;toast('Request sent to the Co-Presidents');render()},
- promote(d){const m=P(d.id);m.st='active';m.req=false;toast(m.name+' is now an Active member');render()},
- ci(d){CI={eid:d.id,i:0,dist:320,code:'',photo:null,link:'',ot:false,otH:1,reason:''};ciRender()},
+ certretry(){CERT.err='';render()}, exretry(){EXPORT.err='';EXPORT.key='';render()},
+
+ signup(d){const e=EV(d.id);if(e.waiver)waiverModal(d.id);else run(()=>api('/api/events/'+d.id+'/signup','POST',{}),'You are signed up')},
+ wsign(){const id=S.pend,name=$('#wname').value.trim();closeModal();run(()=>api('/api/events/'+id+'/signup','POST',{waiverName:name}),'You are signed up')},
+ unsign(d){run(()=>api('/api/events/'+d.id+'/signup','DELETE'),'You left the event')},
+ vsign(d){run(()=>api('/api/events/'+d.id+'/volunteer','POST',{}),'Volunteer slot booked')},
+ vleave(d){run(()=>api('/api/events/'+d.id+'/volunteer','DELETE'),'Slot cancelled')},
+ promo(){run(()=>api('/api/me/request-promotion','POST',{}),'Request sent to the Co-Presidents')},
+ promote(d){const m=P(d.id);run(()=>api('/api/roster/promote','POST',{userId:Number(d.id)}),(m?m.name:'Member')+' is now an Active member')},
+
+ ci(d){CI={eid:d.id,i:0,pos:null,dist:null,posErr:'',posBusy:false,code:'',qrState:'',qrErr:'',photo:null,cam:null,camErr:'',link:'',ot:false,otH:1,reason:'',busy:false};ciRender()},
  cic(){closeModal()},
- cinext(){if(ciValid()){CI.i++;ciRender()}}, ciback(){if(CI.i>0){CI.i--;ciRender()}},
- democode(){CI.code=code(CI.eid,win());const i=$('#ccode');if(i)i.value=CI.code;ciSync()},
- snap(){const e=EV(CI.eid);CI.photo=photo(Date.now()%100000,e.t,Date.now());ciRender()},
- retake(){CI.photo=null;ciRender()},
- cisub(){if(!ciValid())return;const e=EV(CI.eid),ts=Date.now();const prev=L.filter(l=>l.mid==='m0'&&l.eid===e.id).length;
-   L.push({id:'l'+(++lid),mid:'m0',eid:e.id,h:e.h,status:'pending',ts,ph:CI.photo,link:CI.link||null,day:e.days?prev+1:undefined,ot:CI.ot?{hrs:CI.otH,reason:CI.reason.trim(),status:'pending'}:null,fl:false,cheer:[],cm:[]});
-   closeModal();render();toast(`Sent to the ${e.sec} lead for approval`)},
- appr(d){setStatus(L.find(l=>l.id===d.id),'approved');render()}, rej(d){setStatus(L.find(l=>l.id===d.id),'rejected');render()},
- apprall(d){const ls=pending(d.s).filter(l=>l.eid===d.id);ls.forEach(l=>l.status='approved');toast(`Approved ${ls.length} logs in one tap`);render()},
- otok(d){const l=L.find(x=>x.id===d.id);l.ot.status='approved';toast('Extended shift approved');render()}, otno(d){L.find(x=>x.id===d.id).ot.status='denied';render()},
- cheer(d){const l=L.find(x=>x.id===d.id);l.cheer=l.cheer.includes('m0')?l.cheer.filter(x=>x!=='m0'):[...l.cheer,'m0'];render()},
- comment(d){const i=$('#cm-'+d.id);if(i&&i.value.trim()){L.find(x=>x.id===d.id).cm.push({n:'Nomin B.',t:i.value.trim()});render()}},
- flag(d){L.find(x=>x.id===d.id).fl=true;toast('Flag sent privately to the Co-Presidents');render()},
- fkeep(d){L.find(x=>x.id===d.id).fl=false;render()}, fdel(d){const l=L.find(x=>x.id===d.id);l.fl=false;l.status='rejected';toast('Hours removed');render()},
- deliv(d){const e=EV(d.id);if(e.orders.delivered<e.orders.placed)e.orders.delivered++;render()},
- newev(){const v=id=>$('#'+id),t=v('nf-t').value.trim();if(!t)return toast('Add a title first');
-   const ver=[];if(v('nf-g').checked)ver.push('gps');if(v('nf-q').checked)ver.push('qr');if(v('nf-s').checked)ver.push('selfie');if(v('nf-k').checked)ver.push('link');
-   if(!ver.length)return toast('Pick at least one verification method');
-   E.push({id:'e'+(E.length+20),t,sec:S.lead,h:Math.max(.5,+v('nf-h').value||1),cap:Math.max(1,+v('nf-c').value||10),loc:v('nf-l').value.trim()||'To be announced',date:v('nf-d').value.trim()||'Date to be set',type:v('nf-y').value,v:ver,waiver:v('nf-w').checked,vol:2,active:true,signups:[],vsign:[]});
-   toast('Event published to members');render()},
- copycsv(){cp(csvText(),$('#csv'))}, copycert(d){const m=P(d.m),H=hrs(d.m);cp(`${m.name}: ${f1(H.t)} verified hours (${f1(H.i)} in school, ${f1(H.o)} community). ${LV[lvl(H.t)]}.`)}
+ cinext(){if(ciValid()){if(steps(EV(CI.eid))[CI.i]==='selfie')stopCam();CI.i++;ciRender()}},
+ ciback(){if(CI.i>0){stopCam();CI.i--;ciRender()}},
+ locate(){const e=EV(CI.eid);
+  if(!navigator.geolocation){CI.posErr='This browser cannot share your location.';return ciRender()}
+  CI.posBusy=true;CI.posErr='';ciRender();
+  navigator.geolocation.getCurrentPosition(p=>{if(!CI)return;CI.pos={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};
+    CI.dist=Math.round(hav(CI.pos.lat,CI.pos.lng,e.lat,e.lng));CI.posBusy=false;ciRender()},
+   err=>{if(!CI)return;CI.posBusy=false;CI.posErr=err.code===1?'Location access was blocked. Allow it in your browser settings and try again.':'Could not get your location. Try again near a window or outdoors.';ciRender()},
+   {enableHighAccuracy:true,timeout:15000,maximumAge:0})},
+ async startcam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){CI.camErr='This browser cannot open the camera. Use your phone.';return ciRender()}
+  try{CI.camErr='';CI.cam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});if(!CI){return}ciRender()}
+  catch(x){if(!CI)return;CI.camErr='Camera access was blocked. Allow the camera in your browser settings and try again.';ciRender()}},
+ snap(){const v=$('#camv');
+  if(!v||!v.videoWidth)return toast('The camera is still starting. Try again in a second.');
+  const e=EV(CI.eid),w=640,h=Math.round(w*v.videoHeight/v.videoWidth),c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.drawImage(v,0,0,w,h);
+  x.fillStyle='rgba(8,16,32,.82)';x.fillRect(0,h-40,w,40);x.font='bold 14px monospace';x.fillStyle='#fff';x.fillText('LIVE CAPTURE  '+fmt(Date.now()),12,h-22);x.fillStyle='#F2A900';x.fillText(e.t.slice(0,48),12,h-6);
+  CI.photo=c.toDataURL('image/jpeg',.6);stopCam();ciRender()},
+ retake(){CI.photo=null;A.startcam()},
+ async cisub(d,btn){
+  if(!ciValid()||CI.busy)return;CI.busy=true;btn.disabled=true;btn.textContent='Sending...';
+  const e=EV(CI.eid),body={eventId:Number(CI.eid),code:CI.code,photo:CI.photo,link:CI.link,
+    lat:CI.pos?CI.pos.lat:undefined,lng:CI.pos?CI.pos.lng:undefined,overtime:CI.ot?{hours:CI.otH,reason:CI.reason.trim()}:null};
+  try{await api('/api/hours','POST',body)}
+  catch(x){if(expired(x))return;if(CI){CI.busy=false;btn.disabled=false;btn.textContent='Submit for approval'}return toast(x.message)}
+  closeModal();try{await reload()}catch(x){if(expired(x))return}
+  render();loadStats();toast(`Sent to the ${e.sec} lead for approval`)},
+
+ appr(d){run(()=>api('/api/hours/'+d.id+'/review','POST',{status:'approved'}),'Hours approved')},
+ rej(d){run(()=>api('/api/hours/'+d.id+'/review','POST',{status:'rejected'}),'Entry rejected')},
+ async apprall(d){let n=0;
+  if(await run(async()=>{n=(await api('/api/events/'+d.id+'/approve-all','POST',{})).approved}))toast(`Approved ${n} log${n===1?'':'s'} in one tap`)},
+ otok(d){run(()=>api('/api/hours/'+d.id+'/overtime','POST',{decision:'approved'}),'Extended shift approved')},
+ otno(d){run(()=>api('/api/hours/'+d.id+'/overtime','POST',{decision:'denied'}),'Extended shift denied')},
+ cheer(d){run(()=>api('/api/hours/'+d.id+'/cheer','POST',{}))},
+ comment(d){const i=$('#cm-'+d.id);if(!i||!i.value.trim())return;run(()=>api('/api/hours/'+d.id+'/comment','POST',{body:i.value.trim()}),'Comment posted')},
+ flag(d){run(()=>api('/api/hours/'+d.id+'/flag','POST',{}),'Flag sent privately to the Co-Presidents')},
+ fkeep(d){run(()=>api('/api/hours/'+d.id+'/unflag','POST',{}),'Flag dismissed')},
+ fdel(d){run(()=>api('/api/hours/'+d.id+'/remove-hours','POST',{}),'Hours removed')},
+
+ nfloc(){
+  if(!navigator.geolocation)return toast('This browser cannot share your location.');
+  const set=t=>{const el=$('#nfpos');if(el)el.textContent=t};set('Locating...');
+  navigator.geolocation.getCurrentPosition(p=>{S.nfPos={lat:p.coords.latitude,lng:p.coords.longitude};set('Venue location set ✓ (±'+Math.round(p.coords.accuracy)+' m)')},
+   ()=>set('Could not get your location. Allow location access and try again.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0})},
+ async newev(){
+  const v=id=>$('#'+id),t=v('nf-t').value.trim();if(t.length<2)return toast('Add a title first');
+  const ver=[['nf-g','gps'],['nf-q','qr'],['nf-s','selfie'],['nf-k','link']].filter(([id])=>v(id).checked).map(x=>x[1]);
+  if(!ver.length)return toast('Pick at least one verification method');
+  if(ver.includes('gps')&&!S.nfPos)return toast('Tap "Use my current location" at the venue first, or untick GPS 200 m.');
+  const list=id=>v(id).value.split(',').map(s=>s.trim()).filter(Boolean);
+  const body={title:t,sector:S.lead,hours:+v('nf-h').value,capacity:+v('nf-c').value,volunteerSlots:+v('nf-v').value,days:+v('nf-n').value,
+    location:v('nf-l').value.trim(),dateLabel:v('nf-d').value.trim(),type:v('nf-y').value,verification:ver,waiver:v('nf-w').checked,setup:v('nf-u').checked,
+    shifts:list('nf-b'),points:list('nf-z')};
+  if(ver.includes('gps')){body.lat=S.nfPos.lat;body.lng=S.nfPos.lng}
+  await run(async()=>{await api('/api/events','POST',body);S.nfPos=null},'Event published to members')},
+ evactive(d){const e=EV(d.id);run(()=>api('/api/events/'+d.id,'PATCH',{active:!e.active}),e.active?'Event marked inactive':'Event marked active')},
+ evdelete(d){if(!confirm('Delete this event? This cannot be undone.'))return;run(()=>api('/api/events/'+d.id,'DELETE'),'Event deleted')},
+
+ copycsv(){cp(EXPORT.text,$('#csv'))}, dlcsv(){location.href=exUrl('&download=1')},
+ copycert(d){const c=CERT.map[d.m];if(!c)return;const t=c.in+c.out;cp(`${c.name}: ${f1(t)} verified hours (${f1(c.in)} in school, ${f1(c.out)} community). ${LV[lvl(t)]}.`)},
+ printcert(){window.print()}
 };
 function cp(t,el){try{navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>{if(el)el.select();toast('Press Ctrl+C to copy')})}catch(e){if(el)el.select();toast('Press Ctrl+C to copy')}}
 const IN_={
  admq(v){ADM.q=v;admFilter()},
  q(v){S.q=v;$('#rbody').innerHTML=rosterRows()},
- dist(v){CI.dist=+v;ciSync()}, code(v){CI.code=v;ciSync()}, link(v){CI.link=v;ciSync()}, reason(v){CI.reason=v;ciSync()},
+ code(v){CI.code=v.replace(/\D/g,'').slice(0,6);const i=$('#ccode');if(i&&i.value!==CI.code)i.value=CI.code;
+  CI.qrState=CI.code.length===6?'checking':'';ciSync();if(CI.code.length===6)verifyQr()},
+ link(v){CI.link=v;ciSync()}, reason(v){CI.reason=v;ciSync()},
  wname(v){$('#wgo').disabled=!(v.trim().length>2&&$('#wok').checked)}};
 const CH={
  admrole(v,t){t.closest('tr').querySelectorAll('select')[1].disabled=!['lead','member'].includes(v)},
  lsec(v){S.lead=v;S.qrE=null;render()}, qre(v){S.qrE=v;render()},
- mst(v,t,d){const m=P(d.id);m.st=v;toast(m.name+' updated');},
- exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;render()},
+ exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;CERT.err='';render()},
  ot(v,t){CI.ot=t.checked;ciRender()}, oth(v){CI.otH=+v;ciRender()},
  wok(v,t){$('#wgo').disabled=!(t.checked&&$('#wname').value.trim().length>2)}};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
@@ -603,9 +770,20 @@ document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t
 document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)closeModal()});
 
-/* live QR refresh without redrawing the page */
-setInterval(()=>{const c=$('#qrCode');if(!c||!S.qrE)return;const sec=30-(Date.now()/1000%30),n=code(S.qrE,win());
-  if(c.textContent!==n){c.textContent=n;$('#qrSvg').innerHTML=qrSvg(n)}$('#qrBar').style.width=(sec/30*100)+'%';$('#qrSec').textContent=Math.ceil(sec)+' s left'},500);
+/* live check-in code: the server makes it; this page shows it and fetches the next one in time */
+async function qrFetch(){
+  if(S.qrBusy||!S.qrE)return;S.qrBusy=true;const id=S.qrE;
+  try{const r=await api('/api/events/'+id+'/qr');
+    if(S.qrE===id){S.qrCode=r.code;S.qrExp=Date.now()+r.expiresIn*1000;S.qrErr=''}}
+  catch(x){S.qrBusy=false;if(expired(x))return;S.qrErr=x.message;S.qrExp=Date.now()+5000}
+  S.qrBusy=false;qrPaint()}
+function qrPaint(){const c=$('#qrCode');if(!c)return;
+  c.textContent=S.qrErr?'------':(S.qrCode||'------');
+  const left=Math.max(0,(S.qrExp-Date.now())/1000),bar=$('#qrBar'),sec=$('#qrSec'),er=$('#qrErr');
+  if(bar)bar.style.width=Math.min(100,left/30*100)+'%';
+  if(sec)sec.textContent=S.qrCode&&!S.qrErr?Math.ceil(left)+' s left':'';
+  if(er)er.textContent=S.qrErr||''}
+setInterval(()=>{if(!$('#qrCode')||!S.qrE)return;if(Date.now()>=S.qrExp-300)qrFetch();else qrPaint()},500);
 
 /* ---------- accounts (talks to the Express backend) ---------- */
 async function api(path,method='GET',body){
@@ -620,11 +798,12 @@ const isPres=()=>['pres','admin'].includes(S.user.role);
 /* Co-Presidents can preview every view; everyone else is locked to their own */
 const roleChoices=()=>isPres()?ROLES:ROLES.filter(([k])=>k===ROLE_MAP[S.user.role]);
 
-/* Point the sample data at the real account until events/logs move to the API */
+/* Sign in as this account. The screens fill in once /api/bootstrap answers (loadAll). */
 function applyUser(u){
-  LIVE.stats=null;LIVE.err='';
-  S.user=u;S.role=ROLE_MAP[u.role]||'vol';if(u.sector)S.lead=u.sector;
-  P('m0').name=u.name;P('v0').name=u.name}
+  LIVE.stats=null;LIVE.err='';CERT.map={};CERT.err='';EXPORT.key='';EXPORT.err='';
+  S.user=u;ME=String(u.id);S.role=ROLE_MAP[u.role]||'vol';S.certM=ME;if(u.sector)S.lead=u.sector;
+  S.tab={member:'home',lead:'review',pres:'center',vol:'events'};
+  DATA.ready=false;DATA.err=''}
 
 function authView(mode,msg){
   const reg=mode==='register';
@@ -644,7 +823,7 @@ document.addEventListener('submit',async e=>{
   const f=e.target.closest('#authForm');if(!f)return;e.preventDefault();
   const btn=f.querySelector('[type=submit]'),err=$('#authErr');btn.disabled=true;err.textContent='';
   try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',Object.fromEntries(new FormData(f)));
-    applyUser(user);render();toast('Welcome, '+user.name)}
+    applyUser(user);render();loadAll();toast('Welcome, '+user.name)}
   catch(x){err.textContent=x.message;btn.disabled=false}});
 
 /* ---------- admin panel: member roster + pending approvals (live data) ---------- */
@@ -695,9 +874,9 @@ function admCardHtml(l){
    </div></div>`}
 
 function admPendingHtml(){
-  if(ADM.pendErr)return `<div class="empty">${esc(ADM.pendErr)}<br><button class="btn sm" data-act="admtab" data-t="pending" style="margin-top:8px">Retry</button></div>`;
-  if(ADM.pending===null)return '<div class="empty">Loading pending approvals...</div>';
-  if(!ADM.pending.length)return '<div class="empty">Nothing waiting for review. New submissions will appear here.</div>';
+  if(ADM.pendErr)return `<div class="empty err">${esc(ADM.pendErr)}<br><button class="btn sm" data-act="admtab" data-t="pending" style="margin-top:8px">Retry</button></div>`;
+  if(ADM.pending===null)return '<div class="empty loading">Loading pending approvals...</div>';
+  if(!ADM.pending.length)return '<div class="empty"><b>Nothing waiting for review.</b><span>New submissions will appear here.</span></div>';
   return `<div class="grid">${ADM.pending.map(admCardHtml).join('')}</div>`}
 
 function admTabsHtml(){
@@ -749,7 +928,7 @@ async function loadStats(){
 function maybeStats(){if(statsViewOpen()&&!LIVE.stats&&!LIVE.err&&!LIVE.loading)loadStats()}
 
 async function boot(){
-  try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render()}else authView('login')}
+  try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render();loadAll()}else authView('login')}
   catch(e){authView('login',e.status?'Server error ('+e.status+'). Please try again.':'Cannot reach the server. Is it running?')}}
 boot();
 </script>
