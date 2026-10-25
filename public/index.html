@@ -54,8 +54,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   border-bottom:1px solid var(--line);color:var(--ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
 .top-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.mark{width:38px;height:38px;border-radius:12px;background:var(--grad-gold);color:#2A1700;display:grid;place-items:center;
-  font-family:var(--f-display);font-weight:800;font-size:14px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 6px 20px rgba(245,158,11,.35)}
+.mark{width:40px;height:40px;border-radius:12px;object-fit:cover;display:block;flex:none;background:#00B4E7;color:#fff;font-size:11px;box-shadow:0 0 0 1px rgba(255,255,255,.22),0 6px 22px rgba(0,180,231,.38)}
 .brand b{font-family:var(--f-display);font-size:18px;font-weight:800;display:block;line-height:1.1;letter-spacing:-.02em;color:#F8FAFC}
 .brand span{font-size:11px;color:var(--muted)}
 .top .brand span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px;animation:live 2.4s ease-out infinite}
@@ -268,6 +267,8 @@ td.muted{padding:22px 14px;text-align:center}
 /* ---------- sign-in ---------- */
 .authwrap{min-height:100vh;display:grid;place-items:center;padding:20px}
 .authcard{width:100%;max-width:410px;padding:28px;gap:14px;box-shadow:0 30px 80px -20px rgba(0,0,0,.65),0 0 60px -20px rgba(59,130,246,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.authcard .brand{gap:16px}
+.authcard .mark{width:58px;height:58px;border-radius:17px;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 10px 30px rgba(0,180,231,.45)}
 .authcard .brand b{color:#F8FAFC}
 .authcard .brand span{display:block;margin-top:2px}
 .authcard .btn{padding:11px 16px}
@@ -382,7 +383,7 @@ function render(){
   const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length};
   $('#app').innerHTML=`
   <header class="top"><div class="top-in">
-    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span>Live data</span></div></div>
+    <div class="brand"><img class="mark" src="/logo.png" alt="Interact Club logo" width="40" height="40"><div><b>Interact Club Hub</b><span>Live data</span></div></div>
     <div class="roles" role="group" aria-label="View the app as">
       ${roleChoices().map(([k,n])=>`<button data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}
       ${r==='lead'?`<select aria-label="Sector" data-ch="lsec">${SECT.filter(s=>isPres()||s===S.user.sector).map(s=>`<option ${s===S.lead?'selected':''}>${s}</option>`).join('')}</select>`:''}
@@ -808,7 +809,7 @@ function applyUser(u){
 function authView(mode,msg){
   const reg=mode==='register';
   $('#app').innerHTML=`<div class="authwrap"><form class="card stack authcard" id="authForm" data-mode="${mode}" novalidate>
-    <div class="brand"><div class="mark">IC</div><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
+    <div class="brand"><img class="mark" src="/logo.png" alt="Interact Club logo" width="40" height="40"><div><b>Interact Club Hub</b><span class="muted">${reg?'Create your account':'Log in to continue'}</span></div></div>
     ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
     <label>Email<input type="email" name="email" autocomplete="email"></label>
     <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
