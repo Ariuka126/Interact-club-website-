@@ -813,7 +813,7 @@ function authView(mode,msg){
     ${reg?`<label>Full name<input type="text" name="name" autocomplete="name" maxlength="80"></label>`:''}
     <label>Email<input type="email" name="email" autocomplete="email"></label>
     <label>Password<input type="password" name="password" autocomplete="${reg?'new-password':'current-password'}"></label>
-    ${reg?`<label>Confirm password<input type="password" name="confirm" autocomplete="new-password" placeholder="Type your password again"></label>`:''}
+    ${reg?`<label>Confirm password<input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Type your password again"></label>`:''}
     ${reg?'<p class="small muted">At least 8 characters. New accounts start as Volunteers; the Co-Presidents promote you to Member.</p>':''}
     <div class="err" id="authErr" role="alert">${esc(msg||'')}</div>
     <button class="btn pri" type="submit">${reg?'Create account':'Log in'}</button>
@@ -827,9 +827,8 @@ document.addEventListener('submit',async e=>{
   const data=Object.fromEntries(new FormData(f));
   if(f.dataset.mode==='register'){
     const passwordInput=f.querySelector('input[name="password"]');
-    const confirmInput=f.querySelector('input[name="confirm"]');
+    const confirmInput=f.querySelector('input[name="confirmPassword"]');
     if(passwordInput.value!==confirmInput.value){err.textContent="Passwords don't match. Please enter the same password twice.";confirmInput.focus();return}
-    delete data.confirm; /* only a typing check: the server never needs it */
   }
   btn.disabled=true;
   try{const {user}=await api('/api/auth/'+f.dataset.mode,'POST',data);
