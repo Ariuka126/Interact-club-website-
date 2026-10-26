@@ -826,7 +826,9 @@ document.addEventListener('submit',async e=>{
   const btn=f.querySelector('[type=submit]'),err=$('#authErr');err.textContent='';
   const data=Object.fromEntries(new FormData(f));
   if(f.dataset.mode==='register'){
-    if(data.password!==data.confirm){err.textContent="Passwords don't match. Please enter the same password twice.";const c=f.querySelector('[name=confirm]');if(c)c.focus();return}
+    const passwordInput=f.querySelector('input[name="password"]');
+    const confirmInput=f.querySelector('input[name="confirm"]');
+    if(passwordInput.value!==confirmInput.value){err.textContent="Passwords don't match. Please enter the same password twice.";confirmInput.focus();return}
     delete data.confirm; /* only a typing check: the server never needs it */
   }
   btn.disabled=true;
