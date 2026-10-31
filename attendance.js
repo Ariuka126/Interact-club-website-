@@ -8,7 +8,8 @@ const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
 const STATUSES = ['present', 'absent', 'excused'];
 const MAX_CONSECUTIVE = 3, MAX_TOTAL = 5;       // the demotion rule from the specification
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const validDate = s => DATE_RE.test(s) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
+const validDate = s => typeof s === 'string' && DATE_RE.test(s) && !Number.isNaN(Date.parse(s + 'T00:00:00Z'))
+  && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
 
 // ---- the rule, kept pure so it can be tested on its own ----
 // statuses must be in meeting order. An excused absence is neutral: it is not a miss, and it does not break a run of misses.

@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('./middleware');
 const K = require('./lib');
+const { audit } = require('./audit');
 
 const router = express.Router();
 router.use('/events', requireAuth);
@@ -71,6 +72,7 @@ router.post('/events', async (req, res, next) => {
     };
     const { data, error } = await req.app.locals.supabase.from('events').insert(row).select('*').maybeSingle();
     if (error) throw error;
+    await audit(req.app.locals.supabase, u, 'event.create', 'event', data.id, { title, sector });
     console.log(`[events] ${u.email} created "${title}" (${sector})`);
     res.status(201).json({ event: K.eventOut(data) });
   } catch (err) { next(err); }
@@ -115,6 +117,7 @@ router.delete('/events/:id', async (req, res, next) => {
     }
     const { error } = await sb.from('events').delete().eq('id', id);
     if (error) throw error;
+    await audit(sb, req.user, 'event.delete', 'event', id, { title: ev.title, sector: ev.sector });
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -247,6 +250,7 @@ router.post('/events/:id/approve-all', async (req, res, next) => {
       .eq('event_id', id).eq('status', 'pending').neq('user_id', u.id) // never your own hours
       .select('id');
     if (error) throw error;
+    await audit(sb, u, 'hours.approve_all', 'event', id, { count: data.length });
     console.log(`[hours] ${u.email} approved ${data.length} logs for event #${id}`);
     res.json({ approved: data.length });
   } catch (err) { next(err); }

@@ -4,7 +4,7 @@
 //  - fake browser  : a small DOM + fetch wired to the routes, so the page script can be driven like a user would
 // Usage: node tests/e2e.js      (no npm install needed)
 const fs = require('fs'), path = require('path'), vm = require('vm'), Module = require('module');
-const BASE = path.join(__dirname, '..');
+const BASE = __dirname;
 const orig = Module._load;
 
 class MiniRouter {
@@ -112,7 +112,7 @@ function loadApp(T) {
 function makeBrowser(app, T, startUser) {
   const stores = { '#app': { innerHTML: '' }, '#modal': { innerHTML: '' }, '#toast': { textContent: '', hidden: true } };
   const vals = new Map(), checks = new Map(), els = new Map(), handlers = {}, timers = [], fields = new Map();
-  const state = { inflight: 0, user: startUser, href: null, printed: false, copied: null, pos: { latitude: 47.9184, longitude: 106.9177, accuracy: 12 }, geoDenied: false, calls: [], toasts: [], authCalls: [], focused: null };
+  const state = { inflight: 0, user: startUser, href: null, printed: false, copied: null, pos: { latitude: 47.9184, longitude: 106.9177, accuracy: 12 }, geoDenied: false, calls: [], toasts: [], authCalls: [], focused: null, requestGates: new Map() };
   const html = () => stores['#app'].innerHTML + stores['#modal'].innerHTML;
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const tagOf = id => (new RegExp('<(?:input|select|textarea)[^>]*\\bid="' + esc(id) + '"[^>]*>').exec(html()) || [])[0];
@@ -140,6 +140,8 @@ function makeBrowser(app, T, startUser) {
         if (p === '/api/auth/register') { const u = { id: Math.max(0, ...T.users.map(x => x.id)) + 1, name: body.name, email: body.email, role: 'volunteer', sector: null, password_hash: 'x', promotion_requested: 0, created_at: new Date().toISOString() }; T.users.push(u); state.user = u; return resp(201, { user: pub(u) }); }
         const u = T.users.find(x => x.email === body.email); if (!u) return resp(401, { error: 'Invalid email or password.' }); state.user = u; return resp(200, { user: pub(u) });
       }
+      const requestGate = state.requestGates.get(method + ' ' + p);
+      if (requestGate) await requestGate;
       const row = state.user && T.users.find(x => x.id === state.user.id);   // the server re-reads the user on every request
       const out = await app.call(method, p, { user: row ? pub(row) : null, body: opts.body ? JSON.parse(opts.body) : {}, query });
       return resp(out.code, out.json !== null ? out.json : out.text);
@@ -149,7 +151,7 @@ function makeBrowser(app, T, startUser) {
     confirm: () => true, window: { print() { state.printed = true; } },
     FormData: class { constructor() { this.e = [...html().matchAll(/<input[^>]*\bname="([^"]+)"/g)].map(m => [m[1], fields.get(m[1]) || '']); } [Symbol.iterator]() { return this.e[Symbol.iterator](); } } });
   const page = fs.readFileSync(path.join(BASE, 'public', 'index.html'), 'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
-  vm.runInContext(page + `;globalThis.__X={get S(){return S},get M(){return M},get E(){return E},get L(){return L},get ME(){return ME},get CI(){return CI},get DATA(){return DATA},
+  vm.runInContext(page + `;globalThis.__X={get S(){return S},get M(){return M},get E(){return E},get L(){return L},get ME(){return ME},get CI(){return CI},get DATA(){return DATA},get MOD(){return MOD},
     get LIVE(){return LIVE},get CERT(){return CERT},get EXPORT(){return EXPORT},A,IN_,CH,render,loadAll,qrFetch,qrPaint,ciValid,steps,VIEW,reload}`, ctx);
   const X = ctx.__X, sleep = () => new Promise(r => setImmediate(r));
   const b = {

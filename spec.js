@@ -71,7 +71,7 @@ const ok = r => r.code >= 200 && r.code < 300;
   t('audit: the log cannot be edited or deleted (stand-in for the trigger)', (await sb.from('audit_logs').update({ action: 'x' }).eq('id', 1)).error.code === '42501' && (await sb.from('audit_logs').delete().eq('id', 1)).error.code === '42501');
 
   /* ===================== ATTENDANCE AND DEMOTION ===================== */
-  const A = require('../attendance');
+  const A = require('./attendance');
   const T3 = A.tally, why = A.demotionReason;
   t('rule: no records, no misses', JSON.stringify(T3([])) === '{"cumulative":0,"maxStreak":0,"trailing":0}');
   t('rule: 3 absences in a row demote', why(T3(['absent', 'absent', 'absent'])) === '3 consecutive absences');

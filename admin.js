@@ -1,10 +1,12 @@
 const express = require('express');
 const { requireAuth, requireAdmin } = require('./middleware');
+const { audit } = require('./audit');
 
 const router = express.Router();
 const ROLES = ['volunteer', 'member', 'lead', 'pres', 'admin'];
 const ALIASES = { president: 'pres', 'co-president': 'pres', 'sector lead': 'lead' };
 const SECTORS = ['Creative', 'Events', 'Finance', 'Community'];
+const SECTOR_LABEL = { Creative: 'Creative & Media', Events: 'Events & Operations', Finance: 'Finance & Marketing', Community: 'Community Service' };
 const COLUMNS = 'id, name, email, role, sector, created_at'; // never select password_hash here
 
 // Every route below needs a logged-in admin.
@@ -43,6 +45,21 @@ router.post('/update-role', async (req, res, next) => {
     if (findErr) throw findErr;
     if (!target) return res.status(404).json({ error: 'User not found.' });
 
+    if (newRole === 'pres' && target.role !== 'pres') {
+      const { count, error } = await supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'pres');
+      if (error) throw error;
+      if ((count || 0) >= 2) return res.status(409).json({ error: 'There can only be 2 Presidents.' });
+    }
+
+    if (newRole === 'lead') {
+      const sector = req.body.sector || target.sector;
+      const { count, error } = await supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'lead').eq('sector', sector);
+      if (error) throw error;
+      if ((count || 0) && !(target.role === 'lead' && target.sector === sector)) {
+        return res.status(409).json({ error: `${SECTOR_LABEL[sector] || sector} already has a Sector Head.` });
+      }
+    }
+
     const update = { role: newRole };
     if (newRole === 'lead') {
       // The Sector Lead view is empty without a sector, so require one.
@@ -59,6 +76,8 @@ router.post('/update-role', async (req, res, next) => {
       .from('users').update(update).eq('id', targetId).select(COLUMNS).maybeSingle();
     if (error) throw error;
     if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    await audit(supabase, req.user, 'role.change', 'user', targetId, { from: target.role, to: newRole });
 
     console.log(`[admin] ${req.user.email} changed ${target.email}: ${target.role} -> ${newRole}`);
     res.json({ user });

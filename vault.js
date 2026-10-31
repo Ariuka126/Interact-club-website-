@@ -31,7 +31,7 @@ router.post('/vault', requireAuth, async (req, res, next) => {
     const description = b.description ? K.str(b.description, 1, 300) : '';
     if (description === null) return bad(res, 'Keep the description under 300 characters.');
     const sb = req.app.locals.supabase;
-    const { data, error } = await sb.from('resource_vault').insert({ title, category: b.category, url, description, added_by: u.id }).select(COLS).maybeSingle();
+    const { data, error } = await sb.from('resource_vault').insert({ title, category: b.category, url, description, archived: false, added_by: u.id }).select(COLS).maybeSingle();
     if (error) throw error;
     await audit(sb, u, 'vault.add', 'vault', data.id, { title, category: b.category });
     res.status(201).json({ item: data });

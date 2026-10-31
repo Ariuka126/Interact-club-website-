@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { requireAuth, requireRole } = require('./middleware');
 const K = require('./lib');
+const { audit } = require('./audit');
 
 const router = express.Router();
 router.use('/hours', requireAuth);
@@ -84,14 +85,16 @@ router.post('/hours', submitLimiter, async (req, res, next) => {
     let ot = null;
     if (b.overtime) {
       const hours = K.num(b.overtime.hours, 0.5, 3), reason = K.str(b.overtime.reason, 15, 500);
-      if (hours === null || reason === null) return bad(res, 'For an extended shift choose 0.5 to 3 extra hours and explain why (at least 15 characters).');
-      ot = { hours, reason };
+      const proof = K.normalizeLink(b.overtime.proof);
+      if (hours === null || reason === null || !proof) return bad(res, 'For an extended shift choose 0.5 to 3 extra hours, explain why, and add a proof link.');
+      ot = { hours, reason, proof };
     }
 
     const row = {
       user_id: u.id, event_id: eventId, hours: ev.hours, day, status: 'pending',
       photo_data: photo, work_link: link, gps_lat: lat, gps_lng: lng,
-      overtime_hours: ot ? ot.hours : null, overtime_reason: ot ? ot.reason : null, overtime_status: ot ? 'pending' : null,
+      overtime_hours: ot ? ot.hours : null, overtime_reason: ot ? ot.reason : null, overtime_proof_url: ot ? ot.proof : null,
+      overtime_status: ot ? 'pending' : null,
       flagged: 0, reviewed_by: null, reviewed_at: null,
     };
     let result;
@@ -157,20 +160,21 @@ router.post('/hours/:id/review', async (req, res, next) => {
       .eq('id', id).eq('status', 'pending').select('id, status').maybeSingle();
     if (error) throw error;
     if (!data) return bad(res, 'Someone else already reviewed this entry.', 409);
+    await audit(sb, u, status === 'approved' ? 'hours.approve' : 'hours.reject', 'hour_log', id, { userId: log.user_id, eventId: log.event_id });
     console.log(`[hours] ${u.email} ${status} log #${id}`);
     res.json({ log: data });
   } catch (err) { next(err); }
 });
 
-// Extended-shift requests are decided by a Co-President (or admin).
-router.post('/hours/:id/overtime', requireRole('pres', 'admin'), async (req, res, next) => {
+// Extended-shift requests are decided only by a President.
+router.post('/hours/:id/overtime', requireRole('pres'), async (req, res, next) => {
   try {
     const id = K.toId(req.params.id), u = req.user;
     if (!id) return bad(res, 'Invalid log.');
     const decision = String((req.body || {}).decision || '').toLowerCase();
     if (!['approved', 'denied'].includes(decision)) return bad(res, "Decision must be 'approved' or 'denied'.");
     const sb = req.app.locals.supabase;
-    const log = await loadLog(sb, id);
+    const log = await loadLog(sb, id, 'id, user_id, event_id, hours, overtime_hours, overtime_status');
     if (!log) return bad(res, 'Entry not found.', 404);
     if (log.user_id === u.id) return bad(res, 'You cannot decide your own extended shift.', 403);
     if (log.overtime_status !== 'pending') return bad(res, 'There is no pending extended-shift request on this entry.', 409);
@@ -178,7 +182,53 @@ router.post('/hours/:id/overtime', requireRole('pres', 'admin'), async (req, res
       .eq('id', id).eq('overtime_status', 'pending').select('id').maybeSingle();
     if (error) throw error;
     if (!data) return bad(res, 'Someone else already decided this request.', 409);
+    await audit(sb, u, decision === 'approved' ? 'overtime.approve' : 'overtime.deny', 'hour_log', id, { userId: log.user_id, hours: log.overtime_hours });
     res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+router.get('/hours/decided', requireRole('pres'), async (req, res, next) => {
+  try {
+    const sb = req.app.locals.supabase;
+    const logs = await K.fetchAll(() => sb.from('hour_logs')
+      .select('id, user_id, event_id, hours, status, reviewed_by, reviewed_at')
+      .neq('status', 'pending').order('id', { ascending: false }).limit(200));
+    const userIds = [...new Set(logs.flatMap(l => [l.user_id, l.reviewed_by]).filter(Boolean))];
+    const eventIds = [...new Set(logs.map(l => l.event_id))];
+    const [users, events] = await Promise.all([
+      userIds.length ? K.inBatches(userIds, ids => sb.from('users').select('id, name').in('id', ids)) : [],
+      eventIds.length ? K.inBatches(eventIds, ids => sb.from('events').select('id, title').in('id', ids)) : [],
+    ]);
+    const names = new Map(users.map(u => [u.id, u.name]));
+    const titles = new Map(events.map(e => [e.id, e.title]));
+    res.set('Cache-Control', 'no-store');
+    res.json({ logs: logs.map(l => ({
+      ...l, member: names.get(l.user_id) || 'Former member', event: titles.get(l.event_id) || 'Deleted event',
+      reviewer: names.get(l.reviewed_by) || null, own: l.user_id === req.user.id,
+    })) });
+  } catch (err) { next(err); }
+});
+
+router.post('/hours/:id/override', requireRole('pres'), async (req, res, next) => {
+  try {
+    const id = K.toId(req.params.id), u = req.user;
+    if (!id) return bad(res, 'Invalid log.');
+    const body = req.body || {}, status = String(body.status || '').toLowerCase();
+    if (!['pending', 'approved', 'rejected'].includes(status)) return bad(res, 'Choose pending, approved or rejected.');
+    const reason = K.str(body.reason, 10, 300);
+    if (!reason) return bad(res, 'Write a reason (10 to 300 characters).');
+    const sb = req.app.locals.supabase;
+    const log = await loadLog(sb, id, 'id, user_id, event_id, status');
+    if (!log) return bad(res, 'Entry not found.', 404);
+    if (log.user_id === u.id) return bad(res, 'You cannot override your own hours.', 403);
+    if (log.status === status) return bad(res, 'The entry already has that status.', 409);
+    const now = status === 'pending' ? null : new Date().toISOString();
+    const { data, error } = await sb.from('hour_logs').update({ status, reviewed_by: status === 'pending' ? null : u.id, reviewed_at: now })
+      .eq('id', id).eq('status', log.status).select('id, status, reviewed_at').maybeSingle();
+    if (error) throw error;
+    if (!data) return bad(res, 'The entry changed. Reload and try again.', 409);
+    await audit(sb, u, 'hours.override', 'hour_log', id, { userId: log.user_id, from: log.status, to: status, reason });
+    res.json({ log: data });
   } catch (err) { next(err); }
 });
 
@@ -238,6 +288,7 @@ router.post('/hours/:id/unflag', requireRole('pres', 'admin'), async (req, res, 
     if (!id) return bad(res, 'Invalid log.');
     const { error } = await req.app.locals.supabase.from('hour_logs').update({ flagged: 0 }).eq('id', id);
     if (error) throw error;
+    await audit(req.app.locals.supabase, req.user, 'hours.unflag', 'hour_log', id);
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -249,6 +300,7 @@ router.post('/hours/:id/remove-hours', requireRole('pres', 'admin'), async (req,
     const { error } = await req.app.locals.supabase.from('hour_logs')
       .update({ status: 'rejected', flagged: 0, reviewed_by: u.id, reviewed_at: new Date().toISOString() }).eq('id', id);
     if (error) throw error;
+    await audit(req.app.locals.supabase, u, 'hours.remove', 'hour_log', id);
     console.log(`[hours] ${u.email} removed hours of log #${id}`);
     res.json({ ok: true });
   } catch (err) { next(err); }

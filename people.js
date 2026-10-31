@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth, requireRole } = require('./middleware');
 const K = require('./lib');
+const { audit } = require('./audit');
 
 const router = express.Router();
 const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
@@ -25,11 +26,13 @@ router.post('/roster/promote', requireAuth, requireRole('pres', 'admin'), async 
     if (fErr) throw fErr;
     if (!target) return bad(res, 'Member not found.', 404);
     if (target.role !== 'volunteer') return bad(res, 'That person is already a member.', 409);
-    const { error } = await sb.from('users').update({ role: 'member', promotion_requested: 0 }).eq('id', id).eq('role', 'volunteer');
+    const now = new Date().toISOString();
+    const { error } = await sb.from('users').update({ role: 'member', promotion_requested: 0, demoted_at: null, demotion_reason: null, attendance_reset_at: now }).eq('id', id).eq('role', 'volunteer');
     if (error) throw error;
     // their standby slots do not carry over: as a member they sign up for events normally
     const del = await sb.from('signups').delete().eq('user_id', id).eq('is_volunteer', 1);
     if (del.error) throw del.error;
+    await audit(sb, req.user, 'member.promote', 'user', id, { name: target.email });
     console.log(`[roster] ${req.user.email} promoted ${target.email} to member`);
     res.json({ ok: true });
   } catch (err) { next(err); }

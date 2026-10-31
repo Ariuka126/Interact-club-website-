@@ -57,7 +57,7 @@ router.post('/events/:id/tasks', requireAuth, async (req, res, next) => {
       if (claimed.data && claimed.data.claimed_by) return bad(res, 'That task is already claimed, so it cannot be split into smaller ones.', 409);
     }
     const sort = all.reduce((m, t) => Math.max(m, t.sort_order), 0) + 1;
-    const { data, error } = await sb.from('logistics_tasks').insert({ event_id: id, parent_id: parentId, title, notes, sort_order: sort, created_by: u.id }).select(COLS).maybeSingle();
+    const { data, error } = await sb.from('logistics_tasks').insert({ event_id: id, parent_id: parentId, title, notes, status: 'open', claimed_by: null, claimed_at: null, sort_order: sort, created_by: u.id }).select(COLS).maybeSingle();
     if (error) throw error;
     res.status(201).json({ task: await withName(sb, data) });
   } catch (err) { next(err); }

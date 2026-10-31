@@ -20,7 +20,6 @@ app.set('trust proxy', 1); // Render terminates TLS in front of the app
 app.use(express.json({ limit: '1mb' }));
 
 // Sessions persist in Postgres when DATABASE_URL is set; otherwise they live in memory
-// and everyone is logged out on each restart.
 let store;
 if (process.env.DATABASE_URL) {
   const pgSession = require('connect-pg-simple')(session);
@@ -36,7 +35,7 @@ if (process.env.DATABASE_URL) {
 
 app.use(
   session({
-    name: 'ich.sid', // must match the cookie auth.js clears on logout
+    name: 'ich.sid',
     secret: secret || 'dev-only-secret-change-me',
     resave: false,
     saveUninitialized: false,
@@ -52,10 +51,9 @@ app.use(
 
 const supabase = createSupabase();
 app.locals.supabase = supabase;
-checkSupabase(supabase).catch(e => console.error('[supabase] self-test crashed:', e)); // logs only; does not block startup
+checkSupabase(supabase).catch(e => console.error('[supabase] self-test crashed:', e));
 
-// Load the logged-in user on every request so /me works after a page refresh
-// and role changes (promotions) apply immediately.
+// Load the logged-in user on every request
 app.use(async (req, _res, next) => {
   req.user = null;
   if (req.session.userId) {
@@ -70,13 +68,27 @@ app.use(async (req, _res, next) => {
   next();
 });
 
+// Dedicated, individual route mount points
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', require('./admin')); // admin-only; guarded inside the router
-app.use('/api/stats', require('./stats')); // live dashboard numbers; any logged-in user
-app.use('/api', require('./bootstrap'), require('./events'), require('./hours'), require('./people')); // the app itself
-app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
+app.use('/api/admin', require('./admin'));
+app.use('/api/stats', require('./stats'));
 
-// Only the public/ folder is served, so server.js, auth.js etc. are never downloadable.
+// Individual app & feature routers (never chain multiple routers in a single app.use)
+app.use('/api', require('./bootstrap'));
+app.use('/api', require('./events'));
+app.use('/api', require('./hours'));
+app.use('/api', require('./people'));
+app.use('/api', require('./audit'));
+app.use('/api', require('./treasury'));
+app.use('/api', require('./attendance'));
+app.use('/api', require('./sectorroles'));
+app.use('/api', require('./proposals'));
+app.use('/api', require('./logistics'));
+app.use('/api', require('./feedback'));
+app.use('/api', require('./vault'));
+
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
+// Only the public/ folder is served statically
 app.use(express.static(path.join(__dirname, 'public')));
 
 // eslint-disable-next-line no-unused-vars
@@ -86,4 +98,8 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Interact Club Hub listening on port ${port}`));
+if (require.main === module) {
+  app.listen(port, () => console.log(`Interact Club Hub listening on port ${port}`));
+}
+
+module.exports = app;

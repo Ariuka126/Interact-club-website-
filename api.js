@@ -1,6 +1,6 @@
 // API-level checks: permissions, validation and data scoping. Run: node tests/api.js
 const { loadApp } = require('./harness');
-const K = require('../lib');
+const K = require('./lib');
 process.env.SESSION_SECRET = 'test-secret';
 let pass = 0, fail = 0;
 const t = (n, c, d) => { c ? pass++ : fail++; console.log(c ? 'PASS' : 'FAIL', n, c ? '' : (d === undefined ? '' : JSON.stringify(d).slice(0, 300))); };
@@ -84,7 +84,7 @@ const world = (events = [ev()], signed = [4, 5]) => {
   ({ call, T } = world([ev({ id: 5, verification: '["selfie"]' })]));
   const o5 = ov => call('POST', '/api/hours', { user: mia, body: { eventId: 5, photo: PHOTO, overtime: ov } });
   t('overtime: needs a real reason and 0.5 to 3 hours; nothing saved on refusal', (await o5({ hours: 1, reason: 'stayed' })).code === 400 && (await o5({ hours: 4, reason: 'Stayed to water the seedlings' })).code === 400 && T.hour_logs.length === 0);
-  t('overtime: valid request stored as pending', (await o5({ hours: 1, reason: 'Stayed to water the seedlings' })).code === 201 && T.hour_logs[0].overtime_status === 'pending');
+  t('overtime: valid request stored as pending', (await o5({ hours: 1, reason: 'Stayed to water the seedlings', proof: 'https://photos.example/seedlings.jpg' })).code === 201 && T.hour_logs[0].overtime_status === 'pending' && T.hour_logs[0].overtime_proof_url === 'https://photos.example/seedlings.jpg');
 
   /* ---- reviewing ---- */
   ({ call, T } = world([ev({ id: 1, sector: 'Events' }), ev({ id: 2, sector: 'Finance' })]));

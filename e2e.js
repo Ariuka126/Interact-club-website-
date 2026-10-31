@@ -18,7 +18,7 @@ const noMock = (b, where) => ok(`no sample/mock text on screen (${where})`, !MOC
   ok('header says "Live data"', /Live data/.test(mia.text()));
   ok('members list comes from the database, nobody is invented', mia.X.M.length === 7 && mia.X.M.map(m => m.name).includes('Mia Member'));
   ok('my impact: zero hours and an empty log list', /0\.0 of 30 h goal/.test(mia.text()) && /No logs yet/.test(mia.text()));
-  await mia.go('member', 'events'); ok('events: empty state', /No events yet\. Your Sector Leads will post events here\./.test(mia.text()));
+  await mia.go('member', 'events'); ok('events: empty state', /No events yet\. Your Sector Heads will post events here\./.test(mia.text()));
   await mia.go('member', 'feed');   ok('club feed: "No posts yet"', /No posts yet/.test(mia.text()));
   await mia.go('member', 'cert');   ok('certificate loads real (zero) hours', /Mia Member/.test(mia.text()) && /0\.0 verified hours/.test(mia.text()), mia.text().slice(-300));
   ok('certificate signer is the real co-president, not a placeholder', /Pat President/.test(mia.text()) && !MOCK.test(mia.html()));
@@ -33,9 +33,9 @@ const noMock = (b, where) => ok(`no sample/mock text on screen (${where})`, !MOC
   await pat.go('pres', 'roster'); ok('roster: real members only', /Mia Member/.test(pat.text()) && /Vic Volunteer/.test(pat.text()) && !MOCK.test(pat.html()));
   await pat.go('pres', 'export');
   ok('export: report loaded from the API, one row per real member (admin excluded)', pat.X.EXPORT.text.split('\n').length === 1 + 6 && /6 rows/.test(pat.text()) && !/Ann Admin/.test(pat.text()), pat.X.EXPORT.text);
-  await lee.go('lead', 'review'); ok('lead review: empty state', /No pending hours for the Events sector/.test(lee.text()));
+  await lee.go('lead', 'review'); ok('lead review: empty state', /No pending hours for the Events & Operations sector/.test(lee.text()));
   await lee.go('lead', 'qr');     ok('lead code screen: empty state', /No events in this sector use a live check-in code yet/.test(lee.text()));
-  await lee.go('lead', 'events'); ok('lead events: empty state', /No Events events yet/.test(lee.text()));
+  await lee.go('lead', 'events'); ok('lead events: empty state', /No Events & Operations events yet/.test(lee.text()));
   noMock(pat, 'president'); noMock(lee, 'lead'); noMock(vic, 'volunteer');
 
   /* ================= 2. a lead publishes an event ================= */
@@ -120,7 +120,7 @@ const noMock = (b, where) => ok(`no sample/mock text on screen (${where})`, !MOC
   mia2.X.CI.photo = PHOTO; await mia2.act('cinext');
   mia2.X.CH.ot('', { checked: true }); mia2.X.IN_.reason('stayed late');
   ok('extended shift needs a real explanation', !mia2.X.ciValid());
-  mia2.X.IN_.reason('Stayed two extra hours to take down the stage'); mia2.X.CH.oth('2');
+  mia2.X.IN_.reason('Stayed two extra hours to take down the stage'); mia2.X.IN_.proof('https://photos.example/stage-takedown.jpg'); mia2.X.CH.oth('2');
   ok('...then submission is allowed', mia2.X.ciValid()); await mia2.act('cisub');
   const l2 = T.hour_logs.find(l => l.event_id === 2);
   ok('overtime request stored as pending', l2 && l2.overtime_hours === 2 && l2.overtime_status === 'pending' && l2.status === 'pending', l2 && { ...l2, photo_data: '…' });

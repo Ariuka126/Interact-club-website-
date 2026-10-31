@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS hour_logs (
   work_link        TEXT,                                 -- for link-verified creative tasks
   overtime_hours   DOUBLE PRECISION,
   overtime_reason  TEXT,
+  overtime_proof_url TEXT,
   overtime_status  TEXT CHECK (overtime_status IS NULL OR overtime_status IN ('pending','approved','denied')),
   flagged          INTEGER NOT NULL DEFAULT 0 CHECK (flagged IN (0,1)),
   reviewed_by      INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -59,6 +60,8 @@ CREATE TABLE IF NOT EXISTS hour_logs (
   created_at       TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (user_id, event_id, day)                        -- one log per person per event day
 );
+
+ALTER TABLE hour_logs ADD COLUMN IF NOT EXISTS overtime_proof_url TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_hour_logs_user   ON hour_logs(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_hour_logs_event  ON hour_logs(event_id, status);

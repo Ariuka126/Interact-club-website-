@@ -12,7 +12,7 @@ async function countRows(q) { const { count, error } = await q; if (error) throw
 async function loadRole(sb, id) { const { data, error } = await sb.from('sector_roles').select('*').eq('id', id).maybeSingle(); if (error) throw error; return data; }
 const filledOf = (sb, roleId) => countRows(sb.from('role_applications').select('id', head).eq('role_id', roleId).eq('status', 'accepted'));
 
-// Openings. Members see the open ones and where they stand; the sector's head (and Presidents) also see who applied.
+// Openings
 router.get('/sector-roles', requireAuth, async (req, res, next) => {
   try {
     const sb = req.app.locals.supabase, u = req.user;
@@ -52,7 +52,7 @@ router.post('/sector-roles', requireAuth, async (req, res, next) => {
     if (description === null) return bad(res, 'The description can be up to 500 characters.');
     const capacity = K.int(b.capacity, 1, 50); if (capacity === null) return bad(res, 'Places must be a whole number from 1 to 50.');
     const sb = req.app.locals.supabase;
-    const { data, error } = await sb.from('sector_roles').insert({ sector, title, description, capacity, created_by: u.id }).select('*').maybeSingle();
+    const { data, error } = await sb.from('sector_roles').insert({ sector, title, description, capacity, is_open: true, created_by: u.id }).select('*').maybeSingle();
     if (error) throw error;
     await audit(sb, u, 'sector_role.post', 'sector_role', data.id, { sector, title, capacity });
     res.status(201).json({ role: data });
@@ -87,10 +87,10 @@ router.post('/sector-roles/:id/apply', requireAuth, async (req, res, next) => {
     if (prev) {
       if (['pending', 'accepted'].includes(prev.status)) return bad(res, 'You already applied for this role.', 409);
       if (prev.status === 'rejected') return bad(res, 'Your application for this role was declined.', 409);
-      const r = await sb.from('role_applications').update({ status: 'pending', note, decided_by: null, decided_at: null }).eq('id', prev.id); // withdrawn or revoked: apply again
+      const r = await sb.from('role_applications').update({ status: 'pending', note, decided_by: null, decided_at: null }).eq('id', prev.id);
       if (r.error) throw r.error;
     } else {
-      const r = await sb.from('role_applications').insert({ role_id: id, user_id: u.id, note });
+      const r = await sb.from('role_applications').insert({ role_id: id, user_id: u.id, status: 'pending', note });
       if (r.error) { if (r.error.code === '23505') return bad(res, 'You already applied for this role.', 409); throw r.error; }
     }
     res.status(201).json({ ok: true });
@@ -108,7 +108,6 @@ router.post('/sector-roles/:id/withdraw', requireAuth, async (req, res, next) =>
   } catch (err) { next(err); }
 });
 
-// Accept or decline. Heads decide for their own sector; only a President can bring in someone from another sector.
 router.post('/applications/:id/decision', requireAuth, async (req, res, next) => {
   try {
     const id = K.toId(req.params.id), u = req.user; if (!id) return bad(res, 'Invalid application.');
@@ -133,7 +132,7 @@ router.post('/applications/:id/decision', requireAuth, async (req, res, next) =>
       const { data: won, error: wErr } = await sb.from('role_applications').update({ status: 'accepted', decided_by: u.id, decided_at: now }).eq('id', id).eq('status', 'pending').select('id').maybeSingle();
       if (wErr) throw wErr;
       if (!won) return bad(res, 'Someone else already decided this application.', 409);
-      if ((await filledOf(sb, role.id)) > role.capacity) { // two accepts raced for the last place
+      if ((await filledOf(sb, role.id)) > role.capacity) {
         await sb.from('role_applications').update({ status: 'pending', decided_by: null, decided_at: null }).eq('id', id);
         return bad(res, 'This role is full.', 409);
       }
@@ -152,7 +151,6 @@ router.post('/applications/:id/decision', requireAuth, async (req, res, next) =>
   } catch (err) { next(err); }
 });
 
-// Cross-sector recruitment: Presidents can place any active member in any sector.
 router.post('/members/:id/assign-sector', requireAuth, async (req, res, next) => {
   try {
     const id = K.toId(req.params.id), u = req.user;

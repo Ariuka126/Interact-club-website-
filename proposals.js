@@ -43,7 +43,7 @@ router.post('/proposals', requireAuth, async (req, res, next) => {
     const { count, error: cErr } = await sb.from('event_proposals').select('id', { count: 'exact', head: true }).eq('proposer_id', u.id).eq('status', 'pending');
     if (cErr) throw cErr;
     if (count >= MAX_PENDING) return bad(res, `You already have ${MAX_PENDING} proposals waiting. Wait for a decision first.`, 409);
-    const { data, error } = await sb.from('event_proposals').insert({ proposer_id: u.id, title, description, category: b.category, sector: b.sector, type: b.type, date_label: date, location: loc, hours, capacity }).select(COLS).maybeSingle();
+    const { data, error } = await sb.from('event_proposals').insert({ proposer_id: u.id, title, description, category: b.category, sector: b.sector, type: b.type, date_label: date, location: loc, hours, capacity, status: 'pending', decided_by: null, decided_at: null, decision_note: null, event_id: null }).select(COLS).maybeSingle();
     if (error) throw error;
     res.status(201).json({ proposal: data });
   } catch (err) { next(err); }

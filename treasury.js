@@ -13,13 +13,12 @@ router.use('/treasury', requireAuth, (req, res, next) =>
 
 const signed = r => (r.entry_type === 'income' ? 1 : -1) * K.cents(r.amount);
 
-// The balance is never read from a stored field: it is always the sum of every ledger row.
 function summarize(rows) {
   let run = 0, income = 0, expense = 0, badSeq = null;
   for (const r of rows) {
     run += signed(r);
     if (r.entry_type === 'income') income += K.cents(r.amount); else expense += K.cents(r.amount);
-    if (badSeq === null && K.cents(r.balance_after) !== run) badSeq = r.seq; // the stored running total disagrees with the rows
+    if (badSeq === null && K.cents(r.balance_after) !== run) badSeq = r.seq;
   }
   return { balance: run / 100, income: income / 100, expense: expense / 100, integrity: { ok: badSeq === null, badSeq } };
 }
@@ -33,13 +32,11 @@ router.get('/treasury', async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     res.json({
       ...summarize(rows), count: rows.length,
-      entries: rows.slice(-limit).reverse().map(r => ({ ...r, reversed: reversed.has(r.id) })), // newest first
+      entries: rows.slice(-limit).reverse().map(r => ({ ...r, reversed: reversed.has(r.id) })),
     });
   } catch (err) { next(err); }
 });
 
-// Append one entry. Two people writing at once cannot corrupt the running total: seq is unique, so the second
-// writer's insert is refused and it simply recomputes and tries again.
 async function append(sb, user, { type, amount, category, description, reference, reversesId }) {
   const cents = K.cents(amount);
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -54,7 +51,7 @@ async function append(sb, user, { type, amount, category, description, reference
       balance_after: next / 100, reverses_id: reversesId || null, created_by: user.id, created_by_name: user.name,
     }).select(COLS).maybeSingle();
     if (!error) return { entry: data, balance: next / 100 };
-    if (error.code !== '23505') throw error; // 23505 = somebody else wrote seq first: go round again
+    if (error.code !== '23505') throw error;
   }
   return { status: 409, error: 'The ledger is busy. Try again in a moment.' };
 }
@@ -80,7 +77,6 @@ router.post('/treasury', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// A correction is a new entry that cancels an old one. Nothing is ever edited or deleted.
 router.post('/treasury/:id/reverse', async (req, res, next) => {
   try {
     const id = K.toId(req.params.id), u = req.user;

@@ -3,7 +3,7 @@ const { requireAuth } = require('./middleware');
 const K = require('./lib');
 
 const router = express.Router();
-const LOG_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, flagged, created_at';
+const LOG_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, overtime_proof_url, flagged, created_at';
 
 // Everything the app needs to draw its screens, scoped to who is asking.
 //  - everyone: names of members, all events with their sign-ups, their own logs
@@ -80,7 +80,11 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
         id: l.id, uid: l.user_id, eid: l.event_id, hours: l.hours, day: l.day, status: l.status,
         link: l.work_link, hasPhoto: withPhoto.has(l.id), ts: l.created_at,
         feed: l.status === 'approved' && !l.flagged, // shown in the club feed (a flagged post stays out, without saying why)
-        ot: l.overtime_status ? { hrs: l.overtime_hours, reason: l.overtime_reason, status: l.overtime_status } : null,
+        ot: l.overtime_status ? {
+          hrs: l.overtime_hours, status: l.overtime_status,
+          reason: staff || l.user_id === u.id ? l.overtime_reason || null : null,
+          proof: staff || l.user_id === u.id ? l.overtime_proof_url || null : null,
+        } : null,
         flagged: staff && !!l.flagged,
         cheers: cheers.filter(c => c.log_id === l.id).map(c => c.user_id),
         comments: comments.filter(c => c.log_id === l.id).map(c => ({ n: name.get(c.user_id) || 'Member', t: c.body })),

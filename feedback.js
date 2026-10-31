@@ -55,10 +55,11 @@ router.get('/feedback', requireAuth, async (req, res, next) => {
     if (!K.isPres(req.user)) return bad(res, 'Only the Presidents can read the feedback box.', 403);
     const key = keyBytes();
     if (!key) return bad(res, 'The feedback box is not switched on yet: the server needs a FEEDBACK_KEY of at least 32 characters.', 503);
-    const { data, error } = await req.app.locals.supabase.from('anonymous_feedback').select('id, category, body_enc, status, created_on').order('id', { ascending: false }).limit(200);
+    const { data, error } = await req.app.locals.supabase.from('anonymous_feedback').select('id, category, body_enc, status, created_at').order('id', { ascending: false }).limit(200);
     if (error) throw error;
+    data.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) || b.id - a.id);
     res.set('Cache-Control', 'no-store');
-    res.json({ messages: data.map(m => { let body; try { body = decrypt(m.body_enc, key); } catch { body = '[This message cannot be decrypted. The key may have changed.]'; } return { id: m.id, category: m.category, status: m.status, day: m.created_on, body }; }) });
+    res.json({ messages: data.map(m => { let body; try { body = decrypt(m.body_enc, key); } catch { body = '[This message cannot be decrypted. The key may have changed.]'; } return { id: m.id, category: m.category, status: m.status, day: new Date(m.created_at).toISOString().slice(0, 10), body }; }) });
   } catch (err) { next(err); }
 });
 

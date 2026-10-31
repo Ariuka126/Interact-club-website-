@@ -9,8 +9,8 @@ const isStaff = u => !!u && ['pres', 'admin'].includes(u.role);
 const lvl = h => (h < 10 ? 0 : h < 25 ? 1 : h < 50 ? 2 : 3); // keep in sync with lvl() in public/index.html
 const round2 = n => Math.round(n * 100) / 100;
 
-// Presidents and admins manage everything; a Sector Lead only their own sector.
-const canManageSector = (u, sector) => isStaff(u) || (u && u.role === 'lead' && !!u.sector && u.sector === sector);
+// Presidents manage every sector; a Sector Lead only their own sector.
+const canManageSector = (u, sector) => (u && u.role === 'pres') || (u && u.role === 'lead' && !!u.sector && u.sector === sector);
 
 // ---- input helpers: return the cleaned value, or null when invalid ----
 const str = (v, min, max) => {
@@ -97,8 +97,27 @@ const eventOut = (e, signups = []) => ({
   vsign: signups.filter(s => s.is_volunteer).map(s => s.user_id),
 });
 
+// ---- helpers used by sectorroles.js and treasury.js ----
+const isPres = u => !!u && u.role === 'pres';
+const canRunSector = canManageSector;
+const SECTOR_LABEL = Object.fromEntries(SECTORS.map(s => [s, s]));
+// ASSUMPTION: the Finance Head is a Sector Lead in the Finance sector. Check this against seed.js.
+const canTreasury = u => isPres(u) || (!!u && u.role === 'lead' && u.sector === 'Finance');
+// Money is stored as a whole number of cents to avoid floating-point drift.
+const cents = n => Math.round(Number(n) * 100);
+const normalizeLink = v => {
+  if (typeof v !== 'string') return null;
+  try {
+    const value = v.trim();
+    if (!value) return null;
+    const u = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : null;
+  } catch { return null; }
+};
+
 module.exports = {
   SECTORS, VERIFY, GPS_RADIUS_M, toId, isStaff, lvl, round2, canManageSector,
   str, num, int, list, safeJson, qrWindow, qrCode, qrValid, qrSecondsLeft, distanceM,
   logHours, fetchAll, inBatches, hoursByUser, eventOut,
+  isPres, canRunSector, SECTOR_LABEL, canTreasury, cents, normalizeLink,
 };
