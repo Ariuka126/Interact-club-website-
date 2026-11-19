@@ -79,6 +79,14 @@ const row = (T, id) => T.users.find(u => u.id === id);
   t('checkin: approved hours show up in totals straight away; door check-ins stay out of the photo feed',
     (b => b.members.find(m => m.id === 4).out === 8 && !b.logs.some(l => l.grant && l.feed))((await call('GET', '/api/bootstrap', { user: mia })).json), (await call('GET', '/api/bootstrap', { user: mia })).json.members);
 
+  /* ================= event management by an admin account (bug: delete refused "own sector") ================= */
+  ({ call, T, app } = world([ev({ id: 1, sector: 'Community', title: 'DSADA' }), ev({ id: 2, sector: 'Community', title: 'Used' })], []));
+  T.hour_logs.push({ id: 1, user_id: 4, event_id: 2, hours: 2, day: 1, status: 'approved' });
+  t('events: an admin can mark any sector\'s event inactive and show its live code', (await call('PATCH', '/api/events/1', { user: admin, body: { active: false } })).code === 200 && T.events[0].is_active === 0 &&
+    (await call('GET', '/api/events/1/qr', { user: admin })).code === 200);
+  t('events: an admin can delete an event with no hours; one with hours is still kept (409)', (await call('DELETE', '/api/events/2', { user: admin })).code === 409 && (r = await call('DELETE', '/api/events/1', { user: admin }), r.code === 200) && T.events.length === 1, r && r.json);
+  t('events: a lead of another sector and a member are still refused', (await call('DELETE', '/api/events/2', { user: lead })).code === 403 && (await call('PATCH', '/api/events/2', { user: mia, body: { active: false } })).code === 403);
+
   /* ================= screens ================= */
   ({ call, T, app } = world());
   const pat = await openAs(app, T, row(T, 2));

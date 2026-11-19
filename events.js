@@ -28,6 +28,9 @@ const checkinLimiter = rateLimit({
   message: { error: 'Too many scans in a minute. Wait a moment and scan again.' },
 }); // a line of members at the door is about one scan every few seconds
 const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
+// Whoever may create an event in a sector may also run it: its Sector Lead, a President, or an admin
+// (admins publish events in any sector, so they must be able to edit, deactivate and delete them too).
+const canRunEvent = (u, ev) => K.canManageSector(u, ev.sector) || (!!u && u.role === 'admin');
 
 // ---------------------------------------------------------------------------
 // Create / edit / delete events
@@ -89,7 +92,7 @@ router.patch('/events/:id', async (req, res, next) => {
     const sb = req.app.locals.supabase;
     const ev = await loadEvent(sb, id);
     if (!ev) return bad(res, 'Event not found.', 404);
-    if (!K.canManageSector(req.user, ev.sector)) return bad(res, 'You can only manage events in your own sector.', 403);
+    if (!canRunEvent(req.user, ev)) return bad(res, 'You can only manage events in your own sector.', 403);
 
     const upd = {};
     if (b.title !== undefined) { const v = K.str(b.title, 2, 120); if (v === null) return bad(res, 'Title must be 2 to 120 characters.'); upd.title = v; }
@@ -114,7 +117,7 @@ router.delete('/events/:id', async (req, res, next) => {
     const sb = req.app.locals.supabase;
     const ev = await loadEvent(sb, id);
     if (!ev) return bad(res, 'Event not found.', 404);
-    if (!K.canManageSector(req.user, ev.sector)) return bad(res, 'You can only manage events in your own sector.', 403);
+    if (!canRunEvent(req.user, ev)) return bad(res, 'You can only manage events in your own sector.', 403);
     // Never silently erase anyone's logged hours.
     if (await countRows(sb.from('hour_logs').select('id', head).eq('event_id', id))) {
       return bad(res, 'This event already has logged hours, so it cannot be deleted. Mark it inactive instead.', 409);
@@ -217,7 +220,7 @@ router.get('/events/:id/qr', async (req, res, next) => {
     if (!id) return bad(res, 'Invalid event.');
     const ev = await loadEvent(req.app.locals.supabase, id);
     if (!ev) return bad(res, 'Event not found.', 404);
-    if (!K.canManageSector(req.user, ev.sector)) return bad(res, 'Only this sector\'s lead can show the check-in code.', 403);
+    if (!canRunEvent(req.user, ev)) return bad(res, 'Only this sector\'s lead can show the check-in code.', 403);
     if (!K.safeJson(ev.verification, []).includes('qr')) return bad(res, 'This event does not use a live code.');
     res.set('Cache-Control', 'no-store');
     res.json({ code: K.qrCode(id, K.qrWindow()), expiresIn: K.qrSecondsLeft() });
@@ -251,7 +254,7 @@ router.post('/events/checkin', checkinLimiter, async (req, res, next) => {
     const sb = req.app.locals.supabase;
     const ev = await loadEvent(sb, eventId);
     if (!ev) return bad(res, 'Event not found.', 404);
-    if (!(K.canManageSector(u, ev.sector) || u.role === 'admin')) return bad(res, "Only this sector's lead or a President can check members in.", 403);
+    if (!canRunEvent(u, ev)) return bad(res, "Only this sector's lead or a President can check members in.", 403);
     if (!ev.is_active) return bad(res, 'This event is not active. Mark it active to check members in.', 409);
     if (userId === u.id) return bad(res, 'You cannot check yourself in.', 403);
 
@@ -309,7 +312,7 @@ router.post('/events/:id/approve-all', async (req, res, next) => {
     const sb = req.app.locals.supabase;
     const ev = await loadEvent(sb, id);
     if (!ev) return bad(res, 'Event not found.', 404);
-    if (!K.canManageSector(u, ev.sector)) return bad(res, 'You can only approve hours in your own sector.', 403);
+    if (!canRunEvent(u, ev)) return bad(res, 'You can only approve hours in your own sector.', 403);
     const { data, error } = await sb.from('hour_logs')
       .update({ status: 'approved', reviewed_by: u.id, reviewed_at: new Date().toISOString() })
       .eq('event_id', id).eq('status', 'pending').neq('user_id', u.id) // never your own hours
