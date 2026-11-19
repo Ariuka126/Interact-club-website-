@@ -12,15 +12,15 @@ auth.js           /api/auth/register | login | logout | me
 admin.js          /api/admin/*   user roles, pending-hours queue (admin only)
 stats.js          /api/stats     dashboard numbers
 bootstrap.js      /api/bootstrap everything a screen needs, scoped to who is asking
-events.js         create/edit/delete events, sign-ups, volunteer slots, live check-in code, approve-all
-hours.js          check-in submission, proof photos, review, overtime, feed (cheer/comment/flag)
+events.js         create/edit/delete events, sign-ups, volunteer slots, live check-in code, approve-all, QR door check-in
+hours.js          check-in submission, President hour grants, proof photos, review, overtime, feed (cheer/comment/flag)
 people.js         promotion requests, certificates, Rotary CSV export
 lib.js            shared helpers (validation, live code, distance, paging)
 middleware.js     requireAuth, requireRole, requireAdmin
 schema.sql        full schema for a fresh database
-migrations/       002 admin role | 003 old cleanup | 004 live app tables | 005 clean slate
+migrations/       002 admin role | 003 old cleanup | 004 live app tables | 005 clean slate | 006 hour grants + QR check-in
 public/index.html the app
-tests/            node tests/api.js  and  node tests/e2e.js   (no npm install needed)
+tests             npm test  (runs all.js: every suite, including grants.js; no install needed)
 ```
 
 ## Set up, in this order
@@ -28,9 +28,11 @@ tests/            node tests/api.js  and  node tests/e2e.js   (no npm install ne
 1. Supabase SQL editor: run `migrations/004_live_app.sql` (adds sign-ups, cheers, comments, venue and GPS columns, and row-level security).
 2. Supabase SQL editor: run `migrations/005_clean_slate.sql` (read STEP 1 first). It deletes events, sign-ups, hour logs, cheers and
    comments, and keeps every registered account.
-3. Render environment: `SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DATABASE_URL`. Optional: `QR_SECRET`
+3. Supabase SQL editor: run `006_hour_grants.sql` **before deploying this version** (lets a President's grant have no event and
+   adds the grant columns; the app reads them on every page load).
+4. Render environment: `SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DATABASE_URL`. Optional: `QR_SECRET`
    (secret for the live check-in codes; defaults to `SESSION_SECRET`).
-4. Deploy.
+5. Deploy.
 
 ## How the app works now
 
@@ -42,6 +44,12 @@ tests/            node tests/api.js  and  node tests/e2e.js   (no npm install ne
   - Live code: a 6-digit code made by the server, changing every 30 seconds, shown on the lead's screen and checked by the server.
   - Photo: taken live with the camera (no uploads). Link: for off-site work.
   - Hours come from the event, never from the member.
+  - QR door check-in: a member opens **Show My Check-In QR** on My impact; the lead (or a President) taps **Scan QR Check-In** on an
+    active event and scans it (`POST /api/events/checkin`). The member must be signed up; the event's hours are approved at once;
+    a second scan the same day is refused. The camera needs HTTPS (Render provides it). No camera: pick the member from the roster in the same dialog.
+- **President grants:** `+ Grant Hours` (Command Center or Roster, President view) awards approved hours to a member for service outside
+  an event (`POST /api/hours/grant`, Presidents and admins only). Grants count in totals, the leaderboard, certificates and the CSV report,
+  and every grant is in the audit log.
 - **Roles:** volunteer, member, lead, pres, admin. Co-Presidents promote volunteers; every other role change is an admin's (Admin Panel).
 - **Sectors** feed the sector leaderboard. Set them in the Admin Panel (Sector Leads must have one; Members may).
 - **Certificate** has a Print / save-as-PDF button; the Rotary report is a real CSV download from the server.

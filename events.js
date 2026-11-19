@@ -23,6 +23,10 @@ async function countRows(query) {
   return count || 0;
 }
 const head = { count: 'exact', head: true };
+const checkinLimiter = rateLimit({
+  windowMs: 60 * 1000, limit: 90, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many scans in a minute. Wait a moment and scan again.' },
+}); // a line of members at the door is about one scan every few seconds
 const bad = (res, msg, code = 400) => res.status(code).json({ error: msg });
 
 // ---------------------------------------------------------------------------
@@ -231,6 +235,67 @@ router.post('/events/:id/verify-qr', qrLimiter, async (req, res, next) => {
       return bad(res, 'Sign up for this event first.', 403);
     }
     res.json({ ok: K.qrValid(id, (req.body || {}).code) });
+  } catch (err) { next(err); }
+});
+
+// ---------------------------------------------------------------------------
+// Officer QR check-in: the lead (or a President) scans a member's badge at the door.
+// The officer vouches for presence in person, so the hours are logged as approved straight away.
+// ---------------------------------------------------------------------------
+router.post('/events/checkin', checkinLimiter, async (req, res, next) => {
+  try {
+    const u = req.user, b = req.body || {};
+    const eventId = K.toId(b.eventId), userId = K.toId(b.userId);
+    if (!eventId) return bad(res, 'Invalid event.');
+    if (!userId) return bad(res, 'That QR code is not a club member badge.');
+    const sb = req.app.locals.supabase;
+    const ev = await loadEvent(sb, eventId);
+    if (!ev) return bad(res, 'Event not found.', 404);
+    if (!(K.canManageSector(u, ev.sector) || u.role === 'admin')) return bad(res, "Only this sector's lead or a President can check members in.", 403);
+    if (!ev.is_active) return bad(res, 'This event is not active. Mark it active to check members in.', 409);
+    if (userId === u.id) return bad(res, 'You cannot check yourself in.', 403);
+
+    const { data: member, error: mErr } = await sb.from('users').select('id, name, role').eq('id', userId).maybeSingle();
+    if (mErr) throw mErr;
+    if (!member) return bad(res, 'No club member matches this badge.', 404);
+    if (member.role === 'admin') return bad(res, 'Admin accounts are not club members.');
+    if (member.role === 'volunteer') return bad(res, `${member.name} is on the keeplist. Hour logging unlocks when they are promoted to Active.`, 403);
+    if (!(await countRows(sb.from('signups').select('id', head).eq('event_id', eventId).eq('user_id', userId).eq('is_volunteer', 0)))) {
+      return bad(res, `${member.name} is not signed up for ${ev.title}.`, 403);
+    }
+
+    // One check-in per member per event day. A rejected day can be redone.
+    const { data: mine, error: lErr } = await sb.from('hour_logs').select('id, day, status, created_at')
+      .eq('event_id', eventId).eq('user_id', userId);
+    if (lErr) throw lErr;
+    const live = mine.filter(l => l.status !== 'rejected');
+    const today = new Date().toISOString().slice(0, 10);
+    const already = () => res.status(409).json({ error: `${member.name} is already checked in for ${ev.title}.`, duplicate: true, member: { id: member.id, name: member.name } });
+    if (live.some(l => String(l.created_at || '').slice(0, 10) === today)) return already();
+    const taken = new Set(live.map(l => l.day));
+    let day = 0;
+    for (let d = 1; d <= (ev.days || 1); d++) if (!taken.has(d)) { day = d; break; }
+    if (!day) return already();
+    const redo = mine.find(l => l.day === day && l.status === 'rejected');
+
+    const now = new Date().toISOString();
+    const row = {
+      user_id: userId, event_id: eventId, hours: ev.hours, day, status: 'approved', flagged: 0,
+      photo_data: null, work_link: null, gps_lat: null, gps_lng: null,
+      overtime_hours: null, overtime_reason: null, overtime_proof_url: null, overtime_status: null,
+      reviewed_by: u.id, reviewed_at: now, grant_type: 'qr_checkin', granted_by: u.id,
+    };
+    const result = redo
+      ? await sb.from('hour_logs').update({ ...row, created_at: now }).eq('id', redo.id).eq('status', 'rejected').select('id').maybeSingle()
+      : await sb.from('hour_logs').insert(row).select('id').maybeSingle();
+    if (result.error) {
+      if (result.error.code === '23505') return already(); // two scanners, same badge, same moment
+      throw result.error;
+    }
+    if (!result.data) return already();
+    await audit(sb, u, 'hours.qr_checkin', 'hour_log', result.data.id, { userId, eventId, hours: ev.hours, day });
+    console.log(`[events] ${u.email} checked in user #${userId} at event #${eventId} day ${day}`);
+    res.status(201).json({ ok: true, logId: result.data.id, eventId, day, days: ev.days || 1, hours: ev.hours, member: { id: member.id, name: member.name } });
   } catch (err) { next(err); }
 });
 

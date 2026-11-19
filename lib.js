@@ -77,11 +77,13 @@ async function inBatches(ids, run, size = 150) {
 }
 
 // Approved hours per member, split into in-school and out-of-school.
+// A President's manual grant has no event; it says itself which side it counts toward (grant_scope).
 function hoursByUser(approvedLogs, eventType) {
   const m = new Map();
   for (const l of approvedLogs) {
     const t = m.get(l.user_id) || { in: 0, out: 0 };
-    if (eventType.get(l.event_id) === 'out') t.out += logHours(l); else t.in += logHours(l);
+    const type = l.event_id == null ? l.grant_scope : eventType.get(l.event_id);
+    if (type === 'out') t.out += logHours(l); else t.in += logHours(l);
     m.set(l.user_id, t);
   }
   return m;

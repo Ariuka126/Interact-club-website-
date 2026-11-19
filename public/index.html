@@ -510,6 +510,29 @@ td{border-bottom:1px solid rgba(17,17,17,.14)}
 .note{border:0;border-left:6px solid #EC8B3F;background:rgba(236,139,63,.08)}
 .foot{border-top:1px solid rgba(17,17,17,.25)}
 .bar{height:10px;border-width:1.5px}
+/* section header row: title on the left, that section's actions on the right (no separate button bar) */
+.sechead{align-items:flex-end;gap:12px 16px}
+.sechead>.row{gap:8px}
+/* Command Center: one flat strip with vertical dividers instead of six framed tiles */
+.statstrip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#fff;border:3px solid var(--ink);box-shadow:5px 5px 0 rgba(17,17,17,.14)}
+.statstrip .tile,.statstrip .tile:hover{border:0;border-left:2px solid rgba(17,17,17,.16);box-shadow:none;transform:none;background:transparent;padding:14px 16px;gap:2px;min-width:0}
+.statstrip .tile:first-child{border-left:0}
+.statstrip .tile b{font-size:26px}
+.statstrip .tile span{font-size:11.5px;line-height:1.3}
+@media(max-width:900px){.statstrip{grid-template-columns:repeat(3,minmax(0,1fr))}.statstrip .tile:nth-child(4){border-left:0}.statstrip .tile:nth-child(n+4){border-top:2px solid rgba(17,17,17,.16)}}
+@media(max-width:520px){.statstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.statstrip .tile{border-left:2px solid rgba(17,17,17,.16)!important;border-top:2px solid rgba(17,17,17,.16)}.statstrip .tile:nth-child(odd){border-left:0!important}.statstrip .tile:nth-child(-n+2){border-top:0}.statstrip .tile b{font-size:22px}}
+/* check-in badge and door scanner (inside dialogs only) */
+input[type=date]{width:100%;border:2px solid var(--ink);border-radius:0;background:#fff;color:#111;padding:8px 11px;font:inherit}
+input[type=date]:focus{outline:0;border-color:var(--brand);box-shadow:3px 3px 0 #EC8B3F}
+.qrbadge{display:grid;place-items:center;padding:8px 0}
+.qrimg{background:#fff;padding:14px;border:3px solid #111;box-shadow:5px 5px 0 #EC8B3F;line-height:0}
+.qrimg img,.qrimg canvas{display:block;width:240px;height:240px;image-rendering:pixelated}
+.scanbox{width:100%;min-height:220px;background:#111;border:3px solid #111;overflow:hidden}
+.scanbox video{display:block;width:100%!important;height:auto!important}
+.scanmsg{padding:10px 12px;border-left:6px solid var(--brand);background:rgba(67,63,146,.08);font-size:13px;font-weight:600}
+.scanmsg.good{border-left-color:#16834A;background:#DDF3E5;color:#0F5530}
+.scanmsg.warn{border-left-color:#EC8B3F;background:#FFF0D7;color:#754208}
+.scanmsg.bad{border-left-color:#C62828;background:#FCE4E4;color:#9E1B1B}
 @media(max-width:520px){.tabs{overflow-x:auto;flex-wrap:nowrap}.top-in{padding-top:8px;padding-bottom:8px}}
 @media(prefers-color-scheme:dark){
   :root{color-scheme:dark;--bg:#111111;--bg-2:#1A1A1A;--surface:#1A1A1A;--surface2:#242424;--surface-solid:#1A1A1A;--ink:#F4F4F0;--muted:#C3C3C3;--line:#F4F4F0;--line-2:#F4F4F0;--brand:#8D89D5;--brand-2:#EC8B3F;--brand-ink:#fff;--brand-soft:rgba(141,137,213,.2);--link:#B9B6F0;--gold:#EC8B3F;--gold-2:#EC8B3F;--gold-soft:rgba(236,139,63,.2);--gold-ink:#FFC18E;--good:#76D59A;--good-soft:#173B27;--warn:#FFD18F;--warn-soft:#493216;--bad:#FF9B9B;--bad-soft:#482323;--shadow:8px 8px 0 #EC8B3F}
@@ -546,6 +569,11 @@ td{border-bottom:1px solid rgba(17,17,17,.14)}
   .task.mine{background:#302E59}
   .foot{border-top-color:rgba(244,244,240,.25)}
   .empty.loading{border-color:rgba(244,244,240,.15)}
+  .statstrip{background:#1A1A1A}
+  input[type=date]{background:#242424;color:#F4F4F0}
+  .statstrip .tile,.statstrip .tile:hover{border-color:rgba(244,244,240,.18)}
+  .scanmsg{background:#242424;color:#F4F4F0}
+  .scanmsg.good{background:#173B27;color:#A2E7B8}.scanmsg.warn{background:#493216;color:#FFD18F}.scanmsg.bad{background:#482323;color:#FFB0B0}
 }
 </style>
 
@@ -569,7 +597,7 @@ const fmt=ts=>new Date(ts).toLocaleString([],{month:'short',day:'numeric',hour:'
 const VLABEL={gps:'GPS 200 m',qr:'Live code',selfie:'Live photo',link:'Work link'};
 
 /* ---------- live data: one call to /api/bootstrap fills M (members), E (events), L (logs) ---------- */
-let M=[],E=[],L=[],ME='',CI=null;
+let M=[],E=[],L=[],GR=[],ME='',CI=null;
 const DATA={ready:false,err:''};
 let S={role:'member',lead:'Community',tab:{member:'home',lead:'review',pres:'center',vol:'events'},filter:'all',q:'',certM:'',exSec:'all',exSt:'all',pend:null,user:null,
   qrE:null,qrFor:null,qrCode:null,qrExp:0,qrErr:'',qrBusy:false,nfPos:null};
@@ -589,7 +617,9 @@ function adopt(d){
   L=d.logs.filter(l=>ev.has(String(l.eid))).map(l=>{const e=ev.get(String(l.eid));
     return{id:String(l.id),mid:String(l.uid),eid:String(l.eid),h:l.hours,day:e.days?l.day:undefined,status:l.status,ts:Date.parse(l.ts),
       ph:l.hasPhoto?'/api/hours/'+l.id+'/photo':null,link:l.link||null,ot:l.ot?{hrs:l.ot.hrs,reason:l.ot.reason,status:l.ot.status,proof:l.ot.proof}:null,
-      fl:!!l.flagged,feed:!!l.feed,cheer:l.cheers.map(String),cm:l.comments}})}
+      fl:!!l.flagged,feed:!!l.feed,cheer:l.cheers.map(String),cm:l.comments}});
+  GR=d.logs.filter(l=>l.grant&&l.grant.type==='manual_president_grant'&&String(l.uid)===ME).map(l=>({id:String(l.id),grant:true,h:l.hours,status:l.status,
+    reason:l.grant.reason||'President grant',date:l.grant.date||'',ts:Date.parse(l.ts)}))}
 
 async function reload(){adopt(await api('/api/bootstrap'));CERT.map={};EXPORT.key='';MOD.ver++;DATA.ready=true;DATA.err=''}
 function expired(x){if(x&&x.status===401){S.user=null;DATA.ready=false;modal('');authView('login','Your session expired. Please log in again.');return true}return false}
@@ -732,11 +762,11 @@ VIEW.member.home=()=>{
   const m=P(ME)||{name:S.user.name},H=hrs(ME),lv=lvl(H.t),goal=30,C=2*Math.PI*54,pct=Math.min(1,H.t/goal);
   const next=lv<3?LVMIN[lv+1]-H.t:0;
   const tot=H.i+H.o||1,pi=H.i/tot*100;
-  const my=L.filter(l=>l.mid===ME).sort((a,b)=>b.ts-a.ts).slice(0,6);
+  const my=[...L.filter(l=>l.mid===ME),...GR].sort((a,b)=>b.ts-a.ts).slice(0,6);
   return`<section class="card hero">
     <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg>
       <div class="c"><b class="mono">${f1(H.t)}</b><span class="small muted">of ${goal} h goal</span></div></div>
-    <div class="stack"><div><div class="eyebrow">Welcome back</div><h2>${esc(m.name)}</h2></div>
+    <div class="stack"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow">Welcome back</div><h2>${esc(m.name)}</h2></div><button class="btn sm" data-act="myqr">Show My Check-In QR</button></div>
       <p>Level ${lv+1}: <b>${LV[lv]}</b>. ${lv<3?`<b class="mono">${f1(next)} h</b> to reach ${LV[lv+1]}.`:'You are at the top level.'}${H.pen?` <span class="pill warn">${f1(H.pen)} h awaiting approval</span>`:''}</p>
       <div class="levels">${LV.map((n,i)=>`<div class="${i<lv?'done':i===lv?'on':''}"><b>L${i+1}</b>${LVMIN[i]}${i<3?'–'+LVMIN[i+1]:'+'} h</div>`).join('')}</div></div></section>
   <div class="grid">
@@ -744,7 +774,7 @@ VIEW.member.home=()=>{
       <svg class="pie" viewBox="0 0 42 42" role="img" aria-label="${f1(H.i)} hours in school, ${f1(H.o)} hours out of school"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--gold)" stroke-width="7"/><circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--brand)" stroke-width="7" stroke-dasharray="${H.t?pi:0} ${H.t?100-pi:100}" transform="rotate(-90 21 21)"/></svg>
       <div class="stack" style="gap:6px"><div><span class="pill">In school</span> <b class="mono">${f1(H.i)} h</b></div><div><span class="pill gold">Out of school</span> <b class="mono">${f1(H.o)} h</b></div></div></div></section>
     <section class="card stack"><h3>Badges</h3>${badges(ME).map(b=>`<div class="badge ${b.v>=b.n?'on':''}"><div class="ic">${b.ic}</div><div style="flex:1;min-width:0"><b>${b.k}</b> ${b.v>=b.n?'<span class="pill gold">Earned</span>':''}<div class="bar gold" style="margin:4px 0"><i style="width:${Math.min(100,b.v/b.n*100)}%"></i></div><div class="small muted">${b.d} · ${f1(Math.min(b.v,b.n))}/${b.n}</div></div></div>`).join('')}</section></div>
-  <section class="card stack"><h3>My recent logs</h3>${my.map(logRow).join('')||'<div class="empty"><b>No logs yet.</b><span>Sign up for an event and check in.</span></div>'}</section>`};
+  <section class="card stack"><h3>My recent logs</h3>${my.map(l=>l.grant?grantRow(l):logRow(l)).join('')||'<div class="empty"><b>No logs yet.</b><span>Sign up for an event and check in.</span></div>'}</section>`};
 
 VIEW.member.events=()=>{
   const f=S.filter,list=E.filter(e=>f==='all'||(f==='in'&&e.type==='in')||(f==='out'&&e.type==='out')||(f==='mine'&&mySign(e,ME)));
@@ -795,7 +825,7 @@ VIEW.lead.events=()=>{
    <div class="row"><label class="ck"><input type="checkbox" id="nf-g" checked>GPS 200 m</label><label class="ck"><input type="checkbox" id="nf-q" checked>Live code</label><label class="ck"><input type="checkbox" id="nf-s" checked>Live photo</label><label class="ck"><input type="checkbox" id="nf-k">Work link</label><label class="ck"><input type="checkbox" id="nf-w">Waiver</label><label class="ck"><input type="checkbox" id="nf-u">Setup / teardown</label></div>
    <div class="row"><button class="btn" data-act="nfloc">Use my current location as the venue</button><span id="nfpos" class="small muted">${S.nfPos?'Venue location set ✓':'Not set. Needed for GPS check-in.'}</span></div>
    <div><button class="btn pri" data-act="newev">Publish event</button></div></section>
-  <h3>${SL(S.lead)} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}<div class="row"><button class="btn sm" data-act="evactive" data-id="${e.id}">${e.active?'Mark inactive':'Mark active'}</button><button class="btn sm bad" data-act="evdelete" data-id="${e.id}">Delete</button></div></div>`).join('')||`<div class="empty"><b>No ${SL(S.lead)} events yet.</b><span>Publish the first one above.</span></div>`}</div>`};
+  <h3>${SL(S.lead)} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}<div class="row">${e.active?`<button class="btn sm pri" data-act="scanopen" data-id="${e.id}">Scan QR Check-In</button>`:''}<button class="btn sm" data-act="evactive" data-id="${e.id}">${e.active?'Mark inactive':'Mark active'}</button><button class="btn sm bad" data-act="evdelete" data-id="${e.id}">Delete</button></div></div>`).join('')||`<div class="empty"><b>No ${SL(S.lead)} events yet.</b><span>Publish the first one above.</span></div>`}</div>`};
 
 VIEW.lead.qr=()=>{
   const mine=E.filter(e=>e.sec===S.lead&&e.v.includes('qr'));
@@ -820,10 +850,10 @@ VIEW.pres.center=()=>{
   /* null = not loaded yet ("…" or "—" on error). A real 0 is shown as 0, never replaced. */
   const num=(x,max)=>x==null?(LIVE.err?'—':'…'):Number(x).toLocaleString(undefined,{maximumFractionDigits:max||0});
   const T=(val,l)=>`<div class="card tile${val==='…'?' is-loading':''}"><b>${val}</b><span>${l}</span></div>`;
-  return`<div><div class="eyebrow">President dashboard</div><h2>Command center</h2></div>
+  return`<div class="row between sechead"><div><div class="eyebrow">President dashboard</div><h2>Command center</h2></div>
+    <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn sm" data-act="tab" data-t="over">Overrides</button><button class="btn sm" data-act="tab" data-t="export">Export report</button>${grantBtn()}</div></div>
   ${LIVE.err?`<div class="empty err">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
-  <div class="grid g3" style="gap:12px">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
-  <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn" data-act="tab" data-t="over">Overrides</button><button class="btn gold" data-act="tab" data-t="export">Export report</button></div>
+  <div class="statstrip" role="group" aria-label="Club at a glance">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
   <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${lv?lv[i]:'…'}</b></div><div class="bar"><i style="width:${lv&&lvTot?lv[i]/lvTot*100:0}%"></i></div></div>`).join('')}</section></div>`};
 
 function rosterRows(){const q=S.q.toLowerCase();const rows=M.filter(m=>!q||m.name.toLowerCase().includes(q));
@@ -835,7 +865,7 @@ function rosterRows(){const q=S.q.toLowerCase();const rows=M.filter(m=>!q||m.nam
   <td>${esc(SL(m.sec))||'—'}</td><td class="n mono">${f1(H.t)}</td><td>L${lvl(H.t)+1}</td>
   <td>${canMove&&m.role==='member'?`<select data-ch="assignsec" data-id="${m.id}" aria-label="Move ${esc(m.name)} to a sector"><option value="">Move to...</option>${SECT.map(s=>`<option value="${s}">${SL(s)}</option>`).join('')}</select>`:''}</td></tr>`}).join('')}
 VIEW.pres.roster=()=>{const req=M.filter(m=>m.st==='keep'&&m.req);
-  return`<h2>Roster</h2>${req.length?`<section class="card stack"><h3>Promotion requests</h3>${req.map(m=>`<div class="row between flat"><b>${esc(m.name)}</b><button class="btn sm pri" data-act="promote" data-id="${m.id}">Promote to Active</button></div>`).join('')}</section>`:''}
+  return`<div class="row between sechead"><h2>Roster</h2>${grantBtn()}</div>${req.length?`<section class="card stack"><h3>Promotion requests</h3>${req.map(m=>`<div class="row between flat"><b>${esc(m.name)}</b><button class="btn sm pri" data-act="promote" data-id="${m.id}">Promote to Active</button></div>`).join('')}</section>`:''}
   <p class="small muted">Presidents promote volunteers and can move active members between sectors here. Appointing Sector Heads and Presidents is done by an admin in the Admin Panel.</p>
   <input type="search" data-in="q" placeholder="Search members" value="${esc(S.q)}" aria-label="Search members" id="rq">
   <div class="tbl"><table><thead><tr><th>Name</th><th>Role</th><th>Sector</th><th class="n">Hours</th><th>Level</th><th></th></tr></thead><tbody id="rbody">${rosterRows()}</tbody></table></div>`};
@@ -855,7 +885,7 @@ VIEW.pres.certs=()=>{const id=S.certM||ME;
 /* ---------- modals ---------- */
 function modal(h,wide){$('#modal').innerHTML=h?`<div class="scrim"><div class="sheet${wide?' wide':''}" role="dialog" aria-modal="true">${h}</div></div>`:''}
 function stopCam(){if(CI&&CI.cam){CI.cam.getTracks().forEach(t=>t.stop());CI.cam=null}}
-function closeModal(){stopCam();CI=null;S.pend=null;modal('')}
+function closeModal(){stopCam();stopScan();CI=null;S.pend=null;modal('')}
 function steps(e){return[...e.v,'review']}
 const STITLE={gps:'Confirm your location',qr:'Enter the live code',selfie:'Take a live photo',link:'Attach your work',review:'Review and submit'};
 function ciValid(){const e=EV(CI.eid),k=steps(e)[CI.i];
@@ -1483,6 +1513,111 @@ function maybeStats(){if(statsViewOpen()&&!LIVE.stats&&!LIVE.err&&!LIVE.loading)
 async function boot(){
   try{const {user}=await api('/api/auth/me');if(user){applyUser(user);render();loadAll()}else authView('login')}
   catch(e){authView('login',e.status?'Server error ('+e.status+'). Please try again.':'Cannot reach the server. Is it running?')}}
+/* ---------- officer tools: President hour grants, member QR badges, door scanner ----------
+   The two QR libraries load only when one of these dialogs opens, so the main page stays light. */
+const LIBS={
+  qr:{src:'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',sri:'sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU',ok:()=>typeof QRCode!=='undefined'},
+  scan:{src:'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js',sri:'sha384-c9d8RFSL+u3exBOJ4Yp3HUJXS4znl9f+z66d1y54ig+ea249SpqR+w1wyvXz/lk+',ok:()=>!!scanLib()}};
+function scanLib(){return(typeof Html5Qrcode!=='undefined'&&Html5Qrcode)||(typeof window!=='undefined'&&window.__Html5QrcodeLibrary__&&window.__Html5QrcodeLibrary__.Html5Qrcode)||null}
+function needLib(k){const lib=LIBS[k];if(lib.ok())return Promise.resolve();if(lib.p)return lib.p;
+  lib.p=new Promise((res,rej)=>{
+    if(!document.head||!document.head.appendChild)return rej(new Error('no document'));
+    const s=document.createElement('script');s.src=lib.src;s.integrity=lib.sri;s.crossOrigin='anonymous';s.referrerPolicy='no-referrer';
+    s.onload=()=>lib.ok()?res():rej(new Error('library did not start'));s.onerror=()=>rej(new Error('download failed'));
+    document.head.appendChild(s)}).catch(e=>{lib.p=null;throw e});
+  return lib.p}
+const localDay=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+/* what a member badge encodes; the scanner also accepts a bare number */
+const BADGE='interact-member:';
+const badgeId=t=>{const m=/^(?:interact-member:)?\s*(\d{1,9})\s*$/i.exec(String(t||'').trim());return m?m[1]:null};
+
+/* --- President grant: entry point only for the President view --- */
+const canGrant=()=>S.role==='pres'&&!!S.user&&['pres','admin'].includes(S.user.role);
+const grantBtn=()=>canGrant()?'<button class="btn gold sm" data-act="grantopen">+ Grant Hours</button>':'';
+const grantable=()=>M.filter(m=>m.id!==ME&&['member','lead','pres'].includes(m.role)).sort((a,b)=>a.name.localeCompare(b.name));
+function grantRow(l){return`<div class="row between flat"><div style="min-width:0"><b>${esc(l.reason)}</b><div class="small muted">President grant${l.date?` · ${esc(l.date)}`:''}</div></div><div class="row"><span class="mono">${f1(l.h)} h</span><span class="pill good">${esc(l.status)}</span></div></div>`}
+function grantModal(){const ms=grantable();
+  modal(`<div class="row between"><div><div class="eyebrow">President tools</div><h3>Grant service hours</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+  <p class="small muted">For verified service that did not run through an event check-in. The hours count as approved at once, appear on the member's certificate and report, and the grant is recorded in the audit log.</p>
+  ${ms.length?`<div class="grid" style="gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+   <label style="grid-column:1/-1">Member<select id="gr-m" name="memberId"><option value="">Choose a member...</option>${ms.map(m=>`<option value="${m.id}">${esc(m.name)}${m.sec?` · ${esc(SL(m.sec))}`:''}</option>`).join('')}</select></label>
+   <label>Hours<input type="number" id="gr-h" name="hours" min="0.5" max="100" step="0.5" value="1"></label>
+   <label>Date<input type="date" id="gr-d" name="date" value="${localDay()}" max="${localDay()}"></label>
+   <label>Counts as<select id="gr-y" name="type"><option value="in">In school</option><option value="out">Out of school</option></select></label>
+   <label style="grid-column:1/-1">Reason or project<input type="text" id="gr-r" name="reason" maxlength="200" placeholder="e.g. Designed the charity gala posters"></label>
+   <label style="grid-column:1/-1">Notes (optional)<textarea id="gr-n" name="notes" maxlength="500" rows="2" style="min-height:0"></textarea></label></div>
+  <p class="err" id="gr-err" role="alert"></p>
+  <div class="row"><button class="btn pri" id="gr-go" data-act="grantgo">Grant hours</button></div>`
+  :'<div class="empty"><b>No members to grant hours to yet.</b><span>Active members appear here once they join the club.</span></div>'}`)}
+
+/* --- door scanner state (null while closed) --- */
+let SCAN=null;
+function stopScan(){const s=SCAN;SCAN=null;if(!s||!s.inst)return;const i=s.inst;s.inst=null;
+  Promise.resolve().then(()=>i.isScanning?i.stop():null).then(()=>{try{i.clear()}catch(e){}}).catch(()=>{})}
+function scanMsg(kind,html){const el=$('#scanMsg');if(!el)return;el.className='scanmsg'+(kind?' '+kind:'');el.innerHTML=html}
+function scanModal(e){
+  const people=e.signups.map(s=>s.m).filter(id=>id!==ME).map(id=>({id,name:nameOf(id)})).sort((a,b)=>a.name.localeCompare(b.name));
+  modal(`<div class="row between"><div><div class="eyebrow">QR check-in · ${esc(SL(e.sec))}</div><h3>${esc(e.t)}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+  <p class="small muted">Scan each member's check-in QR. <b class="mono">${f1(e.h)} h</b> is logged and approved for them straight away. The scanner stays on for the next person until you close it.</p>
+  <div id="qrReader" class="scanbox" aria-label="Camera view"></div>
+  <div id="scanMsg" class="scanmsg" role="status" aria-live="polite">Starting the camera...</div>
+  <details><summary class="small muted" style="cursor:pointer">No camera? Check in from the roster</summary>
+   <div class="row" style="margin-top:8px">${people.length?`<select id="scanPick" aria-label="Member to check in" style="flex:1;min-width:0"><option value="">Choose a member...</option>${people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><button class="btn sm pri" data-act="scanpick">Check in</button>`:'<span class="small muted">Nobody has signed up for this event yet.</span>'}</div></details>
+  <div id="scanLog" class="stack" style="gap:6px"></div>`)}
+async function scanStart(){
+  try{await needLib('scan')}catch(x){scanMsg('bad','Could not load the camera scanner. Check the connection, or check members in from the roster below.');return}
+  const s=SCAN;if(!s||!$('#qrReader'))return; /* closed while loading */
+  const H=scanLib();
+  let inst=null;
+  try{inst=new H('qrReader',{verbose:false});s.inst=inst;
+    await inst.start({facingMode:'environment'},{fps:10,qrbox:(w,h)=>{const n=Math.floor(Math.min(w,h)*0.7);return{width:n,height:n}}},t=>onScan(t),()=>{});
+    if(SCAN!==s){try{await inst.stop();inst.clear()}catch(e){}return} /* closed while the camera was starting: turn it off */
+    scanMsg('','Camera ready. Hold a member badge inside the square.')}
+  catch(x){if(SCAN===s){s.inst=null;scanMsg('bad','The camera is not available. Allow camera access in the browser, or check members in from the roster below.')}}}
+function onScan(text){const s=SCAN;if(!s||s.busy)return;
+  const now=Date.now();if(text===s.lastText&&now-s.lastAt<(text===s.okText?15000:4000))return; /* the same badge is still in front of the lens */
+  s.lastText=text;s.lastAt=now;
+  const id=badgeId(text);if(!id){scanMsg('bad','That QR code is not a club member badge.');return}
+  scanCheckin(id,text)}
+async function scanCheckin(uid,text){const s=SCAN;if(!s||s.busy)return;s.busy=true;
+  try{if(s.inst&&s.inst.pause)s.inst.pause(true)}catch(e){}
+  scanMsg('','Checking in...');
+  try{const r=await api('/api/events/checkin','POST',{eventId:Number(s.eid),userId:Number(uid)});
+    if(SCAN!==s)return;
+    const line=`<b>${esc(r.member.name)}</b> checked in · <span class="mono">+${f1(r.hours)} h</span> approved${r.days>1?` (day ${r.day} of ${r.days})`:''}`;
+    scanMsg('good','✓ '+line);s.done.unshift(line);if(text)s.okText=text;
+    const log=$('#scanLog');if(log)log.innerHTML=s.done.slice(0,8).map(x=>`<div class="small">${x}</div>`).join('');
+    reload().then(render).catch(()=>{})} /* totals and rosters behind the dialog catch up quietly */
+  catch(x){if(expired(x))return;if(SCAN===s)scanMsg(x.status===409?'warn':'bad',esc(x.message||'Check-in failed'))}
+  finally{s.busy=false;setTimeout(()=>{try{if(SCAN===s&&s.inst&&s.inst.resume)s.inst.resume()}catch(e){}},1200)}}
+
+Object.assign(A,{
+ grantopen(){if(canGrant())grantModal()},
+ async grantgo(d,btn){
+  const v=id=>{const el=$('#'+id);return el?String(el.value).trim():''},err=t=>{const el=$('#gr-err');if(el)el.textContent=t;else toast(t)};
+  const body={memberId:Number(v('gr-m')),hours:Number(v('gr-h')),date:v('gr-d'),type:v('gr-y')||'in',reason:v('gr-r'),notes:v('gr-n')};
+  if(!body.memberId)return err('Choose a member.');
+  if(!(body.hours>=0.5&&body.hours<=100)||!Number.isInteger(body.hours*2))return err('Hours must be from 0.5 to 100, in steps of 0.5.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(body.date))return err('Choose a date.');
+  if(body.reason.length<3)return err('Write the reason or project.');
+  if(btn){btn.disabled=true;btn.textContent='Granting...'}
+  let g=null;
+  const ok=await run(async()=>{g=(await api('/api/hours/grant','POST',body)).grant});
+  if(ok&&g){closeModal();toast(`Granted ${f1(g.hours)} h to ${g.member}`)}
+  else if(btn&&$('#gr-go')){btn.disabled=false;btn.textContent='Grant hours'}},
+ async myqr(){const m=P(ME)||{name:S.user.name};
+  modal(`<div class="row between"><div><div class="eyebrow">Check-in badge</div><h3>${esc(m.name)}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+   <div class="qrbadge"><div id="myQr" class="qrimg" aria-label="Your check-in QR code"></div></div>
+   <p class="small muted" id="myQrMsg" style="text-align:center">Loading your code...</p>`);
+  try{await needLib('qr')}catch(x){const el=$('#myQrMsg');if(el)el.textContent='Could not load the QR generator. Check the connection and try again.';return}
+  const box=$('#myQr');if(!box)return;box.innerHTML='';
+  new QRCode(box,{text:BADGE+ME,width:240,height:240,colorDark:'#111111',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  const el=$('#myQrMsg');if(el)el.textContent='Show this to your Sector Head at the event door. It only identifies you; the officer confirms you are there.'},
+ scanopen(d){const e=EV(d.id);if(!e)return toast('Event not found');if(!e.active)return toast('Mark the event active first');
+  closeModal();SCAN={eid:e.id,inst:null,busy:false,lastText:'',lastAt:0,done:[]};scanModal(e);scanStart()},
+ scanpick(){const el=$('#scanPick'),id=el?String(el.value):'';if(!id)return scanMsg('bad','Choose a member first.');scanCheckin(id)}
+});
+
 boot();
 </script>
 

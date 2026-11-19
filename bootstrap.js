@@ -3,7 +3,7 @@ const { requireAuth } = require('./middleware');
 const K = require('./lib');
 
 const router = express.Router();
-const LOG_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, overtime_proof_url, flagged, created_at';
+const LOG_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, overtime_proof_url, flagged, created_at, grant_type, grant_reason, grant_date';
 
 // Everything the app needs to draw its screens, scoped to who is asking.
 //  - everyone: names of members, all events with their sign-ups, their own logs
@@ -21,7 +21,7 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
       K.fetchAll(() => sb.from('events').select('*').order('id')),
       K.fetchAll(() => sb.from('signups').select('event_id, user_id, shift, is_volunteer').order('id')),
       K.fetchAll(() => {
-        const q = sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status').eq('status', 'approved').order('id');
+        const q = sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status, grant_scope').eq('status', 'approved').order('id');
         return seesAll ? q : q.eq('user_id', u.id);
       }),
     ]);
@@ -29,7 +29,8 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
     // ---- which logs to send ----
     const newest = { ascending: false };
     const queries = [sb.from('hour_logs').select(LOG_COLS).eq('user_id', u.id).order('created_at', newest).limit(200)];
-    if (memberUp) queries.push(sb.from('hour_logs').select(LOG_COLS).eq('status', 'approved').eq('flagged', 0).order('created_at', newest).limit(60));
+    // the club feed shows members' own submissions (photo or work link), never officer grants or door check-ins
+    if (memberUp) queries.push(sb.from('hour_logs').select(LOG_COLS).eq('status', 'approved').eq('flagged', 0).is('grant_type', null).order('created_at', newest).limit(60));
     if (staff) {
       queries.push(sb.from('hour_logs').select(LOG_COLS).eq('status', 'pending').order('created_at', newest).limit(500));
       queries.push(sb.from('hour_logs').select(LOG_COLS).eq('flagged', 1).limit(200));
@@ -79,7 +80,9 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
       logs: logs.map(l => ({
         id: l.id, uid: l.user_id, eid: l.event_id, hours: l.hours, day: l.day, status: l.status,
         link: l.work_link, hasPhoto: withPhoto.has(l.id), ts: l.created_at,
-        feed: l.status === 'approved' && !l.flagged, // shown in the club feed (a flagged post stays out, without saying why)
+        feed: l.status === 'approved' && !l.flagged && !l.grant_type, // shown in the club feed (a flagged post stays out, without saying why)
+        // officer-created hours: a President's manual grant (no event) or a QR check-in at the door
+        grant: l.grant_type ? { type: l.grant_type, reason: l.user_id === u.id || staff ? l.grant_reason || null : null, date: l.grant_date || null } : null,
         ot: l.overtime_status ? {
           hrs: l.overtime_hours, status: l.overtime_status,
           reason: staff || l.user_id === u.id ? l.overtime_reason || null : null,

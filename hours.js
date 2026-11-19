@@ -115,6 +115,62 @@ router.post('/hours', submitLimiter, async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// President grant: award verified hours by hand (service done outside a tracked event).
+// The row is approved at once, so it counts in totals, the leaderboard, the certificate and the report.
+// ---------------------------------------------------------------------------
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+function grantDate(v) {
+  if (typeof v !== 'string' || !ISO_DAY.test(v)) return null;
+  const d = new Date(v + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v) return null; // rejects 2026-02-31
+  const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 10); // one day of slack for time zones
+  return v >= '2000-01-01' && v <= tomorrow ? v : null;
+}
+
+router.post('/hours/grant', requireRole('pres', 'admin'), submitLimiter, async (req, res, next) => {
+  try {
+    const u = req.user, b = req.body || {};
+    const memberId = K.toId(b.memberId);
+    if (!memberId) return bad(res, 'Choose a member.');
+    const hours = K.num(b.hours, 0.5, 100);
+    if (hours === null || !Number.isInteger(hours * 2)) return bad(res, 'Hours must be from 0.5 to 100, in steps of 0.5.');
+    const date = grantDate(b.date);
+    if (!date) return bad(res, 'Choose a valid date that is not in the future.');
+    const reason = K.str(b.reason, 3, 200);
+    if (!reason) return bad(res, 'Write the reason or project (3 to 200 characters).');
+    let notes = null;
+    if (b.notes != null && String(b.notes).trim() !== '') {
+      notes = K.str(b.notes, 1, 500);
+      if (!notes) return bad(res, 'Notes can be up to 500 characters.');
+    }
+    const scope = b.type == null || b.type === '' ? 'in' : b.type;
+    if (!['in', 'out'].includes(scope)) return bad(res, "Type must be 'in' (in school) or 'out' (out of school).");
+    if (memberId === u.id) return bad(res, 'You cannot grant hours to yourself.', 403);
+
+    const sb = req.app.locals.supabase;
+    const { data: member, error: mErr } = await sb.from('users').select('id, name, role').eq('id', memberId).maybeSingle();
+    if (mErr) throw mErr;
+    if (!member) return bad(res, 'Member not found.', 404);
+    if (member.role === 'admin') return bad(res, 'Admin accounts are not club members, so they do not collect hours.');
+    if (member.role === 'volunteer') return bad(res, `${member.name} is on the keeplist. Promote them to Active before granting hours.`, 409);
+
+    const now = new Date().toISOString();
+    const { data, error } = await sb.from('hour_logs').insert({
+      user_id: member.id, event_id: null, hours, day: 1, status: 'approved', flagged: 0,
+      reviewed_by: u.id, reviewed_at: now,
+      grant_type: 'manual_president_grant', granted_by: u.id, grant_reason: reason, grant_notes: notes, grant_date: date, grant_scope: scope,
+    }).select('id').maybeSingle();
+    if (error) throw error;
+    await audit(sb, u, 'hours.grant', 'hour_log', data.id, { userId: member.id, hours, date, reason, type: scope, grantType: 'manual_president_grant' });
+    console.log(`[hours] ${u.email} granted ${hours} h to user #${member.id}`);
+    res.status(201).json({ ok: true, grant: {
+      id: data.id, memberId: member.id, member: member.name, hours, date, reason, notes, type: scope,
+      status: 'approved', grantType: 'manual_president_grant', grantedBy: u.id,
+    } });
+  } catch (err) { next(err); }
+});
+
+// ---------------------------------------------------------------------------
 // The proof photo, served as an image (the page uses it directly in <img src>)
 // ---------------------------------------------------------------------------
 router.get('/hours/:id/photo', async (req, res, next) => {

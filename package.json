@@ -4,7 +4,7 @@
   "description": "Node.js + Express + SQLite backend with session-based login (bcrypt), serving the club hub frontend.",
   "main": "auth.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node all.js",
     "start": "node server.js"
   },
   "keywords": [],

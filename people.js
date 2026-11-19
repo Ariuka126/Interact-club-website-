@@ -52,7 +52,7 @@ router.get('/certificate/:id', requireAuth, async (req, res, next) => {
     if (!m) return bad(res, 'Member not found.', 404);
 
     const [logs, events, signers] = await Promise.all([
-      K.fetchAll(() => sb.from('hour_logs').select('id, event_id, hours, overtime_hours, overtime_status, created_at').eq('user_id', id).eq('status', 'approved').order('id')),
+      K.fetchAll(() => sb.from('hour_logs').select('id, event_id, hours, overtime_hours, overtime_status, grant_scope, created_at').eq('user_id', id).eq('status', 'approved').order('id')),
       K.fetchAll(() => sb.from('events').select('id, title, type').order('id')),
       sb.from('users').select('name').eq('role', 'pres').order('id').limit(2),
     ]);
@@ -89,7 +89,7 @@ router.get('/export', requireAuth, requireRole('pres', 'admin'), async (req, res
     const [users, events, approved] = await Promise.all([
       K.fetchAll(() => sb.from('users').select('id, name, role, sector').order('id')),
       K.fetchAll(() => sb.from('events').select('id, type').order('id')),
-      K.fetchAll(() => sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status').eq('status', 'approved').order('id')),
+      K.fetchAll(() => sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status, grant_scope').eq('status', 'approved').order('id')),
     ]);
     const totals = K.hoursByUser(approved, new Map(events.map(e => [e.id, e.type])));
 

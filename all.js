@@ -1,6 +1,6 @@
 // Runs every suite and prints one line each. Usage: node tests/all.js   (no install needed)
 const { spawnSync } = require('child_process'), path = require('path');
-const suites = ['api', 'spec', 'spec2', 'spec3', 'e2e', 'e2e-spec'];
+const suites = ['api', 'spec', 'spec2', 'spec3', 'e2e', 'e2e-spec', 'grants'];
 let bad = 0, total = 0;
 for (const s of suites) {
   const r = spawnSync(process.execPath, [path.join(__dirname, s + '.js')], { encoding: 'utf8' });
