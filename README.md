@@ -28,8 +28,8 @@ tests             npm test  (runs all.js: every suite, including grants.js; no i
 1. Supabase SQL editor: run `migrations/004_live_app.sql` (adds sign-ups, cheers, comments, venue and GPS columns, and row-level security).
 2. Supabase SQL editor: run `migrations/005_clean_slate.sql` (read STEP 1 first). It deletes events, sign-ups, hour logs, cheers and
    comments, and keeps every registered account.
-3. Supabase SQL editor: run `006_hour_grants.sql` **before deploying this version** (lets a President's grant have no event and
-   adds the grant columns; the app reads them on every page load).
+3. Supabase SQL editor: run `006_hour_grants.sql` (safe to run again; **re-run it if you ran an earlier copy**, so grants can be
+   revoked). Until it runs the app still loads, but grants and QR check-in stay off and the server log says so.
 4. Render environment: `SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `DATABASE_URL`. Optional: `QR_SECRET`
    (secret for the live check-in codes; defaults to `SESSION_SECRET`).
 5. Deploy.
@@ -44,12 +44,18 @@ tests             npm test  (runs all.js: every suite, including grants.js; no i
   - Live code: a 6-digit code made by the server, changing every 30 seconds, shown on the lead's screen and checked by the server.
   - Photo: taken live with the camera (no uploads). Link: for off-site work.
   - Hours come from the event, never from the member.
-  - QR door check-in: a member opens **Show My Check-In QR** on My impact; the lead (or a President) taps **Scan QR Check-In** on an
-    active event and scans it (`POST /api/events/checkin`). The member must be signed up; the event's hours are approved at once;
-    a second scan the same day is refused. The camera needs HTTPS (Render provides it). No camera: pick the member from the roster in the same dialog.
-- **President grants:** `+ Grant Hours` (Command Center or Roster, President view) awards approved hours to a member for service outside
-  an event (`POST /api/hours/grant`, Presidents and admins only). Grants count in totals, the leaderboard, certificates and the CSV report,
-  and every grant is in the audit log.
+  - QR door check-in: a member opens **Show My Check-In QR** on My impact. It is a live code on their phone only (`GET /api/badge`,
+    signed by the server, new every 30 s), so printouts and screenshots stop working within a minute. The Sector Head, a President or
+    an admin taps **Scan QR Check-In** (on the event, or in Command Center → Active events) and scans it (`POST /api/events/checkin`).
+    The event's hours are approved at once; a second scan the same day is refused. Someone who did not sign up can be added as a
+    **walk-in** from the same dialog (capacity applies; events that need a waiver refuse walk-ins). No camera: pick the member from the
+    roster in the dialog. The camera needs HTTPS (Render provides it).
+- **Hour grants:** `+ Grant Hours` awards approved hours for service outside an event (`POST /api/hours/grant`): Presidents and admins
+  for anyone (Command Center, Roster), Sector Heads for members of their own sector (Approvals, Sectors). Grants count in totals, the
+  leaderboard, certificates and the CSV report, and are audit-logged. A President revokes or restores a grant from Overrides → Recent
+  decisions with a written reason; nothing is deleted.
+- **Look:** a calm, open theme built on the school logo (`public/school-logo.png`): indigo `#3F4093` for structure and actions, orange
+  `#F58635` for what is active or earned, soft curves, no boxes inside boxes, and a matching dark mode.
 - **Roles:** volunteer, member, lead, pres, admin. Co-Presidents promote volunteers; every other role change is an admin's (Admin Panel).
 - **Sectors** feed the sector leaderboard. Set them in the Admin Panel (Sector Leads must have one; Members may).
 - **Certificate** has a Print / save-as-PDF button; the Rotary report is a real CSV download from the server.

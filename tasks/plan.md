@@ -36,28 +36,28 @@ club night. This plan fixes the bugs first, then closes the gaps, then polishes.
 See `tasks/todo.md` for full tasks with acceptance criteria and verification.
 
 ### Phase 1: Fix what this release can break (fail fast)
-- [ ] Task 1: Bootstrap survives a missing migration (F3)
-- [ ] Task 2: Grants are labelled correctly in Recent decisions (F1)
-- [ ] Task 3: A President can revoke a mistaken grant (F2)
+- [x] Task 1: Bootstrap survives a missing migration (F3)
+- [x] Task 2: Grants are labelled correctly in Recent decisions (F1)
+- [x] Task 3: A President can revoke a mistaken grant (F2)
 
 ### Checkpoint A: Safe to deploy
-- [ ] `npm test` green; app loads on a DB without 006; grant can be granted, seen and revoked
+- [x] `npm test` green; app loads on a DB without 006; grant can be granted, seen and revoked
 
 ### Phase 2: Make door check-in trustworthy and complete
-- [ ] Task 4: Signed member badges (F4)
-- [ ] Task 5: Walk-in check-in at the door (F5, only if approved; see Open Questions)
-- [ ] Task 6: Presidents can start a door scan without switching views (F6)
+- [x] Task 4: Signed member badges (F4)
+- [x] Task 5: Walk-in check-in at the door (F5, only if approved; see Open Questions)
+- [x] Task 6: Presidents can start a door scan without switching views (F6)
 
 ### Checkpoint B: Club-night ready
-- [ ] Real camera scan of a signed badge in Chromium; forged/plain badge refused; walk-in path (if built) respects capacity
+- [x] Real camera scan of a signed badge in Chromium; forged/plain badge refused; walk-in path (if built) respects capacity
 
 ### Phase 3: Polish
-- [ ] Task 7: Dark mode borders readable (F7)
-- [ ] Task 8: Grants on the certificate + readable audit actions (F8)
-- [ ] Task 9: Dialog focus management (F9)
+- [x] Task 7: Dark mode borders readable (F7)
+- [x] Task 8: Grants on the certificate + readable audit actions (F8)
+- [x] Task 9: Dialog focus management (F9)
 
 ### Checkpoint C: Complete
-- [ ] All acceptance criteria met, screenshots light/dark/phone reviewed, ready for PR
+- [x] All acceptance criteria met, screenshots light/dark/phone reviewed, ready for PR
 
 ## Dependency graph
 ```
@@ -77,7 +77,11 @@ T7, T8, T9: independent (safe to parallelize)
 | Walk-ins overfill an event | Med | Capacity check in the same endpoint; President can override only with a reason (audit) |
 | Scanner behaviour differs on iOS Safari | Med | Manual roster fallback already in dialog; test on a phone before club night |
 
-## Open Questions (need your answer)
+## Decisions (answered)
+1. Walk-ins: yes, capacity applies. 2. Sector Heads may grant to their own sector. 3. Revoking needs a written reason.
+4. Phone-only live badge (30 s). Also: reskin to a minimal theme built on the school logo. All tasks done.
+
+## Open Questions (original)
 1. **Walk-ins (Task 5):** at the door, should an officer be able to check in someone who did not sign up? If yes, should it respect capacity?
 2. **Who may grant:** Presidents and admins only (as now), or Sector Heads for their own sector too?
 3. **Revoking:** should revoking a grant require a written reason (like Overrides do)? Recommended: yes.
