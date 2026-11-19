@@ -245,13 +245,23 @@ router.post('/events/:id/verify-qr', qrLimiter, async (req, res, next) => {
 // Officer QR check-in: the lead (or a President) scans a member's badge at the door.
 // The officer vouches for presence in person, so the hours are logged as approved straight away.
 // ---------------------------------------------------------------------------
+// Body: { eventId, badge } from the scanner (the member's live phone code), or { eventId, userId } when the officer
+// picks the member from the roster by hand. walkIn: true signs a member up on the spot (capacity still applies).
 router.post('/events/checkin', checkinLimiter, async (req, res, next) => {
   try {
     const u = req.user, b = req.body || {};
-    const eventId = K.toId(b.eventId), userId = K.toId(b.userId);
+    const eventId = K.toId(b.eventId);
     if (!eventId) return bad(res, 'Invalid event.');
-    if (!userId) return bad(res, 'That QR code is not a club member badge.');
+    let userId = null;
+    if (b.badge != null) {
+      const r = K.badgeUser(b.badge);
+      if (r.error === 'expired') return bad(res, 'That badge code has expired. Ask the member to keep Show My Check-In QR open on their phone; it refreshes every 30 seconds.');
+      if (r.error) return bad(res, 'That QR code is not a live club check-in badge. Ask the member to open Show My Check-In QR on their phone.');
+      userId = r.uid;
+    } else userId = K.toId(b.userId);
+    if (!userId) return bad(res, 'Choose a member, or scan their check-in badge.');
     const sb = req.app.locals.supabase;
+    if (!(await K.hasGrantColumns(sb))) return bad(res, K.NEEDS_MIGRATION, 503);
     const ev = await loadEvent(sb, eventId);
     if (!ev) return bad(res, 'Event not found.', 404);
     if (!canRunEvent(u, ev)) return bad(res, "Only this sector's lead or a President can check members in.", 403);
@@ -263,8 +273,15 @@ router.post('/events/checkin', checkinLimiter, async (req, res, next) => {
     if (!member) return bad(res, 'No club member matches this badge.', 404);
     if (member.role === 'admin') return bad(res, 'Admin accounts are not club members.');
     if (member.role === 'volunteer') return bad(res, `${member.name} is on the keeplist. Hour logging unlocks when they are promoted to Active.`, 403);
+    let walkIn = false;
     if (!(await countRows(sb.from('signups').select('id', head).eq('event_id', eventId).eq('user_id', userId).eq('is_volunteer', 0)))) {
-      return bad(res, `${member.name} is not signed up for ${ev.title}.`, 403);
+      if (!b.walkIn) return res.status(403).json({ error: `${member.name} is not signed up for ${ev.title}.`, notSignedUp: true, member: { id: member.id, name: member.name } });
+      if (ev.waiver_required) return bad(res, `${ev.title} needs a signed waiver. ${member.name} must sign up in the app first.`, 409);
+      const taken = await countRows(sb.from('signups').select('id', head).eq('event_id', eventId).eq('is_volunteer', 0));
+      if (taken >= ev.capacity) return bad(res, `${ev.title} is full (${taken} of ${ev.capacity}). A walk-in cannot be added.`, 409);
+      const { error: sErr } = await sb.from('signups').insert({ user_id: userId, event_id: eventId, shift: null, is_volunteer: 0 });
+      if (sErr && sErr.code !== '23505') throw sErr; // already signed up a moment ago is fine
+      walkIn = true;
     }
 
     // One check-in per member per event day. A rejected day can be redone.
@@ -296,9 +313,9 @@ router.post('/events/checkin', checkinLimiter, async (req, res, next) => {
       throw result.error;
     }
     if (!result.data) return already();
-    await audit(sb, u, 'hours.qr_checkin', 'hour_log', result.data.id, { userId, eventId, hours: ev.hours, day });
+    await audit(sb, u, 'hours.qr_checkin', 'hour_log', result.data.id, { userId, eventId, hours: ev.hours, day, walkIn, via: b.badge != null ? 'badge' : 'roster' });
     console.log(`[events] ${u.email} checked in user #${userId} at event #${eventId} day ${day}`);
-    res.status(201).json({ ok: true, logId: result.data.id, eventId, day, days: ev.days || 1, hours: ev.hours, member: { id: member.id, name: member.name } });
+    res.status(201).json({ ok: true, logId: result.data.id, eventId, day, days: ev.days || 1, hours: ev.hours, walkIn, member: { id: member.id, name: member.name } });
   } catch (err) { next(err); }
 });
 

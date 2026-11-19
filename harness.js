@@ -105,7 +105,7 @@ function loadApp(T) {
     } catch (e) { out.code = 500; out.json = { error: String((e && e.message) || e) }; }
     return out;
   }
-  return { call, T };
+  return { call, T, app };
 }
 
 // ---------------- a browser running the real page ----------------

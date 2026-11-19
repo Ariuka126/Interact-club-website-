@@ -127,9 +127,11 @@ function grantDate(v) {
   return v >= '2000-01-01' && v <= tomorrow ? v : null;
 }
 
-router.post('/hours/grant', requireRole('pres', 'admin'), submitLimiter, async (req, res, next) => {
+// Presidents and admins grant to any member; a Sector Head only to members of their own sector.
+router.post('/hours/grant', requireRole('pres', 'admin', 'lead'), submitLimiter, async (req, res, next) => {
   try {
     const u = req.user, b = req.body || {};
+    if (u.role === 'lead' && !u.sector) return bad(res, 'Your account has no sector yet. Ask an admin to set it.', 403);
     const memberId = K.toId(b.memberId);
     if (!memberId) return bad(res, 'Choose a member.');
     const hours = K.num(b.hours, 0.5, 100);
@@ -148,9 +150,11 @@ router.post('/hours/grant', requireRole('pres', 'admin'), submitLimiter, async (
     if (memberId === u.id) return bad(res, 'You cannot grant hours to yourself.', 403);
 
     const sb = req.app.locals.supabase;
-    const { data: member, error: mErr } = await sb.from('users').select('id, name, role').eq('id', memberId).maybeSingle();
+    if (!(await K.hasGrantColumns(sb))) return bad(res, K.NEEDS_MIGRATION, 503);
+    const { data: member, error: mErr } = await sb.from('users').select('id, name, role, sector').eq('id', memberId).maybeSingle();
     if (mErr) throw mErr;
     if (!member) return bad(res, 'Member not found.', 404);
+    if (u.role === 'lead' && member.sector !== u.sector) return bad(res, 'Sector Heads can only grant hours to members of their own sector.', 403);
     if (member.role === 'admin') return bad(res, 'Admin accounts are not club members, so they do not collect hours.');
     if (member.role === 'volunteer') return bad(res, `${member.name} is on the keeplist. Promote them to Active before granting hours.`, 409);
 
@@ -246,11 +250,12 @@ router.post('/hours/:id/overtime', requireRole('pres'), async (req, res, next) =
 router.get('/hours/decided', requireRole('pres'), async (req, res, next) => {
   try {
     const sb = req.app.locals.supabase;
+    const g = await K.hasGrantColumns(sb);
     const logs = await K.fetchAll(() => sb.from('hour_logs')
-      .select('id, user_id, event_id, hours, status, reviewed_by, reviewed_at')
+      .select('id, user_id, event_id, hours, status, reviewed_by, reviewed_at' + (g ? ', grant_type, grant_reason' : ''))
       .neq('status', 'pending').order('id', { ascending: false }).limit(200));
     const userIds = [...new Set(logs.flatMap(l => [l.user_id, l.reviewed_by]).filter(Boolean))];
-    const eventIds = [...new Set(logs.map(l => l.event_id))];
+    const eventIds = [...new Set(logs.map(l => l.event_id).filter(id => id != null))];
     const [users, events] = await Promise.all([
       userIds.length ? K.inBatches(userIds, ids => sb.from('users').select('id, name').in('id', ids)) : [],
       eventIds.length ? K.inBatches(eventIds, ids => sb.from('events').select('id, title').in('id', ids)) : [],
@@ -259,7 +264,9 @@ router.get('/hours/decided', requireRole('pres'), async (req, res, next) => {
     const titles = new Map(events.map(e => [e.id, e.title]));
     res.set('Cache-Control', 'no-store');
     res.json({ logs: logs.map(l => ({
-      ...l, member: names.get(l.user_id) || 'Former member', event: titles.get(l.event_id) || 'Deleted event',
+      ...l, member: names.get(l.user_id) || 'Former member',
+      event: l.event_id == null ? null : titles.get(l.event_id) || 'Deleted event', // a President's grant has no event
+      grant: l.grant_type ? { type: l.grant_type, reason: l.grant_reason || null } : null,
       reviewer: names.get(l.reviewed_by) || null, own: l.user_id === req.user.id,
     })) });
   } catch (err) { next(err); }
@@ -277,6 +284,7 @@ router.post('/hours/:id/override', requireRole('pres'), async (req, res, next) =
     const log = await loadLog(sb, id, 'id, user_id, event_id, status');
     if (!log) return bad(res, 'Entry not found.', 404);
     if (log.user_id === u.id) return bad(res, 'You cannot override your own hours.', 403);
+    if (log.event_id == null && status === 'pending') return bad(res, 'A President grant has no review queue. Revoke it (rejected) or restore it (approved).');
     if (log.status === status) return bad(res, 'The entry already has that status.', 409);
     const now = status === 'pending' ? null : new Date().toISOString();
     const { data, error } = await sb.from('hour_logs').update({ status, reviewed_by: status === 'pending' ? null : u.id, reviewed_at: now })

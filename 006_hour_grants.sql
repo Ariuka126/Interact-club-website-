@@ -1,4 +1,4 @@
--- Run once in the Supabase SQL editor (safe to run again).
+-- Run in the Supabase SQL editor (safe to run again; re-run it if you ran an earlier version, so revoking grants works).
 -- Officer-created hours, both stored in hour_logs as approved rows:
 --   * 'manual_president_grant': a President awards hours by hand; no event, so event_id is NULL
 --   * 'qr_checkin': a lead or President scanned the member's badge at an event
@@ -21,11 +21,13 @@ alter table hour_logs drop constraint if exists hour_logs_grant_scope_check;
 alter table hour_logs add constraint hour_logs_grant_scope_check
   check (grant_scope is null or grant_scope in ('in', 'out'));
 
--- Only a President's manual grant may have no event, and it must say why and when.
+-- Only a manual grant may have no event, and it must say why and when. It is approved, or rejected when a
+-- President revokes it (with a written reason, via Overrides); it never waits in a review queue.
 alter table hour_logs drop constraint if exists hour_logs_event_or_grant_check;
 alter table hour_logs add constraint hour_logs_event_or_grant_check
   check (event_id is not null
-         or (grant_type = 'manual_president_grant' and grant_reason is not null and grant_date is not null and status = 'approved'));
+         or (grant_type = 'manual_president_grant' and grant_reason is not null and grant_date is not null
+             and status in ('approved', 'rejected')));
 
 create index if not exists idx_hour_logs_grant on hour_logs(grant_type) where grant_type is not null;
 

@@ -608,7 +608,7 @@ const nameOf=id=>{const m=P(id);return m?m.name:'Former member'};
 
 /* Turn the server's answer into the shapes the screens use. All ids become strings. */
 function adopt(d){
-  ME=String(d.me.id);
+  ME=String(d.me.id);DATA.features=d.features||{};
   M=d.members.map(m=>({id:String(m.id),name:m.name,role:m.role,st:ST_OF[m.role]||'active',sec:m.sector||'',in:m.in||0,out:m.out||0,req:!!m.req}));
   E=d.events.map(e=>({id:String(e.id),t:e.title,sec:e.sector,h:e.hours,cap:e.capacity,loc:e.location,date:e.dateLabel,type:e.type,v:e.verification,
     shifts:e.shifts||undefined,points:e.points||undefined,days:e.days>1?e.days:undefined,waiver:!!e.waiver,setup:!!e.setup,vol:e.volunteerSlots,
@@ -766,7 +766,7 @@ VIEW.member.home=()=>{
   return`<section class="card hero">
     <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg>
       <div class="c"><b class="mono">${f1(H.t)}</b><span class="small muted">of ${goal} h goal</span></div></div>
-    <div class="stack"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow">Welcome back</div><h2>${esc(m.name)}</h2></div><button class="btn sm" data-act="myqr">Show My Check-In QR</button></div>
+    <div class="stack"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow">Welcome back</div><h2>${esc(m.name)}</h2></div>${grantsOn()?'<button class="btn sm" data-act="myqr">Show My Check-In QR</button>':''}</div>
       <p>Level ${lv+1}: <b>${LV[lv]}</b>. ${lv<3?`<b class="mono">${f1(next)} h</b> to reach ${LV[lv+1]}.`:'You are at the top level.'}${H.pen?` <span class="pill warn">${f1(H.pen)} h awaiting approval</span>`:''}</p>
       <div class="levels">${LV.map((n,i)=>`<div class="${i<lv?'done':i===lv?'on':''}"><b>L${i+1}</b>${LVMIN[i]}${i<3?'–'+LVMIN[i+1]:'+'} h</div>`).join('')}</div></div></section>
   <div class="grid">
@@ -807,7 +807,7 @@ function groupReview(sec){
       ${l.ot?`<span class="pill gold">Overtime request goes to President</span>`:''}
       <div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')}</div></section>`}).join('')}
 
-VIEW.lead.review=()=>{const ld=leadOf(S.lead);return`<div><div class="eyebrow">${SL(S.lead)}</div><h2>Hours waiting for you${ld?`, ${esc(ld.name)}`:''}</h2></div>${groupReview(S.lead)}`};
+VIEW.lead.review=()=>{const ld=leadOf(S.lead);return`<div class="row between sechead"><div><div class="eyebrow">${SL(S.lead)}</div><h2>Hours waiting for you${ld?`, ${esc(ld.name)}`:''}</h2></div>${grantBtn()}</div>${groupReview(S.lead)}`};
 
 VIEW.lead.events=()=>{
   const mine=E.filter(e=>e.sec===S.lead);
@@ -825,7 +825,7 @@ VIEW.lead.events=()=>{
    <div class="row"><label class="ck"><input type="checkbox" id="nf-g" checked>GPS 200 m</label><label class="ck"><input type="checkbox" id="nf-q" checked>Live code</label><label class="ck"><input type="checkbox" id="nf-s" checked>Live photo</label><label class="ck"><input type="checkbox" id="nf-k">Work link</label><label class="ck"><input type="checkbox" id="nf-w">Waiver</label><label class="ck"><input type="checkbox" id="nf-u">Setup / teardown</label></div>
    <div class="row"><button class="btn" data-act="nfloc">Use my current location as the venue</button><span id="nfpos" class="small muted">${S.nfPos?'Venue location set ✓':'Not set. Needed for GPS check-in.'}</span></div>
    <div><button class="btn pri" data-act="newev">Publish event</button></div></section>
-  <h3>${SL(S.lead)} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}<div class="row">${e.active?`<button class="btn sm pri" data-act="scanopen" data-id="${e.id}">Scan QR Check-In</button>`:''}<button class="btn sm" data-act="evactive" data-id="${e.id}">${e.active?'Mark inactive':'Mark active'}</button><button class="btn sm bad" data-act="evdelete" data-id="${e.id}">Delete</button></div></div>`).join('')||`<div class="empty"><b>No ${SL(S.lead)} events yet.</b><span>Publish the first one above.</span></div>`}</div>`};
+  <h3>${SL(S.lead)} events</h3><div class="grid">${mine.map(e=>`<div class="stack">${evCard(e,'lead')}<div class="row">${e.active&&grantsOn()?`<button class="btn sm pri" data-act="scanopen" data-id="${e.id}">Scan QR Check-In</button>`:''}<button class="btn sm" data-act="evactive" data-id="${e.id}">${e.active?'Mark inactive':'Mark active'}</button><button class="btn sm bad" data-act="evdelete" data-id="${e.id}">Delete</button></div></div>`).join('')||`<div class="empty"><b>No ${SL(S.lead)} events yet.</b><span>Publish the first one above.</span></div>`}</div>`};
 
 VIEW.lead.qr=()=>{
   const mine=E.filter(e=>e.sec===S.lead&&e.v.includes('qr'));
@@ -843,7 +843,7 @@ function leaderboard(){
   const order=SECT.slice().sort((a,b)=>t[b]-t[a]),mx=Math.max(...SECT.map(x=>t[x])),any=mx>0;
   return`<section class="card stack"><div class="row between"><h3>Sector leaderboard</h3>${any?`<span class="pill gold">Sector of the Month: ${SL(order[0])}</span>`:''}</div>${order.map(x=>`<div><div class="row between"><b>${SL(x)}</b><span class="mono">${f1(t[x])} h</span></div><div class="bar ${any&&x===order[0]?'gold':''}"><i style="width:${any?t[x]/mx*100:0}%"></i></div></div>`).join('')}${any?'':'<p class="small muted">No approved hours are linked to a sector yet.</p>'}</section>`}
 VIEW.lead.sector=()=>{const ms=M.filter(m=>m.sec===S.lead&&m.st!=='keep').map(m=>({m,h:hrs(m.id)})).sort((a,b)=>b.h.t-a.h.t).slice(0,10);
-  return`${leaderboard()}<section class="card stack"><h3>${SL(S.lead)} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')||'<tr><td colspan="4" class="muted">No members in this sector yet. Sectors are set in the Admin Panel.</td></tr>'}</tbody></table></div></section>`};
+  return`<div class="row between sechead"><div><div class="eyebrow">Sector</div><h2>${SL(S.lead)}</h2></div>${grantBtn()}</div>${leaderboard()}<section class="card stack"><h3>${SL(S.lead)} top contributors</h3><div class="tbl"><table><thead><tr><th>Member</th><th class="n">In school</th><th class="n">Out of school</th><th class="n">Total</th></tr></thead><tbody>${ms.map(({m,h})=>`<tr><td>${esc(m.name)} ${m.st==='lead'?'<span class="pill">Lead</span>':''}</td><td class="n mono">${f1(h.i)}</td><td class="n mono">${f1(h.o)}</td><td class="n mono"><b>${f1(h.t)}</b></td></tr>`).join('')||'<tr><td colspan="4" class="muted">No members in this sector yet. Sectors are set in the Admin Panel.</td></tr>'}</tbody></table></div></section>`};
 
 VIEW.pres.center=()=>{
   const st=LIVE.stats,v=k=>st?st[k]:null,lv=v('levels'),lvTot=lv?lv.reduce((a,b)=>a+b,0):0;
@@ -854,6 +854,7 @@ VIEW.pres.center=()=>{
     <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn sm" data-act="tab" data-t="over">Overrides</button><button class="btn sm" data-act="tab" data-t="export">Export report</button>${grantBtn()}</div></div>
   ${LIVE.err?`<div class="empty err">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
   <div class="statstrip" role="group" aria-label="Club at a glance">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
+  ${activeEventsRow()}
   <div class="grid">${leaderboard()}<section class="card stack"><h3>Members by level</h3>${LV.map((n,i)=>`<div><div class="row between"><span>L${i+1} ${n}</span><b class="mono">${lv?lv[i]:'…'}</b></div><div class="bar"><i style="width:${lv&&lvTot?lv[i]/lvTot*100:0}%"></i></div></div>`).join('')}</section></div>`};
 
 function rosterRows(){const q=S.q.toLowerCase();const rows=M.filter(m=>!q||m.name.toLowerCase().includes(q));
@@ -883,7 +884,13 @@ VIEW.pres.certs=()=>{const id=S.certM||ME;
   return`<h2>Verified certificates</h2><label style="max-width:320px">Member<select data-ch="certm">${M.filter(m=>m.st!=='keep').map(m=>`<option value="${m.id}" ${id===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select></label><div class="card">${certHtml(id)}</div>`};
 
 /* ---------- modals ---------- */
-function modal(h,wide){$('#modal').innerHTML=h?`<div class="scrim"><div class="sheet${wide?' wide':''}" role="dialog" aria-modal="true">${h}</div></div>`:''}
+function modal(h,wide){const box=$('#modal'),was=!!box.innerHTML;
+  if(h&&!was)modal.opener=typeof document.activeElement!=='undefined'?document.activeElement:null;
+  box.innerHTML=h?`<div class="scrim"><div class="sheet${wide?' wide':''}" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">${h}</div></div>`:'';
+  if(!box.querySelector)return; /* (test harness has no DOM) */
+  if(h){const sh=box.querySelector('.sheet'),hd=sh&&sh.querySelector('h2,h3');if(hd&&!hd.id)hd.id='dlgTitle';
+    const f=sh&&sh.querySelector('input:not([type=hidden]),select,textarea,button:not([data-act=cic])')||sh&&sh.querySelector('button');if(f&&f.focus)f.focus({preventScroll:true})}
+  else if(was){const o=modal.opener;modal.opener=null;if(o&&o.isConnected&&o.focus)o.focus({preventScroll:true})}}
 function stopCam(){if(CI&&CI.cam){CI.cam.getTracks().forEach(t=>t.stop());CI.cam=null}}
 function closeModal(){stopCam();stopScan();CI=null;S.pend=null;modal('')}
 function steps(e){return[...e.v,'review']}
@@ -1073,7 +1080,11 @@ const CH={
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t&&IN_[t.dataset.in])IN_[t.dataset.in](t.value,t)});
 document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)closeModal()});
+document.addEventListener('keydown',e=>{if(!$('#modal').innerHTML)return;if(e.key==='Escape')return closeModal();
+  if(e.key==='Tab'){const sh=$('#modal').querySelector&&$('#modal').querySelector('.sheet');if(!sh)return;
+    const f=[...sh.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')].filter(x=>x.offsetParent!==null);
+    if(!f.length)return;const a=f[0],z=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
 
 /* live check-in code: the server makes it; this page shows it and fetches the next one in time */
 async function qrFetch(){
@@ -1094,7 +1105,7 @@ setInterval(()=>{if(!$('#qrCode')||!S.qrE)return;if(Date.now()>=S.qrExp-300)qrFe
 async function api(path,method='GET',body){
   const r=await fetch(path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
   const data=await r.json().catch(()=>({}));
-  if(!r.ok)throw Object.assign(new Error(data.error||'Request failed'),{status:r.status});
+  if(!r.ok)throw Object.assign(new Error(data.error||'Request failed'),{status:r.status,data});
   return data}
 
 /* DB role -> the prototype's view key */
@@ -1294,7 +1305,7 @@ VIEW.pres.audit=()=>modBox('audit',d=>`
   <div><div class="eyebrow">Append-only record</div><h2>Audit log</h2></div>
   <p class="note">Every consequential action is written here with who did it. Entries cannot be edited or removed, not even by a President.</p>
   <label style="max-width:260px">Show<select data-ch="auditE">${AUDIT_ENTITIES.map(e=>`<option value="${e}" ${S.auditE===e?'selected':''}>${e?e.replace('_',' '):'Everything'}</option>`).join('')}</select></label>
-  <section class="card stack">${d.entries.length?`<div class="tbl"><table class="logtbl"><thead><tr><th>When (UTC)</th><th>Who</th><th>Action</th><th>Item</th><th>Details</th></tr></thead><tbody>${d.entries.map(e=>`<tr><td>${esc(dtStr(e.created_at))}</td><td style="font-family:var(--f-body)">${esc(e.actor_name)} <span class="chip">${esc(e.actor_role)}</span></td><td>${esc(e.action)}</td><td>${esc(e.entity_type)} ${esc(e.entity_id||'')}</td><td style="font-family:var(--f-body);font-size:12px;color:var(--muted)">${esc(Object.entries(e.details||{}).map(([k,v])=>k+': '+(v&&typeof v==='object'?JSON.stringify(v):v)).join(' · ').slice(0,220))}</td></tr>`).join('')}</tbody></table></div>${d.more?'<button class="btn" data-act="auditmore">Load older entries</button>':''}`:emptyBox('Nothing recorded yet.','Actions like approvals, overrides and treasury entries will appear here.')}</section>`);
+  <section class="card stack">${d.entries.length?`<div class="tbl"><table class="logtbl"><thead><tr><th>When (UTC)</th><th>Who</th><th>Action</th><th>Item</th><th>Details</th></tr></thead><tbody>${d.entries.map(e=>`<tr><td>${esc(dtStr(e.created_at))}</td><td style="font-family:var(--f-body)">${esc(e.actor_name)} <span class="chip">${esc(e.actor_role)}</span></td><td>${AUDIT_LABEL[e.action]?`<b>${AUDIT_LABEL[e.action]}</b> <span class="small muted mono">${esc(e.action)}</span>`:esc(e.action)}</td><td>${esc(e.entity_type)} ${esc(e.entity_id||'')}</td><td style="font-family:var(--f-body);font-size:12px;color:var(--muted)">${esc(Object.entries(e.details||{}).map(([k,v])=>k+': '+(v&&typeof v==='object'?JSON.stringify(v):v)).join(' · ').slice(0,220))}</td></tr>`).join('')}</tbody></table></div>${d.more?'<button class="btn" data-act="auditmore">Load older entries</button>':''}`:emptyBox('Nothing recorded yet.','Actions like approvals, overrides and treasury entries will appear here.')}</section>`);
 
 /* ---------------- Attendance (President's overview) ---------------- */
 VIEW.pres.attend=()=>modBox('attend',d=>`
@@ -1429,7 +1440,7 @@ VIEW.pres.over=()=>{
   <section class="card stack"><h3>Extended shift requests</h3>${real?'':'<p class="note">Only a President can approve extended shifts.</p>'}${ots.map(l=>`<div class="flat stack"><div class="row between"><b>${esc(nameOf(l.mid))} · ${esc(EV(l.eid).t)}</b><span class="pill gold mono">+${f1(l.ot.hrs)} h</span></div><p class="small">${esc(l.ot.reason||'')}</p><div class="row">${l.ot.proof&&safeUrl(l.ot.proof)?`<a href="${esc(safeUrl(l.ot.proof))}" target="_blank" rel="noopener noreferrer">View proof</a>`:'<span class="pill bad">No proof attached</span>'}${real?`<button class="btn sm pri" data-act="otok" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="otno" data-id="${l.id}">Deny</button>`:''}</div></div>`).join('')||emptyBox('No override requests.','Extended-shift requests from members will appear here.')}</section>
   <section class="card stack"><h3>Flagged entries</h3>${fl.map(l=>`<div class="flat row between"><div><div class="small muted">Submitted by <b>${esc(nameOf(l.mid))}</b></div>${logRow(l).replace('flat','')}</div><div class="row"><button class="btn sm" data-act="fkeep" data-id="${l.id}">Dismiss flag</button><button class="btn sm bad" data-act="fdel" data-id="${l.id}">Remove hours</button></div></div>`).join('')||emptyBox('No flagged entries.','Flags from the club feed are anonymous and land here.')}</section>
   <section class="card stack"><h3>All pending approvals</h3>${pl.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(nameOf(l.mid))}</b> <span class="small muted">${esc(EV(l.eid).t)} · ${SL(EV(l.eid).sec)} Head</span></div><div class="row"><button class="btn sm pri" data-act="appr" data-id="${l.id}">Approve</button><button class="btn sm bad" data-act="rej" data-id="${l.id}">Reject</button></div></div>`).join('')||emptyBox('Nothing pending.','You are all caught up.')}</section>
-  ${real?`<section class="card stack"><h3>Recent decisions</h3><p class="small muted">Change any decision with a written reason. Every override is recorded in the audit log.</p>${dec===undefined?(MOD.err.decided?`<div class="empty err">${esc(MOD.err.decided)}</div>`:'<div class="empty loading">Loading...</div>'):dec.logs.length?dec.logs.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(l.member)}</b> <span class="small muted">${esc(l.event)} · <span class="mono">${f1(l.hours)} h</span>${l.reviewer?' · by '+esc(l.reviewer):''}</span></div><div class="row"><span class="pill ${l.status==='approved'?'good':'bad'}">${l.status}</span>${l.own?'':`<button class="btn sm" data-act="ovopen" data-id="${l.id}" data-to="${l.status==='approved'?'rejected':'approved'}">Change to ${l.status==='approved'?'rejected':'approved'}</button>`}</div></div>`).join(''):emptyBox('No decisions yet.','Approved and rejected hours will be listed here.')}</section>`:''}`};
+  ${real?`<section class="card stack"><h3>Recent decisions</h3><p class="small muted">Change any decision with a written reason. Every override is recorded in the audit log.</p>${dec===undefined?(MOD.err.decided?`<div class="empty err">${esc(MOD.err.decided)}</div>`:'<div class="empty loading">Loading...</div>'):dec.logs.length?dec.logs.map(l=>`<div class="row between flat"><div style="min-width:0"><b>${esc(l.member)}</b> <span class="small muted">${esc(decLabel(l))} · <span class="mono">${f1(l.hours)} h</span>${l.reviewer?' · by '+esc(l.reviewer):''}</span></div><div class="row"><span class="pill ${l.status==='approved'?'good':'bad'}">${l.status}</span>${l.own?'':`<button class="btn sm" data-act="ovopen" data-id="${l.id}" data-to="${l.status==='approved'?'rejected':'approved'}"${isGrantRow(l)?' data-g="1"':''}>${isGrantRow(l)?(l.status==='approved'?'Revoke grant':'Restore grant'):`Change to ${l.status==='approved'?'rejected':'approved'}`}</button>`}</div></div>`).join(''):emptyBox('No decisions yet.','Approved and rejected hours will be listed here.')}</section>`:''}`};
 
 /* ---------------- actions ---------------- */
 const val=id=>{const e=$('#'+id);return e?e.value:''};
@@ -1485,7 +1496,7 @@ Object.assign(A,{
  vaultadd(){return run(()=>api('/api/vault','POST',{title:val('vl-title').trim(),category:val('vl-cat'),url:val('vl-url').trim(),description:val('vl-desc').trim()}),'Added to the vault')},
  vaultarch(d){return run(()=>api('/api/vault/'+d.id+'/archive','POST',{}),'Archived')},
  // audit override
- ovopen(d){S.ovId=d.id;S.ovTo=d.to;modal(`<div class="row between"><h3>Change this decision to ${esc(d.to)}</h3><button class="btn sm" data-act="cic">Close</button></div><p class="muted">Write why. This is recorded in the audit log with your name.</p><label>Reason (at least 10 characters)<textarea id="ov-reason" maxlength="300"></textarea></label><button class="btn pri" data-act="ovgo">Change decision</button>`)},
+ ovopen(d){S.ovId=d.id;S.ovTo=d.to;modal(`<div class="row between"><h3>${d.g?(d.to==='rejected'?'Revoke this grant':'Restore this grant'):`Change this decision to ${esc(d.to)}`}</h3><button class="btn sm" data-act="cic">Close</button></div><p class="muted">Write why. This is recorded in the audit log with your name.</p><label>Reason (at least 10 characters)<textarea id="ov-reason" maxlength="300"></textarea></label><button class="btn pri" data-act="ovgo">Change decision</button>`)},
  ovgo(){const reason=val('ov-reason').trim(),id=S.ovId,to=S.ovTo;closeModal();return run(()=>api('/api/hours/'+id+'/override','POST',{status:to,reason}),'Decision changed and recorded')},
 });
 Object.assign(CH,{
@@ -1527,17 +1538,28 @@ function needLib(k){const lib=LIBS[k];if(lib.ok())return Promise.resolve();if(li
     document.head.appendChild(s)}).catch(e=>{lib.p=null;throw e});
   return lib.p}
 const localDay=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
-/* what a member badge encodes; the scanner also accepts a bare number */
-const BADGE='interact-member:';
-const badgeId=t=>{const m=/^(?:interact-member:)?\s*(\d{1,9})\s*$/i.exec(String(t||'').trim());return m?m[1]:null};
+/* A member badge is a signed code from the server that changes every 30 s and lives only on the member's phone. */
+const isBadge=t=>/^ICH1\.\d{1,9}\.\d{1,12}\.[A-Za-z0-9_-]{16}$/.test(String(t||'').trim());
+const BADGE_S={token:null,exp:0,err:'',busy:false,qr:null};
 
-/* --- President grant: entry point only for the President view --- */
-const canGrant=()=>S.role==='pres'&&!!S.user&&['pres','admin'].includes(S.user.role);
+/* --- hour grants: Presidents/admins (President view) for anyone; Sector Heads (Sector Head view) for their own sector --- */
+const grantsOn=()=>!(DATA.features&&DATA.features.grants===false);
+const canGrant=()=>{if(!S.user||!grantsOn())return false;const r=S.user.role;
+  if(S.role==='pres')return['pres','admin'].includes(r);
+  if(S.role==='lead')return['pres','admin'].includes(r)||(r==='lead'&&!!S.user.sector&&S.user.sector===S.lead);
+  return false};
 const grantBtn=()=>canGrant()?'<button class="btn gold sm" data-act="grantopen">+ Grant Hours</button>':'';
-const grantable=()=>M.filter(m=>m.id!==ME&&['member','lead','pres'].includes(m.role)).sort((a,b)=>a.name.localeCompare(b.name));
+const grantable=()=>M.filter(m=>m.id!==ME&&['member','lead','pres'].includes(m.role)&&(S.role!=='lead'||m.sec===S.lead)).sort((a,b)=>a.name.localeCompare(b.name));
+const isGrantRow=l=>!!(l.grant&&l.grant.type==='manual_president_grant');
+const decLabel=l=>isGrantRow(l)?'Grant: '+(l.grant.reason||'hours'):(l.event||'Deleted event')+(l.grant&&l.grant.type==='qr_checkin'?' · QR check-in':'');
+const AUDIT_LABEL={'hours.grant':'Granted hours','hours.qr_checkin':'QR check-in','hours.override':'Changed a decision','hours.approve':'Approved hours','hours.reject':'Rejected hours',
+  'hours.approve_all':'Approved all','hours.remove':'Removed hours','hours.unflag':'Dismissed a flag','overtime.approve':'Approved overtime','overtime.deny':'Denied overtime','event.delete':'Deleted an event'};
+/* Command Center: today's active events, each one tap from the door scanner (no view switching) */
+function activeEventsRow(){const act=E.filter(e=>e.active);if(!act.length||!grantsOn())return'';
+  return`<section class="stack" style="gap:8px"><h3>Active events</h3><div class="evlist">${act.map(e=>`<div class="evrow"><div style="min-width:0"><b>${esc(e.t)}</b> <span class="small muted">${esc(SL(e.sec))} · ${e.signups.length} of ${e.cap} signed up · <span class="mono">${f1(e.h)} h</span></span></div><button class="btn sm pri" data-act="scanopen" data-id="${e.id}">Scan QR Check-In</button></div>`).join('')}</div></section>`}
 function grantRow(l){return`<div class="row between flat"><div style="min-width:0"><b>${esc(l.reason)}</b><div class="small muted">President grant${l.date?` · ${esc(l.date)}`:''}</div></div><div class="row"><span class="mono">${f1(l.h)} h</span><span class="pill good">${esc(l.status)}</span></div></div>`}
 function grantModal(){const ms=grantable();
-  modal(`<div class="row between"><div><div class="eyebrow">President tools</div><h3>Grant service hours</h3></div><button class="btn sm" data-act="cic">Close</button></div>
+  modal(`<div class="row between"><div><div class="eyebrow">${S.role==='lead'?esc(SL(S.lead))+' · Sector Head tools':'President tools'}</div><h3>Grant service hours</h3></div><button class="btn sm" data-act="cic">Close</button></div>
   <p class="small muted">For verified service that did not run through an event check-in. The hours count as approved at once, appear on the member's certificate and report, and the grant is recorded in the audit log.</p>
   ${ms.length?`<div class="grid" style="gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
    <label style="grid-column:1/-1">Member<select id="gr-m" name="memberId"><option value="">Choose a member...</option>${ms.map(m=>`<option value="${m.id}">${esc(m.name)}${m.sec?` · ${esc(SL(m.sec))}`:''}</option>`).join('')}</select></label>
@@ -1548,7 +1570,7 @@ function grantModal(){const ms=grantable();
    <label style="grid-column:1/-1">Notes (optional)<textarea id="gr-n" name="notes" maxlength="500" rows="2" style="min-height:0"></textarea></label></div>
   <p class="err" id="gr-err" role="alert"></p>
   <div class="row"><button class="btn pri" id="gr-go" data-act="grantgo">Grant hours</button></div>`
-  :'<div class="empty"><b>No members to grant hours to yet.</b><span>Active members appear here once they join the club.</span></div>'}`)}
+  :`<div class="empty"><b>No members to grant hours to yet.</b><span>${S.role==='lead'?'Members of this sector appear here once they are assigned to it.':'Active members appear here once they join the club.'}</span></div>`}`)}
 
 /* --- door scanner state (null while closed) --- */
 let SCAN=null;
@@ -1556,13 +1578,15 @@ function stopScan(){const s=SCAN;SCAN=null;if(!s||!s.inst)return;const i=s.inst;
   Promise.resolve().then(()=>i.isScanning?i.stop():null).then(()=>{try{i.clear()}catch(e){}}).catch(()=>{})}
 function scanMsg(kind,html){const el=$('#scanMsg');if(!el)return;el.className='scanmsg'+(kind?' '+kind:'');el.innerHTML=html}
 function scanModal(e){
-  const people=e.signups.map(s=>s.m).filter(id=>id!==ME).map(id=>({id,name:nameOf(id)})).sort((a,b)=>a.name.localeCompare(b.name));
+  const signed=new Set(e.signups.map(s=>s.m)),byName=(a,b)=>a.name.localeCompare(b.name);
+  const elig=M.filter(m=>m.id!==ME&&['member','lead','pres'].includes(m.role));
+  const people=elig.filter(m=>signed.has(m.id)).sort(byName),walk=elig.filter(m=>!signed.has(m.id)).sort(byName);
   modal(`<div class="row between"><div><div class="eyebrow">QR check-in · ${esc(SL(e.sec))}</div><h3>${esc(e.t)}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
   <p class="small muted">Scan each member's check-in QR. <b class="mono">${f1(e.h)} h</b> is logged and approved for them straight away. The scanner stays on for the next person until you close it.</p>
   <div id="qrReader" class="scanbox" aria-label="Camera view"></div>
   <div id="scanMsg" class="scanmsg" role="status" aria-live="polite">Starting the camera...</div>
   <details><summary class="small muted" style="cursor:pointer">No camera? Check in from the roster</summary>
-   <div class="row" style="margin-top:8px">${people.length?`<select id="scanPick" aria-label="Member to check in" style="flex:1;min-width:0"><option value="">Choose a member...</option>${people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><button class="btn sm pri" data-act="scanpick">Check in</button>`:'<span class="small muted">Nobody has signed up for this event yet.</span>'}</div></details>
+   <div class="row" style="margin-top:8px">${people.length||walk.length?`<select id="scanPick" aria-label="Member to check in" style="flex:1;min-width:0"><option value="">Choose a member...</option>${people.length?`<optgroup label="Signed up">${people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</optgroup>`:''}${walk.length?`<optgroup label="Not signed up (walk-in)">${walk.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</optgroup>`:''}</select><button class="btn sm pri" data-act="scanpick">Check in</button>`:'<span class="small muted">No active members yet.</span>'}</div></details>
   <div id="scanLog" class="stack" style="gap:6px"></div>`)}
 async function scanStart(){
   try{await needLib('scan')}catch(x){scanMsg('bad','Could not load the camera scanner. Check the connection, or check members in from the roster below.');return}
@@ -1577,19 +1601,37 @@ async function scanStart(){
 function onScan(text){const s=SCAN;if(!s||s.busy)return;
   const now=Date.now();if(text===s.lastText&&now-s.lastAt<(text===s.okText?15000:4000))return; /* the same badge is still in front of the lens */
   s.lastText=text;s.lastAt=now;
-  const id=badgeId(text);if(!id){scanMsg('bad','That QR code is not a club member badge.');return}
-  scanCheckin(id,text)}
-async function scanCheckin(uid,text){const s=SCAN;if(!s||s.busy)return;s.busy=true;
+  if(!isBadge(text)){scanMsg('bad',/^(interact-member:)?\s*\d+\s*$/i.test(text)?'That is an old or printed code. Ask the member to open <b>Show My Check-In QR</b> on their phone.':'That QR code is not a club check-in badge.');return}
+  scanCheckin({badge:text.trim()},text)}
+async function scanCheckin(who,text,walkIn){const s=SCAN;if(!s||s.busy)return;s.busy=true;
   try{if(s.inst&&s.inst.pause)s.inst.pause(true)}catch(e){}
-  scanMsg('','Checking in...');
-  try{const r=await api('/api/events/checkin','POST',{eventId:Number(s.eid),userId:Number(uid)});
+  scanMsg('',walkIn?'Adding walk-in...':'Checking in...');
+  try{const r=await api('/api/events/checkin','POST',{eventId:Number(s.eid),...who,...(walkIn?{walkIn:true}:{})});
     if(SCAN!==s)return;
-    const line=`<b>${esc(r.member.name)}</b> checked in · <span class="mono">+${f1(r.hours)} h</span> approved${r.days>1?` (day ${r.day} of ${r.days})`:''}`;
+    const line=`<b>${esc(r.member.name)}</b> checked in${r.walkIn?' as a walk-in':''} · <span class="mono">+${f1(r.hours)} h</span> approved${r.days>1?` (day ${r.day} of ${r.days})`:''}`;
     scanMsg('good','✓ '+line);s.done.unshift(line);if(text)s.okText=text;
     const log=$('#scanLog');if(log)log.innerHTML=s.done.slice(0,8).map(x=>`<div class="small">${x}</div>`).join('');
     reload().then(render).catch(()=>{})} /* totals and rosters behind the dialog catch up quietly */
-  catch(x){if(expired(x))return;if(SCAN===s)scanMsg(x.status===409?'warn':'bad',esc(x.message||'Check-in failed'))}
+  catch(x){if(expired(x))return;if(SCAN!==s)return;
+    if(x.data&&x.data.notSignedUp&&!walkIn){s.walkIn={who,text};
+      scanMsg('warn',`${esc(x.message)} <button class="btn sm gold" data-act="scanwalkin" style="margin-left:8px">Add as walk-in and check in</button>`)}
+    else scanMsg(x.status===409?'warn':'bad',esc(x.message||'Check-in failed'))}
   finally{s.busy=false;setTimeout(()=>{try{if(SCAN===s&&s.inst&&s.inst.resume)s.inst.resume()}catch(e){}},1200)}}
+
+/* badge: fetch a fresh code shortly before the current one expires, while the dialog is open */
+async function badgeFetch(){if(BADGE_S.busy||!$('#myQr'))return;BADGE_S.busy=true;
+  try{const r=await api('/api/badge');BADGE_S.token=r.token;BADGE_S.exp=Date.now()+r.expiresIn*1000;BADGE_S.err=''}
+  catch(x){BADGE_S.busy=false;if(expired(x))return;BADGE_S.err=x.message;BADGE_S.exp=Date.now()+5000}
+  BADGE_S.busy=false;badgePaint(true)}
+function badgePaint(fresh){const box=$('#myQr');if(!box)return;const msg=$('#myQrMsg'),bar=$('#myQrBar');
+  if(BADGE_S.err){if(msg)msg.textContent=BADGE_S.err;return}
+  if(fresh&&BADGE_S.token&&typeof QRCode!=='undefined'){
+    if(BADGE_S.qr&&box.firstChild)BADGE_S.qr.makeCode(BADGE_S.token);
+    else{box.innerHTML='';BADGE_S.qr=new QRCode(box,{text:BADGE_S.token,width:240,height:240,colorDark:'#1d1b4b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}}
+  const left=Math.max(0,(BADGE_S.exp-Date.now())/1000);
+  if(bar)bar.style.width=Math.min(100,left/30*100)+'%';
+  if(msg&&BADGE_S.token)msg.textContent=`Live code · refreshes in ${Math.ceil(left)} s`}
+setInterval(()=>{if(!$('#myQr'))return;if(Date.now()>=BADGE_S.exp-1500)badgeFetch();else badgePaint()},500);
 
 Object.assign(A,{
  grantopen(){if(canGrant())grantModal()},
@@ -1606,16 +1648,18 @@ Object.assign(A,{
   if(ok&&g){closeModal();toast(`Granted ${f1(g.hours)} h to ${g.member}`)}
   else if(btn&&$('#gr-go')){btn.disabled=false;btn.textContent='Grant hours'}},
  async myqr(){const m=P(ME)||{name:S.user.name};
+  BADGE_S.token=null;BADGE_S.exp=0;BADGE_S.err='';BADGE_S.qr=null;
   modal(`<div class="row between"><div><div class="eyebrow">Check-in badge</div><h3>${esc(m.name)}</h3></div><button class="btn sm" data-act="cic">Close</button></div>
-   <div class="qrbadge"><div id="myQr" class="qrimg" aria-label="Your check-in QR code"></div></div>
-   <p class="small muted" id="myQrMsg" style="text-align:center">Loading your code...</p>`);
-  try{await needLib('qr')}catch(x){const el=$('#myQrMsg');if(el)el.textContent='Could not load the QR generator. Check the connection and try again.';return}
-  const box=$('#myQr');if(!box)return;box.innerHTML='';
-  new QRCode(box,{text:BADGE+ME,width:240,height:240,colorDark:'#111111',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-  const el=$('#myQrMsg');if(el)el.textContent='Show this to your Sector Head at the event door. It only identifies you; the officer confirms you are there.'},
+   <div class="qrbadge"><div id="myQr" class="qrimg" aria-label="Your check-in QR code"></div>
+   <div class="badgebar"><i id="myQrBar"></i></div></div>
+   <p class="small muted" id="myQrMsg" style="text-align:center" aria-live="polite">Loading your code...</p>
+   <p class="small muted" style="text-align:center">Show this on your phone at the event door. It changes every 30 seconds, so a screenshot or printout will not work.</p>`);
+  try{await needLib('qr')}catch(x){const el=$('#myQrMsg');if(el)el.textContent='Could not load the QR generator. Check the connection and try again.'}
+  await badgeFetch()},
  scanopen(d){const e=EV(d.id);if(!e)return toast('Event not found');if(!e.active)return toast('Mark the event active first');
   closeModal();SCAN={eid:e.id,inst:null,busy:false,lastText:'',lastAt:0,done:[]};scanModal(e);scanStart()},
- scanpick(){const el=$('#scanPick'),id=el?String(el.value):'';if(!id)return scanMsg('bad','Choose a member first.');scanCheckin(id)}
+ scanpick(){const el=$('#scanPick'),id=el?String(el.value):'';if(!id)return scanMsg('bad','Choose a member first.');scanCheckin({userId:Number(id)})},
+ scanwalkin(){const s=SCAN;if(!s||!s.walkIn)return;const w=s.walkIn;s.walkIn=null;scanCheckin(w.who,w.text,true)}
 });
 
 boot();

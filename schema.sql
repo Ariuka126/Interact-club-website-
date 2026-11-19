@@ -73,7 +73,7 @@ ALTER TABLE hour_logs ADD COLUMN IF NOT EXISTS grant_date   DATE;
 ALTER TABLE hour_logs ADD COLUMN IF NOT EXISTS grant_scope  TEXT CHECK (grant_scope IS NULL OR grant_scope IN ('in','out'));
 ALTER TABLE hour_logs DROP CONSTRAINT IF EXISTS hour_logs_event_or_grant_check;
 ALTER TABLE hour_logs ADD CONSTRAINT hour_logs_event_or_grant_check CHECK (event_id IS NOT NULL
-  OR (grant_type = 'manual_president_grant' AND grant_reason IS NOT NULL AND grant_date IS NOT NULL AND status = 'approved'));
+  OR (grant_type = 'manual_president_grant' AND grant_reason IS NOT NULL AND grant_date IS NOT NULL AND status IN ('approved','rejected')));
 
 CREATE INDEX IF NOT EXISTS idx_hour_logs_user   ON hour_logs(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_hour_logs_event  ON hour_logs(event_id, status);

@@ -39,6 +39,17 @@ router.post('/roster/promote', requireAuth, requireRole('pres', 'admin'), async 
 });
 
 // ---------------------------------------------------------------------------
+// My check-in badge: a code for the officer's scanner, valid for this 30-second window (and the one before)
+// ---------------------------------------------------------------------------
+router.get('/badge', requireAuth, (req, res) => {
+  const u = req.user;
+  if (u.role === 'volunteer') return bad(res, 'Check-in badges unlock when you are promoted to Active.', 403);
+  if (u.role === 'admin') return bad(res, 'Admin accounts are not club members, so they do not check in.', 403);
+  res.set('Cache-Control', 'no-store');
+  res.json({ token: K.badgeToken(u.id), expiresIn: K.qrSecondsLeft() });
+});
+
+// ---------------------------------------------------------------------------
 // Certificate data: yourself, or anyone if you are a Co-President / admin
 // ---------------------------------------------------------------------------
 router.get('/certificate/:id', requireAuth, async (req, res, next) => {
@@ -51,8 +62,9 @@ router.get('/certificate/:id', requireAuth, async (req, res, next) => {
     if (error) throw error;
     if (!m) return bad(res, 'Member not found.', 404);
 
+    const g = await K.hasGrantColumns(sb);
     const [logs, events, signers] = await Promise.all([
-      K.fetchAll(() => sb.from('hour_logs').select('id, event_id, hours, overtime_hours, overtime_status, grant_scope, created_at').eq('user_id', id).eq('status', 'approved').order('id')),
+      K.fetchAll(() => sb.from('hour_logs').select('id, event_id, hours, overtime_hours, overtime_status, created_at' + (g ? ', grant_scope, grant_reason' : '')).eq('user_id', id).eq('status', 'approved').order('id')),
       K.fetchAll(() => sb.from('events').select('id, title, type').order('id')),
       sb.from('users').select('name').eq('role', 'pres').order('id').limit(2),
     ]);
@@ -61,7 +73,7 @@ router.get('/certificate/:id', requireAuth, async (req, res, next) => {
     const t = K.hoursByUser(logs.map(l => ({ ...l, user_id: id })), new Map(events.map(e => [e.id, e.type]))).get(id) || { in: 0, out: 0 };
     const projects = [];
     for (const l of [...logs].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))) {
-      const title = ev.get(l.event_id) && ev.get(l.event_id).title;
+      const title = l.event_id == null ? l.grant_reason : ev.get(l.event_id) && ev.get(l.event_id).title;
       if (title && !projects.includes(title)) projects.push(title);
       if (projects.length === 4) break;
     }
@@ -86,10 +98,11 @@ router.get('/export', requireAuth, requireRole('pres', 'admin'), async (req, res
     const sector = K.SECTORS.includes(req.query.sector) ? req.query.sector : 'all';
     const status = ['active', 'lead', 'keep'].includes(req.query.status) ? req.query.status : 'all';
 
+    const g = await K.hasGrantColumns(sb);
     const [users, events, approved] = await Promise.all([
       K.fetchAll(() => sb.from('users').select('id, name, role, sector').order('id')),
       K.fetchAll(() => sb.from('events').select('id, type').order('id')),
-      K.fetchAll(() => sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status, grant_scope').eq('status', 'approved').order('id')),
+      K.fetchAll(() => sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status' + (g ? ', grant_scope' : '')).eq('status', 'approved').order('id')),
     ]);
     const totals = K.hoursByUser(approved, new Map(events.map(e => [e.id, e.type])));
 

@@ -43,6 +43,18 @@ function qrValid(eventId, code, now = Date.now()) {
   const w = qrWindow(now);
   return [w, w - 1].some(x => crypto.timingSafeEqual(Buffer.from(qrCode(eventId, x)), Buffer.from(c)));
 }
+// ---- member check-in badge: shown only on the member's own phone, a new code every 30 s ----
+// Token "ICH1.<userId>.<window>.<signature>". A printed copy or an old screenshot stops working within a minute.
+const badgeSig = (uid, win) => crypto.createHmac('sha256', qrSecret()).update(`badge:${uid}:${win}`).digest('base64url').slice(0, 16);
+const badgeToken = (uid, now = Date.now()) => { const w = qrWindow(now); return `ICH1.${uid}.${w}.${badgeSig(uid, w)}`; };
+function badgeUser(token, now = Date.now()) {
+  const m = /^ICH1\.(\d{1,9})\.(\d{1,12})\.([A-Za-z0-9_-]{16})$/.exec(String(token == null ? '' : token).trim());
+  if (!m) return { error: 'invalid' };
+  const uid = Number(m[1]), win = Number(m[2]), w = qrWindow(now);
+  if (!crypto.timingSafeEqual(Buffer.from(badgeSig(uid, win)), Buffer.from(m[3]))) return { error: 'invalid' };
+  if (win !== w && win !== w - 1) return { error: 'expired' };
+  return { uid };
+}
 const qrSecondsLeft = (now = Date.now()) => Math.max(1, Math.ceil(((qrWindow(now) + 1) * WINDOW_MS - now) / 1000));
 
 function distanceM(lat1, lng1, lat2, lng2) {
@@ -53,6 +65,23 @@ function distanceM(lat1, lng1, lat2, lng2) {
 
 // Hours a log is worth: the event's hours plus any overtime a Co-President approved.
 const logHours = l => l.hours + (l.overtime_status === 'approved' ? l.overtime_hours || 0 : 0);
+
+// Is 006_hour_grants.sql applied? President grants and QR check-ins need its columns. Until it runs, the
+// app keeps working without them (no grants), and this re-checks once a minute so no restart is needed.
+const SCHEMA = { grants: null, at: 0 };
+async function hasGrantColumns(sb) {
+  if (SCHEMA.grants === true) return true;
+  if (SCHEMA.grants === false && Date.now() - SCHEMA.at < 60000) return false;
+  const { error } = await sb.from('hour_logs').select('id, grant_type, grant_scope').limit(1);
+  SCHEMA.at = Date.now();
+  if (!error) return (SCHEMA.grants = true);
+  if (/42703|PGRST204|grant_|does not exist|column/i.test(`${error.code} ${error.message}`)) {
+    if (SCHEMA.grants !== false) console.error('[schema] hour_logs has no grant columns. Run 006_hour_grants.sql in the Supabase SQL editor; grants and QR check-in are off until then.');
+    return (SCHEMA.grants = false);
+  }
+  throw error;
+}
+const NEEDS_MIGRATION = 'This needs a database update. Ask an admin to run 006_hour_grants.sql in Supabase.';
 
 // Supabase returns at most 1000 rows per request, so read big tables page by page.
 async function fetchAll(buildQuery) {
@@ -119,7 +148,7 @@ const normalizeLink = v => {
 
 module.exports = {
   SECTORS, VERIFY, GPS_RADIUS_M, toId, isStaff, lvl, round2, canManageSector,
-  str, num, int, list, safeJson, qrWindow, qrCode, qrValid, qrSecondsLeft, distanceM,
-  logHours, fetchAll, inBatches, hoursByUser, eventOut,
+  str, num, int, list, safeJson, qrWindow, qrCode, qrValid, qrSecondsLeft, badgeToken, badgeUser, distanceM,
+  logHours, fetchAll, inBatches, hoursByUser, eventOut, hasGrantColumns, NEEDS_MIGRATION,
   isPres, canRunSector, SECTOR_LABEL, canTreasury, cents, normalizeLink,
 };

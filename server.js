@@ -51,7 +51,9 @@ app.use(
 
 const supabase = createSupabase();
 app.locals.supabase = supabase;
-checkSupabase(supabase).catch(e => console.error('[supabase] self-test crashed:', e));
+checkSupabase(supabase)
+  .then(() => require('./lib').hasGrantColumns(supabase)) // logs which migration is missing, if any
+  .catch(e => console.error('[supabase] self-test crashed:', e));
 
 // Load the logged-in user on every request
 app.use(async (req, _res, next) => {

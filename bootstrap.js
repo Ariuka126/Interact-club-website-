@@ -3,7 +3,7 @@ const { requireAuth } = require('./middleware');
 const K = require('./lib');
 
 const router = express.Router();
-const LOG_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, overtime_proof_url, flagged, created_at, grant_type, grant_reason, grant_date';
+const BASE_COLS = 'id, user_id, event_id, hours, day, status, work_link, overtime_hours, overtime_reason, overtime_status, overtime_proof_url, flagged, created_at';
 
 // Everything the app needs to draw its screens, scoped to who is asking.
 //  - everyone: names of members, all events with their sign-ups, their own logs
@@ -15,13 +15,15 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
     const sb = req.app.locals.supabase, u = req.user;
     const staff = K.isStaff(u), lead = u.role === 'lead', memberUp = u.role !== 'volunteer';
     const seesAll = staff || lead; // may see everyone's hour totals
+    const g = await K.hasGrantColumns(sb); // false until 006_hour_grants.sql has run: the app still loads, without grants
+    const LOG_COLS = g ? BASE_COLS + ', grant_type, grant_reason, grant_date' : BASE_COLS;
 
     const [users, events, signups, approved] = await Promise.all([
       K.fetchAll(() => sb.from('users').select('id, name, role, sector, promotion_requested').order('id')),
       K.fetchAll(() => sb.from('events').select('*').order('id')),
       K.fetchAll(() => sb.from('signups').select('event_id, user_id, shift, is_volunteer').order('id')),
       K.fetchAll(() => {
-        const q = sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status, grant_scope').eq('status', 'approved').order('id');
+        const q = sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status' + (g ? ', grant_scope' : '')).eq('status', 'approved').order('id');
         return seesAll ? q : q.eq('user_id', u.id);
       }),
     ]);
@@ -30,7 +32,7 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
     const newest = { ascending: false };
     const queries = [sb.from('hour_logs').select(LOG_COLS).eq('user_id', u.id).order('created_at', newest).limit(200)];
     // the club feed shows members' own submissions (photo or work link), never officer grants or door check-ins
-    if (memberUp) queries.push(sb.from('hour_logs').select(LOG_COLS).eq('status', 'approved').eq('flagged', 0).is('grant_type', null).order('created_at', newest).limit(60));
+    if (memberUp) { const q = sb.from('hour_logs').select(LOG_COLS).eq('status', 'approved').eq('flagged', 0); queries.push((g ? q.is('grant_type', null) : q).order('created_at', newest).limit(60)); }
     if (staff) {
       queries.push(sb.from('hour_logs').select(LOG_COLS).eq('status', 'pending').order('created_at', newest).limit(500));
       queries.push(sb.from('hour_logs').select(LOG_COLS).eq('flagged', 1).limit(200));
@@ -67,6 +69,7 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     res.json({
       me: { id: u.id, name: u.name, role: u.role, sector: u.sector },
+      features: { grants: g },
       members: users.map(m => {
         const t = totals.get(m.id) || { in: 0, out: 0 };
         return {
