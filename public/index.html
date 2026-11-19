@@ -441,6 +441,76 @@ tbody tr:hover{background:#F7F1EB}
 .err{color:#B42323}
 @media(min-width:640px){.sheet{border-radius:0}}
 @media(max-width:520px){.wrap{padding-inline:14px}.top-in{gap:10px}.top .roles{max-width:100%;overflow-x:auto;flex-wrap:nowrap}.top .roles button{white-space:nowrap}.card{padding:16px}.sheet{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}}
+/* ---------- de-bloat layer: one heavy frame per section, everything inside it stays light ----------
+   Thick borders + offset shadows are kept for primary containers (.card, .sheet, .hero, .authcard),
+   the active tab / active role and main action buttons (.btn.pri, .btn.gold). Inputs, chips, table
+   rows, stat boxes and empty states drop to thin rules so screens read as open sections, not stacked windows. */
+.top{border-bottom:3px solid var(--ink);box-shadow:none}
+.top-in{padding-top:8px;padding-bottom:8px;gap:12px}
+.mark{width:36px;height:36px;border-width:2px;box-shadow:3px 3px 0 #EC8B3F}
+.roles{background:transparent;border:2px solid var(--ink);padding:2px;gap:2px}
+.roles button{padding:5px 12px;font-size:12.5px;background:transparent}
+.roles button[aria-pressed="true"]{box-shadow:none}
+.roles select{border-width:2px;padding:4px 8px;font-size:12.5px;box-shadow:none}
+.top .btn.sm{box-shadow:none}
+.top .btn.sm:hover{box-shadow:2px 2px 0 #EC8B3F}
+/* tabs: one quiet strip with a single rule; only the active tab is a solid block */
+.wrap{padding-top:14px;gap:18px}
+.tabs{gap:2px;padding:0 6px 0 0;border-bottom:3px solid var(--ink);align-items:flex-end}
+.tabs button{border:2px solid transparent;border-bottom:0;background:transparent;color:var(--muted);margin:0;padding:8px 13px;font-weight:700;box-shadow:none}
+.tabs button:hover{transform:none;background:rgba(67,63,146,.08);color:var(--brand);border-color:transparent}
+.tabs button[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--ink);box-shadow:inset 0 -4px 0 #EC8B3F}
+.tabs .dot{box-shadow:none;border-width:1.5px}
+/* primary containers keep the brutalist frame; flat + nested things lose the shadow */
+.card{box-shadow:5px 5px 0 rgba(17,17,17,.14)}
+.flat,.kv>div,.task,.photo,.linkbox,.cam,.skel,.tbl{border-width:2px;box-shadow:none}
+.card .card,.card .flat,.card .empty,.card .tbl,.card .note,.sheet .tbl,.sheet .flat,.sheet .empty{box-shadow:none}
+.card .card{border-width:2px}
+/* stat boxes inside a card: a left rule instead of a box-in-a-box */
+.kv{gap:4px 18px}
+.kv>div{border:0;border-left:4px solid var(--ink);background:transparent;padding:4px 0 4px 12px}
+.kv>div:first-child{border-left-color:#EC8B3F}
+/* tiles: still cards, but one accent shadow (on hover) instead of six indigo slabs */
+.tile{box-shadow:4px 4px 0 rgba(17,17,17,.14);padding:18px 18px 16px}
+.tile b{font-size:30px}
+/* empty states: an open dashed area, not another framed window */
+.empty{border:2px dashed rgba(17,17,17,.35);box-shadow:none;background:rgba(255,255,255,.6);padding:26px 20px}
+.card .empty{background:transparent;padding:20px 16px}
+.empty::before{width:40px;height:40px;margin-bottom:4px;border-width:2px;box-shadow:none;background-size:20px}
+.empty.err{border-style:solid;border-color:#C62828}
+.empty.loading{border:2px solid rgba(17,17,17,.15)}
+/* inputs, chips, pills, secondary buttons: thinner and quieter */
+input[type=text],input[type=number],input[type=search],input[type=email],input[type=password],select,textarea{box-shadow:none;padding:9px 11px}
+input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 #EC8B3F}
+.pill,.chip{border:0;padding:3px 8px}
+.pill.gold{border:0}
+.btn,button.btn{box-shadow:2px 2px 0 var(--ink)}
+.btn:hover{box-shadow:3px 3px 0 #EC8B3F}
+.btn.pri,.btn.gold{box-shadow:4px 4px 0 var(--ink)}
+.btn.pri:hover{box-shadow:5px 5px 0 #EC8B3F}
+.btn.gold:hover{box-shadow:5px 5px 0 #433F92}
+.btn.sm{padding:5px 11px}
+.btn.sm:not(.pri):not(.gold){box-shadow:none}
+.btn.sm:not(.pri):not(.gold):hover{box-shadow:2px 2px 0 #EC8B3F}
+.btn:disabled{box-shadow:none}
+.filters{gap:6px}
+.filters button{border-width:2px;padding:5px 12px}
+.filters button:hover{transform:none;background:rgba(67,63,146,.08)}
+/* tables, rows and dividers: one strong rule under the header, hairlines between rows */
+th{border-bottom:2px solid var(--ink)}
+td{border-bottom:1px solid rgba(17,17,17,.14)}
+.task{border-width:0 0 1px;border-color:rgba(17,17,17,.14);background:transparent;padding:9px 10px}
+.task.mine{border-left:4px solid var(--brand);background:#E8E7F5}
+.task.head{background:transparent;border-bottom:2px solid var(--ink)}
+.levels div,.badge .ic{border-width:2px;border-color:rgba(17,17,17,.22)}
+.levels div.on,.levels div.done,.badge.on .ic{border-color:var(--ink)}
+.roles:not(:has(button + button)){border-color:transparent;padding:0}
+.levels div.on{box-shadow:2px 2px 0 var(--ink)}
+.badge.on .ic{box-shadow:none}
+.note{border:0;border-left:6px solid #EC8B3F;background:rgba(236,139,63,.08)}
+.foot{border-top:1px solid rgba(17,17,17,.25)}
+.bar{height:10px;border-width:1.5px}
+@media(max-width:520px){.tabs{overflow-x:auto;flex-wrap:nowrap}.top-in{padding-top:8px;padding-bottom:8px}}
 @media(prefers-color-scheme:dark){
   :root{color-scheme:dark;--bg:#111111;--bg-2:#1A1A1A;--surface:#1A1A1A;--surface2:#242424;--surface-solid:#1A1A1A;--ink:#F4F4F0;--muted:#C3C3C3;--line:#F4F4F0;--line-2:#F4F4F0;--brand:#8D89D5;--brand-2:#EC8B3F;--brand-ink:#fff;--brand-soft:rgba(141,137,213,.2);--link:#B9B6F0;--gold:#EC8B3F;--gold-2:#EC8B3F;--gold-soft:rgba(236,139,63,.2);--gold-ink:#FFC18E;--good:#76D59A;--good-soft:#173B27;--warn:#FFD18F;--warn-soft:#493216;--bad:#FF9B9B;--bad-soft:#482323;--shadow:8px 8px 0 #EC8B3F}
   html,body{background-color:#111;color:#F4F4F0;scrollbar-color:#EC8B3F #111}
@@ -464,6 +534,18 @@ tbody tr:hover{background:#F7F1EB}
   .boot-top{background:#1A1A1A}.note{background:#242424;color:#D1D1D1}
   .cert{background:#FFFDF6;color:#14213D}.cert h2,.cert .big{color:#433F92}.cert .sl{color:#4a5878}
   .toast{background:#111;color:#fff}
+}
+@media(prefers-color-scheme:dark){
+  .tabs button{background:transparent;color:#C3C3C3}
+  .tabs button[aria-selected="true"]{background:#433F92;color:#fff}
+  .roles button{background:transparent;color:#F4F4F0}
+  .roles button[aria-pressed="true"]{color:#111}
+  .empty{border-color:rgba(244,244,240,.35);background:rgba(26,26,26,.6)}
+  .card .empty,.kv>div,.task{background:transparent}
+  td,.task{border-color:rgba(244,244,240,.16)}
+  .task.mine{background:#302E59}
+  .foot{border-top-color:rgba(244,244,240,.25)}
+  .empty.loading{border-color:rgba(244,244,240,.15)}
 }
 </style>
 
