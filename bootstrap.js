@@ -99,4 +99,50 @@ router.get('/bootstrap', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ---------------------------------------------------------------------------
+// Public impact summary for the landing page. No login. Aggregates only: no member names, no amounts per
+// person, no photos. "Funds raised" is income on the treasury ledger, minus entries that were reversed.
+// ---------------------------------------------------------------------------
+router.get('/public/summary', async (req, res, next) => {
+  try {
+    const sb = req.app.locals.supabase;
+    const g = await K.hasGrantColumns(sb);
+    const [users, events, approved, ledger] = await Promise.all([
+      K.fetchAll(() => sb.from('users').select('id, role, sector').order('id')),
+      K.fetchAll(() => sb.from('events').select('id, title, sector, type, hours, date_label, is_active, created_at').order('id')),
+      K.fetchAll(() => sb.from('hour_logs').select('id, user_id, event_id, hours, overtime_hours, overtime_status' + (g ? ', grant_scope' : '')).eq('status', 'approved').order('id')),
+      K.fetchAll(() => sb.from('treasury_ledger').select('id, entry_type, amount, reverses_id').order('id')),
+    ]);
+    const sectorOf = new Map(users.map(u => [u.id, u.sector]));
+    const sectors = Object.fromEntries(K.SECTORS.map(s => [s, 0]));
+    const perEvent = new Map();
+    let hours = 0;
+    for (const l of approved) {
+      const h = K.logHours(l);
+      hours += h;
+      const s = sectorOf.get(l.user_id); if (K.SECTORS.includes(s)) sectors[s] += h;
+      if (l.event_id != null) {
+        const e = perEvent.get(l.event_id) || { hours: 0, people: new Set() };
+        e.hours += h; e.people.add(l.user_id); perEvent.set(l.event_id, e);
+      }
+    }
+    const reversed = new Set(ledger.filter(r => r.reverses_id).map(r => r.reverses_id));
+    const raised = ledger.filter(r => r.entry_type === 'income' && !r.reverses_id && !reversed.has(r.id)).reduce((a, r) => a + K.cents(r.amount), 0) / 100;
+    const projects = events.slice().sort((a, b) => (b.is_active - a.is_active) || (a.created_at < b.created_at ? 1 : -1)).slice(0, 6).map(e => {
+      const pe = perEvent.get(e.id) || { hours: 0, people: new Set() };
+      return { title: e.title, sector: e.sector, type: e.type, date: e.date_label || null, active: !!e.is_active, hours: K.round2(pe.hours), volunteers: pe.people.size };
+    });
+    for (const s of K.SECTORS) sectors[s] = K.round2(sectors[s]);
+    res.set('Cache-Control', 'public, max-age=60');
+    res.json({
+      hours: K.round2(hours),
+      members: users.filter(u => ['member', 'lead', 'pres'].includes(u.role)).length,
+      activeProjects: events.filter(e => e.is_active).length,
+      projects: events.length,
+      fundsRaised: raised,
+      sectors, recent: projects,
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
