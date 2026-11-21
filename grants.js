@@ -150,8 +150,17 @@ const row = (T, id) => T.users.find(u => u.id === id);
   ({ call, T, app } = world());
   const pat = await openAs(app, T, row(T, 2));
   await pat.go('pres', 'center');
-  t('command center: six metrics in one flat strip, actions in the header row', /<div class="statstrip"[^>]*>(<div class="card tile"><b>[^<]*<\/b><span>[^<]*<\/span><\/div>){6}<\/div>/.test(pat.app()) &&
-    /class="row between sechead">[\s\S]*Command center[\s\S]*Manage roster[\s\S]*Export report[\s\S]*\+ Grant Hours[\s\S]*<\/div><\/div>\s*<div class="statstrip"/.test(pat.app()), pat.app().slice(0, 1500));
+  t('command center: six metrics in one flat strip; the header row holds only + Grant Hours (no buttons repeating tabs)', /<div class="statstrip"[^>]*>(<div class="card tile"><b>[^<]*<\/b><span>[^<]*<\/span><\/div>){6}<\/div>/.test(pat.app()) &&
+    /class="row between sechead">[\s\S]*Command center[\s\S]*\+ Grant Hours/.test(pat.app()) && !/Manage roster|Export report/.test(pat.app()), pat.app().slice(0, 1500));
+  t('header: one bar with brand, tabs and the account button; "Live data" kept for screen readers; no footer line', /<header class="top">[\s\S]*class="brand"[\s\S]*<nav class="tabs" role="tablist">[\s\S]*<\/nav>[\s\S]*data-act="acct"[\s\S]*<\/header>/.test(pat.app()) &&
+    /sr-only">Live data</.test(pat.app()) && !/class="foot"/.test(pat.app()));
+  const navOf = b => /<nav class="tabs" role="tablist">[\s\S]*?<\/nav>/.exec(b.app())[0];
+  t('tabs: President bar shows 4 main tabs; the other 7 are under More, inside the same nav', [...navOf(pat).matchAll(/role="tab" [^>]*data-t="(\w+)"/g)].map(m => m[1]).join() === 'center,over,roster,treasury' &&
+    [...navOf(pat).matchAll(/role="menuitem" [^>]*data-t="(\w+)"/g)].map(m => m[1]).join() === 'props,attend,audit,inbox,vault,export,certs' && /data-act="more"/.test(navOf(pat)));
+  t('account menu: View as (4 roles) and Log out, hidden until opened', /class="menu acctmenu" role="menu" aria-label="Account" hidden>[\s\S]*View as[\s\S]*data-r="vol"[\s\S]*data-act="logout"/.test(pat.app()));
+  await pat.go('pres', 'audit');
+  t('tabs: opening a page from More puts its name on the More button', /class="tabmore on"[^>]*>Audit log/.test(pat.app()));
+  await pat.go('pres', 'center');
   t('grant dialog is closed until asked for', pat.modal() === '');
   await pat.go('pres', 'roster'); t('roster header also offers + Grant Hours', /<h2>Roster<\/h2><button class="btn gold sm" data-act="grantopen">\+ Grant Hours<\/button>/.test(pat.app()));
   await pat.act('grantopen');

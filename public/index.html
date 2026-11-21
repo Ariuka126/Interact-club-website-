@@ -503,6 +503,59 @@ tbody tr:hover{background:var(--surface2)}
 
 @media(max-width:520px){.wrap{padding:14px 14px 64px}.top-in{gap:10px}.top .roles{max-width:100%;overflow-x:auto;flex-wrap:nowrap}.top .roles button{white-space:nowrap}.card{padding:16px}.tabs{overflow-x:auto;flex-wrap:nowrap}.sheet{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}}
 
+/* ---- one bar: logo · main tabs · account (tabs move to a second row on phones) ---- */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.top{background:var(--bg);border-bottom:0;box-shadow:none;transition:background-color .2s ease,box-shadow .2s ease}
+.top.scrolled{background:var(--surface);box-shadow:0 1px 0 var(--line)}
+.top-in{position:relative;display:flex;align-items:center;flex-wrap:nowrap;gap:24px;padding:0 20px;min-height:60px}
+.brand{flex:none;gap:10px;align-items:center}
+.brand b{font-size:15.5px}
+.brand .live{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none;margin-left:-2px}
+.top .tabs{flex:1;min-width:0;align-self:stretch;align-items:stretch;gap:2px;border-bottom:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.top .tabs::-webkit-scrollbar{display:none}
+.top .tabs>button{display:inline-flex;align-items:center;gap:4px;padding:0 12px;white-space:nowrap;flex:none}
+.top .tabs>button[aria-selected="true"]::after,.top .tabs>.tabmore.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--gold)}
+.tabmore{position:relative;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;cursor:pointer}
+.tabmore:hover{color:var(--ink)} .tabmore.on{color:var(--brand);font-weight:700}
+.chev{width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);margin-left:4px;opacity:.7}
+.acct{flex:none;margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;border:0;background:var(--brand-soft);color:var(--brand);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:.02em}
+.avatar:hover,.avatar[aria-expanded="true"]{background:var(--brand);color:#fff}
+/* menus: placed by script against the header row */
+.menu{position:absolute;z-index:40;min-width:210px;max-width:min(300px,calc(100vw - 16px));background:var(--surface);border-radius:14px;box-shadow:0 12px 32px rgba(29,27,75,.16),0 0 0 1px var(--line);padding:6px;display:flex;flex-direction:column;gap:1px}
+.menu[hidden]{display:none!important}
+.menuitem{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;border-radius:9px;background:transparent;color:var(--ink);padding:9px 12px;font:inherit;font-weight:500;cursor:pointer;box-shadow:none}
+.menuitem:hover{background:var(--surface2)}
+.tabs .menuitem{color:var(--ink);font-weight:500;padding:9px 12px;margin:0;border-radius:9px}
+.tabs .menuitem:hover{color:var(--ink);background:var(--surface2)}
+.menuitem.on,.tabs .menuitem.on{color:var(--brand);font-weight:700}
+.menuitem.on::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none}
+.menuhead{display:flex;flex-direction:column;padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.menuhead b{font-family:var(--f-display);font-size:14px} .menuhead span{font-size:12px;color:var(--muted)}
+.menusec{display:flex;flex-direction:column;gap:1px;padding:4px 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.menusec .eyebrow{padding:4px 12px}
+.menu .roles{display:flex;flex-direction:column;background:transparent;border-radius:0;padding:0;gap:1px}
+.menu .roles button[aria-pressed="true"]{background:transparent;box-shadow:none}
+.menuselect{padding:6px 12px 2px;font-size:12px} .menuselect select{margin-top:4px}
+@media(max-width:760px){
+  .top-in{flex-wrap:wrap;gap:0 12px;padding:8px 14px 0;min-height:0}
+  .top .tabs{order:3;flex-basis:100%;height:44px;padding-right:28px}
+  /* edge fade drawn over the row (a mask would also clip the More menu) */
+  .top-in::after{content:"";position:absolute;right:0;bottom:0;width:32px;height:44px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--bg))}
+  .top.scrolled .top-in::after{background:linear-gradient(90deg,transparent,var(--surface))}
+  .top .tabs>button{padding:0 10px}
+  .top .tabs>button[aria-selected="true"]::after,.top .tabs>.tabmore.on::after{left:10px;right:10px}
+}
+/* page body: no footer, Command Center numbers sit on the page itself */
+.wrap{padding-top:22px}
+.statstrip{background:transparent;box-shadow:none;border-radius:0;padding:0}
+.statstrip .tile:first-child{padding-left:0}
+/* event filters: words, not pills; the active one is underlined like a tab */
+.filters{gap:18px}
+.filters button,.filters button:hover{background:transparent;box-shadow:none;border-radius:0;padding:4px 0;color:var(--muted)}
+.filters button:hover{color:var(--ink)}
+.filters button[aria-pressed="true"]{background:transparent;color:var(--brand);font-weight:700;box-shadow:inset 0 -2px 0 var(--gold)}
+
 /* ---- dark: same structure, indigo night ---- */
 @media(prefers-color-scheme:dark){
   :root{color-scheme:dark;--bg:#111127;--bg-2:#16162F;--surface:#1A1A35;--surface2:#24244A;--surface-solid:#1A1A35;
@@ -517,6 +570,9 @@ tbody tr:hover{background:var(--surface2)}
   .cert{background:#FFFDF7;color:#1D1B4B}.cert h2,.cert .big{color:#3F4093}.cert .sl{color:#4a5878}
   .qrimg{box-shadow:none}
   .mark{background:#fff;border-radius:50%;padding:3px}
+  .menu{box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 1px var(--line)}
+  .avatar:hover,.avatar[aria-expanded="true"]{background:#4F50B5}
+  .filters button[aria-pressed="true"]{background:transparent;color:var(--brand)}
 }
 </style>
 
@@ -619,6 +675,8 @@ const TABS={
   vol:[['events','Events'],['status','My status']],
   lead:[['review','Approvals'],['roll','Roll-call'],['events','Events'],['sroles','Sector roles'],['tasks','Checklists'],['qr','Check-in code'],['sector','Sectors'],['vault','Vault']],
   pres:[['center','Command center'],['over','Overrides'],['props','Proposals'],['treasury','Treasury'],['attend','Attendance'],['roster','Roster'],['audit','Audit log'],['inbox','Feedback inbox'],['vault','Vault'],['export','Export'],['certs','Certificates']]};
+/* Shown in the bar; every other tab sits under "More" (still inside the same nav). */
+const MAIN_TABS={member:['home','events','feed','cert'],lead:['review','events','roll','qr'],pres:['center','over','roster','treasury'],vol:['events','status']};
 /* The Finance Head also gets the Treasury. Admin accounts are outside the money, audit, roll-call and feedback tools, so those tabs are not shown to them. */
 function tabsFor(r){
   let t=TABS[r].slice();
@@ -633,20 +691,28 @@ function render(){
   const r=S.role,tabs=tabsFor(r),tab=tabs.some(x=>x[0]===S.tab[r])?S.tab[r]:tabs[0][0];S.tab[r]=tab;
   maybeStats();maybeCert();maybeExport();maybeMod();
   const cnt={review:pending(S.lead).length,over:pending().length+flagged().length+otReq().length,props:((MOD.d.props&&MOD.d.props.proposals)||[]).filter(p=>p.status==='pending').length};
+  const dotOf=k=>{const n=(r==='lead'&&k==='review')?cnt.review:(r==='pres'&&k==='over')?cnt.over:(r==='pres'&&k==='props')?cnt.props:0;return n?`<span class="dot">${n}</span>`:''};
+  const main=MAIN_TABS[r]||[],vis=main.map(k=>tabs.find(x=>x[0]===k)).filter(Boolean),more=tabs.filter(x=>!main.includes(x[0]));
+  const inMore=more.find(x=>x[0]===tab),moreDots=more.reduce((a,[k])=>a+((r==='pres'&&k==='props')?cnt.props:0),0);
+  const roles=roleChoices(),initials=String(S.user.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
   $('#app').innerHTML=`
   <header class="top"><div class="top-in">
-    <div class="brand"><img class="mark" src="/school-logo.png" alt="School logo" width="40" height="40"><div><b>Interact Club Hub</b><span>Live data</span></div></div>
-    <div class="roles" role="group" aria-label="View the app as">
-      ${roleChoices().map(([k,n])=>`<button data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}
-      ${r==='lead'?`<select aria-label="Sector" data-ch="lsec">${SECT.filter(s=>isPres()||s===S.user.sector).map(s=>`<option value="${s}" ${s===S.lead?'selected':''}>${SL(s)}</option>`).join('')}</select>`:''}
-    </div>
-    <div class="row" style="gap:8px">${S.user.role==='admin'?'<button class="btn sm gold" data-act="admin">Admin Panel</button>':''}<span class="small" style="opacity:.85">${esc(S.user.name)}</span><button class="btn sm" data-act="logout">Log out</button></div>
+    <div class="brand"><img class="mark" src="/school-logo.png" alt="School logo" width="40" height="40"><b>Interact Club Hub</b><i class="live" aria-hidden="true"></i><span class="sr-only">Live data</span></div>
+    <nav class="tabs" role="tablist">${vis.map(([k,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="tab" data-t="${k}">${n}${dotOf(k)}</button>`).join('')}${more.length?`<button class="tabmore${inMore?' on':''}" data-act="more" aria-haspopup="true" aria-expanded="false">${inMore?inMore[1]:'More'}${moreDots&&!inMore?`<span class="dot">${moreDots}</span>`:''}<i class="chev" aria-hidden="true"></i></button><div class="menu" role="menu" aria-label="More pages" hidden>${more.map(([k,n])=>`<button role="menuitem" class="menuitem${tab===k?' on':''}" ${tab===k?'aria-current="page" ':''}data-act="tab" data-t="${k}">${n}${dotOf(k)}</button>`).join('')}</div>`:''}</nav>
+    <div class="acct"><button class="avatar" data-act="acct" aria-haspopup="true" aria-expanded="false" aria-label="Account: ${esc(S.user.name)}">${esc(initials)}</button>
+      <div class="menu acctmenu" role="menu" aria-label="Account" hidden>
+        <div class="menuhead"><b>${esc(S.user.name)}</b><span>${esc(ROLE_LABEL[S.user.role]||S.user.role)}${S.user.sector?` · ${esc(SL(S.user.sector))}`:''}</span></div>
+        ${roles.length>1?`<div class="menusec"><span class="eyebrow">View as</span><div class="roles" role="group" aria-label="View the app as">${roles.map(([k,n])=>`<button class="menuitem${r===k?' on':''}" data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('')}</div>
+          ${r==='lead'&&isPres()?`<label class="menuselect">Sector<select aria-label="Sector" data-ch="lsec">${SECT.map(s=>`<option value="${s}" ${s===S.lead?'selected':''}>${SL(s)}</option>`).join('')}</select></label>`:''}</div>`
+          :roles.map(([k,n])=>`<button hidden data-act="role" data-r="${k}" aria-pressed="${r===k}">${n}</button>`).join('') /* one view only: nothing to switch, nothing shown */}
+        ${S.user.role==='admin'?'<button class="menuitem" data-act="admin">Admin Panel</button>':''}
+        <button class="menuitem" data-act="logout">Log out</button>
+      </div></div>
   </div></header>
   <main class="wrap">
-    <nav class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="tab" data-t="${k}">${n}${(r==='lead'&&k==='review'&&cnt.review)?`<span class="dot">${cnt.review}</span>`:''}${(r==='pres'&&k==='over'&&cnt.over)?`<span class="dot">${cnt.over}</span>`:''}${(r==='pres'&&k==='props'&&cnt.props)?`<span class="dot">${cnt.props}</span>`:''}</button>`).join('')}</nav>
     <div id="view" class="stack" style="gap:16px">${VIEW[r][tab]()}</div>
-    <div class="foot"><span>${isPres()?'Switch roles above to preview each side of the app. Everything shown is live club data.':'Everything shown here is live club data.'}</span></div>
   </main>`;
+  afterRender();
 }
 
 function evCard(e,mode){
@@ -794,7 +860,7 @@ VIEW.pres.center=()=>{
   const num=(x,max)=>x==null?(LIVE.err?'—':'…'):Number(x).toLocaleString(undefined,{maximumFractionDigits:max||0});
   const T=(val,l)=>`<div class="card tile${val==='…'?' is-loading':''}"><b>${val}</b><span>${l}</span></div>`;
   return`<div class="row between sechead"><div><div class="eyebrow">President dashboard</div><h2>Command center</h2></div>
-    <div class="row"><button class="btn pri" data-act="tab" data-t="roster">Manage roster</button><button class="btn sm" data-act="tab" data-t="over">Overrides</button><button class="btn sm" data-act="tab" data-t="export">Export report</button>${grantBtn()}</div></div>
+    ${grantBtn()}</div>
   ${LIVE.err?`<div class="empty err">Could not load live stats: ${esc(LIVE.err)} <button class="btn sm" data-act="statsretry">Retry</button></div>`:''}
   <div class="statstrip" role="group" aria-label="Club at a glance">${T(num(v('totalHours'),1),'Total club hours')}${T(num(v('activeMembers')),'Active members')}${T(num(v('keeplist')),'On the keeplist')}${T(num(v('pendingApprovals')),'Pending approvals')}${T(num(v('flaggedEntries')),'Flagged entries')}${T(num(v('activeEvents')),'Events active')}</div>
   ${activeEventsRow()}
@@ -1020,10 +1086,13 @@ const CH={
  exs(v){S.exSec=v;render()}, exst(v){S.exSt=v;render()}, certm(v){S.certM=v;CERT.err='';render()},
  ot(v,t){CI.ot=t.checked;ciRender()}, oth(v){CI.otH=+v;ciRender()},
  wok(v,t){$('#wgo').disabled=!(t.checked&&$('#wname').value.trim().length>2)}};
-document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList.contains('scrim'))closeModal()});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');
+  if(!t||!MENU_TOGGLES.includes(t.dataset.act)){if(!(e.target.closest&&e.target.closest('.menu'))||t)closeMenus()} /* a click outside, or any action, closes open menus */
+  if(t){A[t.dataset.act]&&A[t.dataset.act](t.dataset,t);return}if(e.target.classList&&e.target.classList.contains('scrim'))closeModal()});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-in]');if(t&&IN_[t.dataset.in])IN_[t.dataset.in](t.value,t)});
 document.addEventListener('change',e=>{const t=e.target.closest('[data-ch]');if(t&&CH[t.dataset.ch])CH[t.dataset.ch](t.value,t,t.dataset)});
-document.addEventListener('keydown',e=>{if(!$('#modal').innerHTML)return;if(e.key==='Escape')return closeModal();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openMenu()){const b=openMenu().previousElementSibling;closeMenus();if(b&&b.focus)b.focus();return}
+  if(!$('#modal').innerHTML)return;if(e.key==='Escape')return closeModal();
   if(e.key==='Tab'){const sh=$('#modal').querySelector&&$('#modal').querySelector('.sheet');if(!sh)return;
     const f=[...sh.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')].filter(x=>x.offsetParent!==null);
     if(!f.length)return;const a=f[0],z=f[f.length-1];
@@ -1576,7 +1645,27 @@ function badgePaint(fresh){const box=$('#myQr');if(!box)return;const msg=$('#myQ
   if(msg&&BADGE_S.token)msg.textContent=`Live code · refreshes in ${Math.ceil(left)} s`}
 setInterval(()=>{if(!$('#myQr'))return;if(Date.now()>=BADGE_S.exp-1500)badgeFetch();else badgePaint()},500);
 
+/* ---------- header menus: "More" pages and the account menu ---------- */
+const MENU_TOGGLES=['more','acct'];
+const openMenu=()=>document.querySelector&&document.querySelector('#app .menu:not([hidden])');
+function closeMenus(){const m=openMenu();if(!m)return;m.hidden=true;const b=m.previousElementSibling;if(b&&b.setAttribute)b.setAttribute('aria-expanded','false')}
+function menuToggle(btn){const m=btn&&btn.nextElementSibling;if(!m||!m.classList||!m.classList.contains('menu'))return;
+  const wasOpen=!m.hidden;closeMenus();if(wasOpen)return;
+  m.hidden=false;btn.setAttribute('aria-expanded','true');
+  /* placed against the header row, so the sideways-scrolling tab row cannot clip it */
+  const box=btn.closest('.top-in'),pr=box.getBoundingClientRect(),br=btn.getBoundingClientRect();
+  m.style.top=(br.bottom-pr.top+6)+'px';m.style.left=Math.max(8,Math.min(br.left-pr.left,pr.width-m.offsetWidth-8))+'px';
+  const f=m.querySelector('button,select');if(f)f.focus()}
+function afterRender(){if(!document.querySelector)return; /* (test harness has no DOM) */
+  const a=document.querySelector('.tabs [aria-selected="true"], .tabs .tabmore.on');
+  if(a&&a.scrollIntoView)a.scrollIntoView({block:'nearest',inline:'center'});
+  syncTop()}
+function syncTop(){const top=document.querySelector&&document.querySelector('.top');if(top)top.classList.toggle('scrolled',(window.scrollY||0)>4)}
+if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('scroll',syncTop,{passive:true});
+
 Object.assign(A,{
+ more(d,btn){menuToggle(btn)},
+ acct(d,btn){menuToggle(btn)},
  grantopen(){if(canGrant())grantModal()},
  async grantgo(d,btn){
   const v=id=>{const el=$('#'+id);return el?String(el.value).trim():''},err=t=>{const el=$('#gr-err');if(el)el.textContent=t;else toast(t)};
