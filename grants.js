@@ -231,6 +231,21 @@ const row = (T, id) => T.users.find(u => u.id === id);
   const mia4 = await openAs(app, T, row(T, 4)); await mia4.act('myqr');
   t('badge dialog: live code wording, no printable id in the page', /changes every 30 seconds/.test(mia4.modal()) && !/interact-member:/.test(mia4.modal()) && mia4.state.calls.includes('GET /api/badge'));
 
+  /* ================= public page ================= */
+  ({ call, T, app } = world());
+  T.hour_logs.push({ id: 1, user_id: 4, event_id: 1, hours: 2, day: 1, status: 'approved' }, { id: 2, user_id: 5, event_id: 1, hours: 2, day: 1, status: 'pending' });
+  T.treasury_ledger.push({ id: 1, seq: 1, entry_type: 'income', amount: 150000, category: 'Bake sale', description: 'x', balance_after: 150000, reverses_id: null },
+    { id: 2, seq: 2, entry_type: 'income', amount: 9999, category: 'Typo', description: 'x', balance_after: 159999, reverses_id: null },
+    { id: 3, seq: 3, entry_type: 'expense', amount: 9999, category: 'Reversal', description: 'x', balance_after: 150000, reverses_id: 2 });
+  r = await call('GET', '/api/public/summary', {});
+  t('public summary: no login needed; approved hours only; funds exclude a reversed entry', r.code === 200 && r.json.hours === 2 && r.json.fundsRaised === 150000 && r.json.activeProjects === 1 && r.json.members === 5 && r.json.sectors.Events === 2, r.json);
+  t('public summary: aggregates only (no member names, no emails)', !/Mia|Max|Lee|Pat|Fay|@x\.com/.test(JSON.stringify(r.json)) && r.json.recent[0].title === 'Library Drive' && r.json.recent[0].volunteers === 1);
+  const g1 = await openAs(app, T, null);
+  t('public page: club identity, live figures (₮, hours) and the login form', /Service Above Self/.test(g1.text()) && /Orkhon Khasu/.test(g1.text()) && /Log in to continue/.test(g1.text()) && g1.fieldNames().join() === 'email,password' && g1.state.calls.includes('GET /api/public/summary') && /₮150,000/.test(g1.el('#pubFigs').innerHTML), g1.el('#pubFigs').innerHTML);
+  await g1.act('lang', { l: 'mn' });
+  t('EN/MN: Mongolian copy, same login fields', /Орхон Хасу/.test(g1.text()) && /Нэвтрэх/.test(g1.text()) && g1.fieldNames().join() === 'email,password');
+  await g1.act('lang', { l: 'en' });
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.log('CRASH', e && e.stack || e); process.exit(1); });

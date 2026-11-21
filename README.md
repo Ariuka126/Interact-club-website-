@@ -54,8 +54,14 @@ tests             npm test  (runs all.js: every suite, including grants.js; no i
   for anyone (Command Center, Roster), Sector Heads for members of their own sector (Approvals, Sectors). Grants count in totals, the
   leaderboard, certificates and the CSV report, and are audit-logged. A President revokes or restores a grant from Overrides → Recent
   decisions with a written reason; nothing is deleted.
-- **Look:** a calm, open theme built on the school logo (`public/school-logo.png`): indigo `#3F4093` for structure and actions, orange
-  `#F58635` for what is active or earned, soft curves, no boxes inside boxes, and a matching dark mode.
+- **Look:** institutional and quiet, built on the club crest (`public/crest.webp`). Tokens are at the top of the
+  "Club theme" block in `public/index.html`: alabaster `#FAFAFA`, slate ink `#0F172A`, hairlines `#E2E8F0`, Rotary Royal
+  Blue `#17458F` for structure, Orkhon Crimson `#8B1E24` only for active state, Rotary Gold `#F7A81B` only for the main
+  action and verified marks. Plus Jakarta Sans headings (-0.02em), Inter text, JetBrains Mono for every counted number
+  (hours, ₮ amounts, certificate IDs). Matching dark mode.
+- **Public page:** signed-out visitors see the club's report: live verified hours, active projects, funds raised (₮),
+  members (`GET /api/public/summary`, aggregates only, no names), the four sectors, recent projects, the member login,
+  and an EN / MN switch (remembered per browser). Mongolian copy is in `I18N.mn`; have a native speaker check it.
 - **Roles:** volunteer, member, lead, pres, admin. Co-Presidents promote volunteers; every other role change is an admin's (Admin Panel).
 - **Sectors** feed the sector leaderboard. Set them in the Admin Panel (Sector Leads must have one; Members may).
 - **Certificate** has a Print / save-as-PDF button; the Rotary report is a real CSV download from the server.
