@@ -61,7 +61,7 @@ tests             npm test  (runs all.js: every suite, including grants.js; no i
   (hours, ₮ amounts, certificate IDs). Matching dark mode.
 - **Public page:** signed-out visitors see the club's report: live verified hours, active projects, funds raised (₮),
   members (`GET /api/public/summary`, aggregates only, no names), the four sectors, recent projects, the member login,
-  and an EN / MN switch (remembered per browser). Mongolian copy is in `I18N.mn`; have a native speaker check it.
+  and an EN / MN switch (remembered per browser). Mongolian copy is in `I18N.mn`.
 - **Roles:** volunteer, member, lead, pres, admin. Co-Presidents promote volunteers; every other role change is an admin's (Admin Panel).
 - **Sectors** feed the sector leaderboard. Set them in the Admin Panel (Sector Leads must have one; Members may).
 - **Certificate** has a Print / save-as-PDF button; the Rotary report is a real CSV download from the server.
